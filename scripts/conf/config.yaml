@@ -1,10 +1,12 @@
+root_dir: /Users/daniellerothermel/drotherm/
+data_dir: ${.root_dir}data/dr_gen/
+log_dir: ${.root_dir}logs/dr_gen/
+
 hydra:
+    run:
+        dir: ${...log_dir}${now:%Y-%m-%d}/${now:%H-%M-%S}
     job_logging:
         formatters:
             simple:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
-
-root_dir: /Users/daniellerothermel/drotherm/
-data_dir: ${.root_dir}data
-log_dir: ${.root_dir}logs
