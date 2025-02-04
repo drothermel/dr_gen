@@ -7,6 +7,9 @@ authors = [
 ]
 dependencies = [
     "dr-util @ git+https://github.com/drothermel/dr_util.git",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "torchaudio>=2.6.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
