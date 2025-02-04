@@ -1,12 +1,22 @@
-root_dir: /Users/daniellerothermel/drotherm/
-data_dir: ${.root_dir}data/dr_gen/
-log_dir: ${.root_dir}logs/dr_gen/
 
 hydra:
     run:
-        dir: ${...log_dir}${now:%Y-%m-%d}/${now:%H-%M-%S}
+        dir: ${paths.logs}${now:%Y-%m-%d}/${now:%H-%M-%S}
     job_logging:
         formatters:
             simple:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
+
+paths:
+    root: /Users/daniellerothermel/drotherm
+    data: ${paths.root}/data/dr_gen
+    logs: ${paths.root}/logs/dr_gen
+
+    dataset_cache_root: ${paths.data}/${data.name}/
+
+data:
+    name: cifar10
+    num_workers:
+    cache_dataset: true
+    download: true
