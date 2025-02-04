@@ -29,8 +29,8 @@ def run(cfg: DictConfig):
     logging.info(">> Welcome to your new script! here")
 
     logging.info(" :: Loading Train Dataset :: ")
-    train_data = data.get_dataset(cfg.data, cfg.paths, train=True)
-    test_data = data.get_dataset(cfg.data, cfg.paths, train=False)
+    data.get_dataset(cfg.data, cfg.paths, train=True)
+    data.get_dataset(cfg.data, cfg.paths, train=False)
     logging.info(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
 

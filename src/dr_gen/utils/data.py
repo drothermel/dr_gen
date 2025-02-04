@@ -1,7 +1,4 @@
-import torch
-from torch.utils.data import DataLoader
 from torchvision import datasets
-from torchvision.transforms import v2 as transforms_v2
 
 AVAIL_DATASETS = {"cifar10", "cifar100"}
 
