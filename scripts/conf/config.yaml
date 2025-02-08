@@ -17,6 +17,48 @@ paths:
 
 data:
     name: cifar10
-    num_workers:
+    num_workers: 10
     cache_dataset: true
     download: true
+
+    transform:
+        train:
+            normalize: true
+            random_crop: true
+            random_horizontal_flip: true
+            color_jitter: true
+
+            normalize_mean: [0.4914, 0.4822, 0.4465]
+            normalize_std:  [0.2023, 0.1994, 0.2010]
+            crop_size: 32
+            crop_padding: 4
+            random_horizontal_flip_prob: 0.5
+            jitter_brightness: 0.247
+        eval:
+            normalize: true
+            random_crop: false
+            random_horizontal_flip: false
+            color_jitter: false
+
+            normalize_mean: [0.4914, 0.4822, 0.4465]
+            normalize_std:  [0.2023, 0.1994, 0.2010]
+            crop_size:
+            crop_padding: 
+            random_horizontal_flip_prob: 
+            jitter_brightness: 
+
+train:
+    run: true
+    source_percent: 0.8
+    batch_size: 5
+
+val:
+    source: train
+    source_percent: 0.2
+    batch_size: 10
+
+eval:
+    run: false
+    batch_size: 10
+
+seed: 101
