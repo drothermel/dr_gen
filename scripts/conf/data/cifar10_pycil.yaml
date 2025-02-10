@@ -1,11 +1,11 @@
 defaults:
     - _self_
-    - /transform@_global_.data.train.transform: cifar10_train_pycil
-    - /transform@_global_.data.val.transform: cifar10_val_pycil
-    - /transform@_global_.data.eval.transform: cifar10_val_pycil
+    - /transform@train.transform: cifar10_train_pycil
+    - /transform@val.transform: cifar10_val_pycil
+    - /transform@eval.transform: cifar10_val_pycil
 
 name: cifar10
-num_workers: 10
+num_workers: 8
 cache_dataset: true
 download: true
 
