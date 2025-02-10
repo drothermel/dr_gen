@@ -9,6 +9,7 @@ from dr_gen.utils.run import seed_worker
 
 AVAIL_DATASETS = {"cifar10", "cifar100"}
 
+
 def get_transforms(augment_cfg):
     xfs = [
         transforms_v2.ToImage(),
@@ -45,97 +46,92 @@ def get_transforms(augment_cfg):
             )
         )
     return transforms_v2.Compose([xfs])
-    
 
-def get_dataset(cfg, split):
+
+def split_size(dataset, percent):
+    return math.floor(len(dataset) * percent)
+
+
+def prep_dataset_split_sources(cfg):
+    # Process the source info for data into usable data struct
+    source_percents = {}
+    for spl in ["train", "val", "eval"]:
+        spl_source = cfg.data[spl].source
+        if spl_source not in source_percents:
+            source_percents[spl_source] = []
+        source_percents[spl_source].append((spl, cfg.data[spl].source_percent))
+
+    # Validate source distribution
+    for source, usages in source_percents.items():
+        if sum([use[1] for use in usages]) > 1.0:
+            assert False, "Cannot use more than 100% of a data source"
+
+    return source_percents
+
+
+def get_source_range(cfg, source_percents, split):
+    my_source = cfg.data[split].source
+    my_source_percents = source_percents[my_source]
+    start_percent = 0
+    end_percent = None
+    for spl, perc in my_source_percents:
+        end_percent = start_percent + perc
+        if split == spl:
+            return start_percent, end_percent
+        start_percent = end_percent
+        end_percent = None
+    assert False, f"Split {split} should be in {my_source_percents}"
+
+
+def get_dataset_and_sampler(cfg, split):
     data_name_lower = cfg.data.name.lower()
     assert data_name_lower in AVAIL_DATASETS
 
-    xf_type = split if split == "train" else "eval"
-    xfs = get_transforms(cfg.data.transform[xf_type])
-    print(xfs)
+    # For now repeat this (deterministically) each time we
+    # get a dataset to avoid state, in future maybe do once
+    data_source = cfg.data[split].source
+    source_percents = prep_dataset_split_sources(cfg)
+    start_perc, end_perc = get_source_range(cfg, source_percents, split)
 
+    # Make the dataset based on the source with expected transforms
+    xfs = get_transforms(cfg.data[split].transform)
     if data_name_lower == "cifar10":
-        use_train_data = (
-            (split == "train") or
-            (split == "val" and cfg.val.source == "train")
-        )
-        return datasets.CIFAR10(
+        ds = datasets.CIFAR10(
             root=cfg.paths.dataset_cache_root,
-            train=use_train_data,
-            #transform=xfs,
-            transform=None,
+            train=(data_source == "train"),
+            transform=xfs,
             target_transform=None,
             download=cfg.data.download,
         )
     elif data_name_lower == "cifar100":
-        use_train_data = (
-            (split == "train") or
-            (split == "val" and cfg.val.source == "train")
-        )
-        return datasets.CIFAR100(
+        ds = datasets.CIFAR100(
             root=cfg.paths.dataset_cache_root,
-            train=use_train_data,
-            #transform=xfs,
-            transform=None,
+            train=(data_source == "train"),
+            transform=xfs,
             target_transform=None,
             download=cfg.data.download,
         )
 
-def split_size(dataset, percent):
-    return math.floor(len(dataset) * percent)
-    
-def setup_train_val_datasets(cfg, generator):
-    train_ds = get_dataset(cfg, "train")
-    val_ds = get_dataset(cfg, "val")
-
-    #train_size = split_size(train_ds, cfg.train.source_percent)
-    #train_indices = torch.randperm(len(train_ds))
-    #if cfg.val.source == "train":
-        #assert len(train_ds) == len(val_ds)
-        #assert cfg.train.source_percent + cfg.val.source_percent == 1.0
-        #train_ds = torch.utils.data.Subset(
-            #train_ds, train_indices[:train_size],
-        #)
-        #val_ds = torch.utils.data.Subset(
-            #val_ds, train_indices[train_size:],
-        #)
-    #elif cfg.train.source_percent != 1.0:
-        #train_ds = torch.utils.data.Subset(
-            #train_ds, train_indices[:train_size],
-        #)
-    #elif cfg.val.source_percent != 1.0:
-        #val_indices = torch.randperm(len(val_ds))
-        #val_size = split_size(val_ds, cfg.val.source_percent)
-        #val_ds = torch.utils.data.Subset(
-            #val_ds, val_indices[:val_size]
-        #)
-    return train_ds, val_ds
-
-
-def setup_train_val_dataloaders(cfg, generator):
-    train_ds, val_ds = setup_train_val_datasets(cfg, generator)
-    train_sampler = torch.utils.data.RandomSampler()
-    val_sampler = torch.utils.data.SequentialSampler()
-
-    train_size = split_size(train_ds, cfg.train.source_percent)
-    train_indices = torch.randperm(len(train_ds))
-    if cfg.val.source == "train":
-        assert len(train_ds) == len(val_ds)
-        assert cfg.train.source_percent + cfg.val.source_percent == 1.0
-        train_sampler = SubsetRandomSampler(train_indices[:train_size])
-        val_sampler = SubsetRandomSampler(train_indices[train_size:])
-    elif cfg.train.source_percent != 1.0:
-        train_sampler = SubsetRandomSampler(train_indices[:train_size])
-    elif cfg.val.source_percent != 1.0:
-        val_indices = torch.randperm(len(val_ds))
-        val_size = split_size(val_ds, cfg.val.source_percent)
-        val_sampler = SubsetRandomSampler(val_indices[:val_size])
-
-
-    train_dl = get_dataloader(cfg, train_ds, sampler, generator, "train")
-    val_dl = get_dataloader(cfg, val_ds, sampler, generator, "val")
-    return train_dl, val_dl
+    # Setup the sampler for the dataset
+    shuffle = cfg.data[split].shuffle
+    ns = len(ds)
+    indices = torch.randperm(ns)
+    start_i = math.floor(ns * start_perc)
+    end_i = ns if end_perc == 1.0 else math.floor(ns * end_perc)
+    ds_indices = indices[start_i:end_i]
+    if shuffle and (start_perc == 0 and end_perc == 1.0):
+        print(">> Shuffle full dataset")
+        sampler = torch.utils.data.RandomSampler()
+    elif shuffle:
+        print(f">> Shuffle subset dataset: {start_perc} {start_i} - {end_perc} {end_i}")
+        sampler = torch.utils.data.SubsetRandomSampler(ds_indices)
+    else:
+        print(
+            ">> Sequential subset dataset: {start_perc} {start_i} - {end_perc} {end_i}"
+        )
+        ds = torch.utils.data.Subset(ds, ds_indices)
+        sampler = torch.utils.data.SequentialSampler()
+    return ds, sampler
 
 
 def get_dataloader(cfg, dataset, sampler, generator, split):
@@ -151,6 +147,3 @@ def get_dataloader(cfg, dataset, sampler, generator, split):
         worker_init_fn=seed_worker,
         generator=generator,
     )
-
-    
-    

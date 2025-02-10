@@ -1,4 +1,3 @@
-
 hydra:
     run:
         dir: ${paths.logs}${now:%Y-%m-%d}/${now:%H-%M-%S}
@@ -21,8 +20,11 @@ data:
     cache_dataset: true
     download: true
 
-    transform:
-        train:
+    train:
+        source: train 
+        source_percent: 0.8
+        shuffle: true
+        transform:
             normalize: true
             random_crop: true
             random_horizontal_flip: true
@@ -34,7 +36,27 @@ data:
             crop_padding: 4
             random_horizontal_flip_prob: 0.5
             jitter_brightness: 0.247
-        eval:
+    val:
+        source: train
+        source_percent: 0.2
+        shuffle: false
+        transform:
+            normalize: true
+            random_crop: false
+            random_horizontal_flip: false
+            color_jitter: false
+
+            normalize_mean: [0.4914, 0.4822, 0.4465]
+            normalize_std:  [0.2023, 0.1994, 0.2010]
+            crop_size:
+            crop_padding: 
+            random_horizontal_flip_prob: 
+            jitter_brightness: 
+    eval:
+        source: eval
+        source_percent: 1.0
+        shuffle: false
+        transform:
             normalize: true
             random_crop: false
             random_horizontal_flip: false
@@ -49,12 +71,10 @@ data:
 
 train:
     run: true
-    source_percent: 0.8
     batch_size: 5
 
 val:
-    source: train
-    source_percent: 0.2
+    run: true
     batch_size: 10
 
 eval:
