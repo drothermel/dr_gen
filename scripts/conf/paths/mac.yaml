@@ -1,0 +1,5 @@
+root: /Users/daniellerothermel/drotherm
+data: ${paths.root}/data/dr_gen
+logs: ${paths.root}/logs/dr_gen
+
+dataset_cache_root: ${paths.data}/${data.name}/

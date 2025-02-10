@@ -1,3 +1,8 @@
+defaults:
+    - _self_
+    - paths: mac
+    - data: cifar10_pycil
+
 hydra:
     run:
         dir: ${paths.logs}${now:%Y-%m-%d}/${now:%H-%M-%S}
@@ -6,68 +11,6 @@ hydra:
             simple:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
-
-paths:
-    root: /Users/daniellerothermel/drotherm
-    data: ${paths.root}/data/dr_gen
-    logs: ${paths.root}/logs/dr_gen
-
-    dataset_cache_root: ${paths.data}/${data.name}/
-
-data:
-    name: cifar10
-    num_workers: 10
-    cache_dataset: true
-    download: true
-
-    train:
-        source: train 
-        source_percent: 0.8
-        shuffle: true
-        transform:
-            normalize: true
-            random_crop: true
-            random_horizontal_flip: true
-            color_jitter: true
-
-            normalize_mean: [0.4914, 0.4822, 0.4465]
-            normalize_std:  [0.2023, 0.1994, 0.2010]
-            crop_size: 32
-            crop_padding: 4
-            random_horizontal_flip_prob: 0.5
-            jitter_brightness: 0.247
-    val:
-        source: train
-        source_percent: 0.2
-        shuffle: false
-        transform:
-            normalize: true
-            random_crop: false
-            random_horizontal_flip: false
-            color_jitter: false
-
-            normalize_mean: [0.4914, 0.4822, 0.4465]
-            normalize_std:  [0.2023, 0.1994, 0.2010]
-            crop_size:
-            crop_padding: 
-            random_horizontal_flip_prob: 
-            jitter_brightness: 
-    eval:
-        source: eval
-        source_percent: 1.0
-        shuffle: false
-        transform:
-            normalize: true
-            random_crop: false
-            random_horizontal_flip: false
-            color_jitter: false
-
-            normalize_mean: [0.4914, 0.4822, 0.4465]
-            normalize_std:  [0.2023, 0.1994, 0.2010]
-            crop_size:
-            crop_padding: 
-            random_horizontal_flip_prob: 
-            jitter_brightness: 
 
 train:
     run: true
