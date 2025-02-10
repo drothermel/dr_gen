@@ -8,6 +8,7 @@ def seed_worker(worker_id):
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
+
 def set_deterministic(seed):
     torch.manual_seed(seed)
     random.seed(seed)
