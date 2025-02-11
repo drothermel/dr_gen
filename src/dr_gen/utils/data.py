@@ -7,7 +7,7 @@ from torchvision.transforms import v2 as transforms_v2
 from dr_gen.utils.run import seed_worker
 
 
-SPLIT_NAMES = ['train', 'val', 'eval']
+SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = {"cifar10", "cifar100"}
 
 
@@ -80,9 +80,9 @@ def get_source_range(cfg, source_percents, split):
         end_percent = None
     assert False, f"Split {split} should be in {my_source_percents}"
 
+
 def get_source_dataset(cfg, split):
     assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"
-    my_source = cfg.data[split].source
     data_name_lower = cfg.data.name.lower()
     assert data_name_lower in AVAIL_DATASETS
     data_source = cfg.data[split].source
@@ -122,14 +122,12 @@ def get_dataloaders(cfg, generator):
             source_indices[source] = torch.randperm(len(source_ds))
         indices = source_indices[source]
 
-        start_perc, end_perc = get_source_range(
-            cfg, source_percents, split
-        )
+        start_perc, end_perc = get_source_range(cfg, source_percents, split)
         ns = len(source_ds)
         start_i = math.floor(ns * start_perc)
         end_i = ns if end_perc == 1.0 else math.floor(ns * end_perc)
         spl_indices = indices[start_i:end_i]
-        if shuffle and (start_perc == 0  and end_perc == 1.0):
+        if shuffle and (start_perc == 0 and end_perc == 1.0):
             ds = source_ds
             sampler = torch.utils.data.RandonmSampler()
         elif shuffle:
@@ -138,11 +136,9 @@ def get_dataloaders(cfg, generator):
         else:
             ds = torch.utils.data.Subset(source_ds, spl_indices)
             sampler = torch.utils.data.SequentialSampler(ds)
-        split_dls[split] = get_dataloader(
-            cfg, ds, sampler, generator, split
-        )
+        split_dls[split] = get_dataloader(cfg, ds, sampler, generator, split)
     return split_dls
-    
+
 
 def get_dataloader(cfg, dataset, sampler, generator, split):
     assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"

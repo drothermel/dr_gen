@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 
 def plot_first_from_dl(dl):
     feats, labels = next(iter(dl))
-    print(f"Label: {labels[0]}, Batch Shape: {feats.shape}, Total DS Len: {len(dl.dataset)}")
+    print(
+        f"Label: {labels[0]}, Batch Shape: {feats.shape}, Total DS Len: {len(dl.dataset)}"
+    )
     plot([feats[0].squeeze()])
 
 
@@ -23,8 +25,8 @@ def plot(imgs, row_title=None, **imshow_kwargs):
     _, axs = plt.subplots(nrows=num_rows, ncols=num_cols, squeeze=False)
     for row_idx, row in enumerate(imgs):
         for col_idx, img in enumerate(row):
-            boxes = None
-            masks = None
+            #boxes = None
+            #masks = None
             if isinstance(img, tuple):
                 img, target = img
                 # if isinstance(target, dict):
