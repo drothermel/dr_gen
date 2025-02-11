@@ -1,0 +1,27 @@
+defaults:
+    - _self_
+    - paths: mac
+    - data: cifar10_pycil
+
+hydra:
+    run:
+        dir: ${paths.logs}${now:%Y-%m-%d}/${now:%H-%M-%S}
+    job_logging:
+        formatters:
+            simple:
+                format: "%(asctime)s - %(message)s"
+                datefmt: "%Y-%m-%d %H:%M:%S"
+
+train:
+    run: true
+    batch_size: 5
+
+val:
+    run: true
+    batch_size: 10
+
+eval:
+    run: false
+    batch_size: 10
+
+seed: 101

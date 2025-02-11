@@ -1,0 +1,26 @@
+defaults:
+    - _self_
+    - /transform@train.transform: cifar10_train_pycil
+    - /transform@val.transform: cifar10_val_pycil
+    - /transform@eval.transform: cifar10_val_pycil
+
+name: cifar10
+num_workers: 8
+cache_dataset: true
+download: true
+
+train:
+    source: train 
+    source_percent: 0.8
+    shuffle: true
+    transform: 
+val:
+    source: train
+    source_percent: 0.2
+    shuffle: false
+    transform: 
+eval:
+    source: eval
+    source_percent: 1.0
+    shuffle: false
+    transform: 
