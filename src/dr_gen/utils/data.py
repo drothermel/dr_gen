@@ -7,6 +7,7 @@ from torchvision.transforms import v2 as transforms_v2
 from dr_gen.utils.run import seed_worker
 
 
+SPLIT_NAMES = ['train', 'val', 'eval']
 AVAIL_DATASETS = {"cifar10", "cifar100"}
 
 
@@ -51,7 +52,7 @@ def get_transforms(augment_cfg):
 def prep_dataset_split_sources(cfg):
     # Process the source info for data into usable data struct
     source_percents = {}
-    for spl in ["train", "val", "eval"]:
+    for spl in SPLIT_NAMES:
         spl_source = cfg.data[spl].source
         if spl_source not in source_percents:
             source_percents[spl_source] = []
@@ -66,6 +67,7 @@ def prep_dataset_split_sources(cfg):
 
 
 def get_source_range(cfg, source_percents, split):
+    assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"
     my_source = cfg.data[split].source
     my_source_percents = source_percents[my_source]
     start_percent = 0
@@ -79,6 +81,8 @@ def get_source_range(cfg, source_percents, split):
     assert False, f"Split {split} should be in {my_source_percents}"
 
 def get_source_dataset(cfg, split):
+    assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"
+    my_source = cfg.data[split].source
     data_name_lower = cfg.data.name.lower()
     assert data_name_lower in AVAIL_DATASETS
     data_source = cfg.data[split].source
@@ -109,7 +113,7 @@ def get_dataloaders(cfg, generator):
 
     # For each split select the portion of the dataset specified
     split_dls = {}
-    for split in ['train', 'val', 'eval']:
+    for split in SPLIT_NAMES:
         source = cfg.data[split].source
         shuffle = cfg.data[split].shuffle
         source_ds = get_source_dataset(cfg, split)
@@ -141,6 +145,7 @@ def get_dataloaders(cfg, generator):
     
 
 def get_dataloader(cfg, dataset, sampler, generator, split):
+    assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"
     # assumes determinism has been set
     # assumes dataset is tensors not pil images
     return torch.utils.data.DataLoader(

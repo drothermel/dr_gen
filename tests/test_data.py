@@ -23,6 +23,18 @@ def augment_cfg():
     cfg.normalize_std = [0.5, 0.5, 0.5]
     return cfg
 
+@pytest.fixture
+def data_cfg():
+    """Returns a mock config with structured dataset information."""
+    cfg = Mock()
+    cfg.data = {
+        "train": Mock(source="dataset_a", source_percent=0.6),
+        "val": Mock(source="dataset_a", source_percent=0.2),
+        "eval": Mock(source="dataset_b", source_percent=0.2),
+    }
+    return cfg
+
+
 def test_basic_transforms(augment_cfg):
     """Test if base transforms (ToImage and ToDtype) are always included."""
     transforms = du.get_transforms(augment_cfg)
@@ -74,3 +86,41 @@ def test_full_pipeline(augment_cfg):
     }
 
     assert expected_types.issubset(transform_types)
+
+def test_prep_dataset_split_sources(data_cfg):
+    """Test if prep_dataset_split_sources correctly groups sources and their percentages."""
+    result = du.prep_dataset_split_sources(data_cfg)
+
+    expected = {
+        "dataset_a": [("train", 0.6), ("val", 0.2)],
+        "dataset_b": [("eval", 0.2)],
+    }
+
+    assert result == expected
+
+def test_prep_dataset_split_sources_invalid(data_cfg):
+    """Test if prep_dataset_split_sources raises assertion error when percentages exceed 1.0."""
+    data_cfg.data["train"].source_percent = 0.7
+    data_cfg.data["val"].source_percent = 0.5  # Exceeds 1.0
+
+    with pytest.raises(AssertionError, match="Cannot use more than 100% of a data source"):
+        du.prep_dataset_split_sources(data_cfg)
+
+@pytest.fixture
+def source_percents():
+    """Mocked source_percents structure returned by prep_dataset_split_sources."""
+    return {
+        "dataset_a": [("train", 0.6), ("val", 0.2)],
+        "dataset_b": [("eval", 0.2)],
+    }
+
+def test_get_source_range(data_cfg, source_percents):
+    """Test if get_source_range returns correct percentage range for each split."""
+    assert du.get_source_range(data_cfg, source_percents, "train") == (0.0, 0.6)
+    assert du.get_source_range(data_cfg, source_percents, "val") == (0.6, 0.8)
+    assert du.get_source_range(data_cfg, source_percents, "eval") == (0.0, 0.2)
+
+def test_get_source_range_invalid(data_cfg, source_percents):
+    """Test if get_source_range raises assertion error when an invalid split is provided."""
+    with pytest.raises(AssertionError, match="Split test should be in .*"):
+        du.get_source_range(data_cfg, source_percents, "test")
