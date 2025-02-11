@@ -83,7 +83,6 @@ def get_source_range(cfg, source_percents, split):
 
 def get_source_dataset(cfg, split):
     assert split in SPLIT_NAMES, f"Split {split} should be in {SPLIT_NAMES}"
-    my_source = cfg.data[split].source
     data_name_lower = cfg.data.name.lower()
     assert data_name_lower in AVAIL_DATASETS
     data_source = cfg.data[split].source

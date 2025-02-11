@@ -1,14 +1,10 @@
 import pytest
-import torch
 from unittest.mock import Mock
 from torchvision.transforms import v2 as transforms_v2
 
-import hydra
-from omegaconf import DictConfig, OmegaConf
 from hydra import initialize, compose
 
 import dr_gen.utils.data as du
-import dr_gen.utils.run as ru
 
 
 @pytest.fixture
@@ -43,7 +39,7 @@ def data_cfg():
 
 @pytest.fixture
 def hydra_cfg():
-    with initialize(config_path=f"../scripts/conf/", version_base=None):
+    with initialize(config_path="../scripts/conf/", version_base=None):
         cfg = compose(
             config_name="config.yaml",
         )
