@@ -5,23 +5,35 @@ defaults:
 
 hydra:
     run:
-        dir: ${paths.logs}${now:%Y-%m-%d}/${now:%H-%M-%S}
+        dir: ${paths.run_dir}
     job_logging:
         formatters:
             simple:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
 
+model:
+    name: resnet18
+    weights: 
+    load_checkpoint:
+    write_checkpoint: ${paths.run_dir}/checkpoints/
+
+optim:
+    loss: cross_entropy
+    label_smoothing: 0.0
+
 train:
     run: true
-    batch_size: 5
+    batch_size: 100
 
 val:
     run: true
-    batch_size: 10
+    batch_size: 10000
 
 eval:
     run: false
-    batch_size: 10
+    batch_size: 10000
 
-seed: 101
+
+seed: 202
+device: cpu
