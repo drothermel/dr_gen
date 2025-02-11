@@ -3,9 +3,12 @@ import torch
 from unittest.mock import Mock
 from torchvision.transforms import v2 as transforms_v2
 
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from hydra import initialize, compose
+
 import dr_gen.utils.data as du
-
-
+import dr_gen.utils.run as ru
 
 @pytest.fixture
 def augment_cfg():
@@ -25,15 +28,23 @@ def augment_cfg():
 
 @pytest.fixture
 def data_cfg():
-    """Returns a mock config with structured dataset information."""
+    """Mocked config with deterministic seed and batch sizes."""
     cfg = Mock()
+    cfg.seed = 101
     cfg.data = {
-        "train": Mock(source="dataset_a", source_percent=0.6),
-        "val": Mock(source="dataset_a", source_percent=0.2),
-        "eval": Mock(source="dataset_b", source_percent=0.2),
+        "train": Mock(source="train", source_percent=0.6, shuffle=True),
+        "val": Mock(source="train", source_percent=0.2, shuffle=False),
+        "eval": Mock(source="eval", source_percent=0.2, shuffle=False),
     }
     return cfg
 
+@pytest.fixture
+def hydra_cfg():
+    with initialize(config_path=f"../scripts/conf/", version_base=None):
+        cfg = compose(
+            config_name="config.yaml",
+        )
+    return cfg
 
 def test_basic_transforms(augment_cfg):
     """Test if base transforms (ToImage and ToDtype) are always included."""
@@ -92,8 +103,8 @@ def test_prep_dataset_split_sources(data_cfg):
     result = du.prep_dataset_split_sources(data_cfg)
 
     expected = {
-        "dataset_a": [("train", 0.6), ("val", 0.2)],
-        "dataset_b": [("eval", 0.2)],
+        "train": [("train", 0.6), ("val", 0.2)],
+        "eval": [("eval", 0.2)],
     }
 
     assert result == expected
@@ -110,8 +121,8 @@ def test_prep_dataset_split_sources_invalid(data_cfg):
 def source_percents():
     """Mocked source_percents structure returned by prep_dataset_split_sources."""
     return {
-        "dataset_a": [("train", 0.6), ("val", 0.2)],
-        "dataset_b": [("eval", 0.2)],
+        "train": [("train", 0.6), ("val", 0.2)],
+        "eval": [("eval", 0.2)],
     }
 
 def test_get_source_range(data_cfg, source_percents):
@@ -124,3 +135,59 @@ def test_get_source_range_invalid(data_cfg, source_percents):
     """Test if get_source_range raises assertion error when an invalid split is provided."""
     with pytest.raises(AssertionError, match="Split test should be in .*"):
         du.get_source_range(data_cfg, source_percents, "test")
+
+
+#def test_determinism(hydra_cfg):
+    #hydra_cfg.seed = 101
+    #generator = ru.set_deterministic(hydra_cfg.seed)
+    #dls = du.get_dataloaders(hydra_cfg, generator)
+    #data_out = {}
+    #for split in du.SPLIT_NAMES:
+        #spl_iter = iter(dls[split])
+        #for ind in range(3):
+            #feats, labels = next(spl_iter)
+            #assert feats.shape[0] == hydra_cfg[split].batch_size
+            #data_out[f"{split}_{ind}_features"] = feats
+            #data_out[f"{split}_{ind}_labels"] = labels
+#
+    #del generator, dls
+    #hydra_cfg.seed = 202
+    #generator = ru.set_deterministic(hydra_cfg.seed)
+    #dls = du.get_dataloaders(hydra_cfg, generator)
+    #for split in du.SPLIT_NAMES:
+        #spl_iter = iter(dls[split])
+        #for ind in range(3):
+            #feats, labels = next(spl_iter)
+            #assert feats.shape[0] == hydra_cfg[split].batch_size
+            #assert torch.isclose(feats, data_out[f"{split}_{ind}_features"]).all().item()
+            #assert torch.isclose(labels, data_out[f"{split}_{ind}_labels"]).all().item()
+
+#def test_shuffle(hydra_cfg):
+    #generator = ru.set_deterministic(hydra_cfg.seed)
+    #dls = du.get_dataloaders(hydra_cfg, generator)
+#
+    #for split in du.SPLIT_NAMES:
+        #spl_iter = iter(dls[split])
+        #feats, labels = next(spl_iter)
+        #for _ in spl_iter:
+            #continue
+#
+        #spl_iter = iter(dls[split])
+        #feats2, labels2 = next(spl_iter)
+#
+        #if hydra_cfg.data[split].shuffle:
+            #assert not torch.isclose(labels, labels2).all().item()
+        #else:
+            #assert torch.isclose(labels, labels2).all().item()
+#
+        #if (
+            #hydra_cfg.data[split].shuffle or
+            #hydra_cfg.data[split].transform.random_crop or
+            #hydra_cfg.data[split].transform.random_horizontal_flip or
+            #hydra_cfg.data[split].transform.color_jitter
+        #):
+            #assert torch.isclose(feats, feats2).all().item()
+#
+        #else:
+            #assert not torch.isclose(feats, feats2).all().item()
+    
