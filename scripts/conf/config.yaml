@@ -15,14 +15,13 @@ hydra:
 model:
     name: resnet18
     weights: 
-    load_checkpoint:
-    write_checkpoint: ${paths.run_dir}/checkpoints/
 
 optim:
     loss: cross_entropy
     label_smoothing: 0.0
     name: sgd
     weight_decay: 1e-4
+    clip_grad_norm:
     lr: 0.1
     momentum: 0.9
     eps: 0.0316
@@ -49,4 +48,6 @@ eval:
 
 seed: 202
 device: cpu
-epochs: 
+epochs: 3
+load_checkpoint:
+write_checkpoint: ${paths.run_dir}/checkpoints/
