@@ -106,7 +106,7 @@ def create_optim_lrsched(cfg, model):
 
 def get_model_optim_lrsched(cfg, num_classes):
     model = create_model(cfg, num_classes)
-    if cfg.load_checkpoint is not None:
+    if cfg.get('load_checkpoint', None) is not None:
         if cfg.md is not None:
             cfg.md.log(f">> Loading checkpoint: {cfg.load_checkpoint}")
         checkpoint = torch.load(
@@ -136,7 +136,7 @@ def get_criterion(cfg):
 
 
 def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
-    if cfg.write_checkpoint is None:
+    if cfg.get('write_checkpoint', None) is None:
         return
 
     chpt_dir = Path(cfg.write_checkpoint)

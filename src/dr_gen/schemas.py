@@ -85,6 +85,21 @@ def get_schema(config_type):
 class DataConfig:
     name: str = ???
 
+
+@lenient_validate
+@dataclass
+class ModelConfig:
+    name: str = ???
+
+@lenient_validate
+@dataclass
+class OptimConfig:
+    name: str = ???
+    loss: str = ???
+    lr: float = ???
+
+
+
 #########################################################
 #             Config Interface Definitions
 #########################################################
@@ -113,9 +128,8 @@ class UsingDataConfig:
 @lenient_validate
 @dataclass
 class UsingModelConfig:
-    model = ???
+    device: str = ???
+    md: any = None
+    model: type = ModelConfig
+    optim: type = OptimConfig
 
-## Using Model is setup to also use the following (optionally)
-#
-# model:
-#   weights
