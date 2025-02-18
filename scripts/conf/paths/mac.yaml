@@ -1,6 +1,0 @@
-root: /Users/daniellerothermel/drotherm
-data: ${paths.root}/data/dr_gen
-logs: ${paths.root}/logs/dr_gen
-run_dir: ${paths.logs}/${now:%Y-%m-%d}/${now:%H-%M-%S}
-
-dataset_cache_root: ${paths.data}/${data.name}/
