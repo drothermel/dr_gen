@@ -98,6 +98,10 @@ class OptimConfig:
     loss: str = ???
     lr: float = ???
 
+@lenient_validate
+@dataclass
+class RunConfig:
+    run: bool = ???
 
 
 #########################################################
@@ -133,3 +137,11 @@ class UsingModelConfig:
     model: type = ModelConfig
     optim: type = OptimConfig
 
+
+@lenient_validate
+@dataclass
+class UsingRun:
+    seed: int = ???
+    epochs: int = ???
+    train: RunConfig
+    val: RunConfig
