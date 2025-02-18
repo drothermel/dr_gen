@@ -1,5 +1,6 @@
 import torch
 
+
 # From https://github.com/pytorch/vision/blob/main/references/classification/utils.py#L173
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""

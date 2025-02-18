@@ -2,7 +2,12 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import logging
 
-import dr_gen.utils.train_eval as te
+import torch
+import dr_gen.run_utils as ru
+import dr_gen.data_utils as du
+import dr_gen.model_utils as mu
+import dr_gen.train_eval as te
+
 
 # Potentially add all of this to dr_util
 def cfg_to_loggable_lines(cfg):
@@ -37,11 +42,10 @@ def run(cfg: DictConfig):
     logging.info(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
     # Model
-    model = create_model(cfg, len(split_dls['train'].dataset.classes))
+    model = mu.create_model(cfg, len(split_dls["train"].dataset.classes))
 
     # Run Train
-    train_loop(cfg, model, split_dls['train'], val_dl=split_dls['val'])
-
+    te.train_loop(cfg, model, split_dls["train"], val_dl=split_dls["val"])
 
 
 if __name__ == "__main__":

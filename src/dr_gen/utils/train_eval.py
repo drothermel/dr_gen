@@ -1,8 +1,11 @@
 from collections import defaultdict
+from datetime import datetime
 import time
 
 import torch
+import torch.nn as nn
 import dr_gen.utils.evaluate as eu
+import dr_gen.utils.model as mu
 
 CRITERIONS = {"cross_entropy"}
 OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
@@ -25,7 +28,6 @@ def update_metrics(metrics, batch_size, loss, output, target, prefix=""):
     metrics[f"{prefix}_acc5"].append(acc5.item())
     metrics[f"{prefix}_img_per_s"].append(img_ps)
 
-
     # Logging
     n = sum(metrics[f"{prefix}_batch_size"])
     print(f">> {prefix} {n}| {loss=} {acc1=} {acc5=} {img_ps=}")
@@ -35,7 +37,7 @@ def agg_metrics(metrics):
     agg_m = {}
 
     # Scale and sum
-    bs_key = [k for k in metrics.keys() if 'batch_size' in k][0]
+    bs_key = [k for k in metrics.keys() if "batch_size" in k][0]
     for k, v in metrics.items():
         agg_m[k] = 0
         for i, vv in enumerate(v):
@@ -54,7 +56,6 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
 
     metrics = defaultdict(list)
     for i, (image, target) in enumerate(dataloader):
-        start_time = time.time()
         image, target = image.to(cfg.device), target.to(cfg.device)
         output = model(image)
         loss = criterion(output, target)
@@ -67,7 +68,12 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
             )
         optimizer.step()
         update_metrics(
-            metrics, image.shape[0], loss, output, target, "t",
+            metrics,
+            image.shape[0],
+            loss,
+            output,
+            target,
+            "t",
         )
     return metrics
 
@@ -77,23 +83,28 @@ def eval_model(cfg, model, dataloader, criterion):
 
     metrics = defaultdict(list)
     with torch.inference_mode():
-        num_processed_samples = 0
-
         for image, target in dataloader:
             image = image.to(cfg.device, non_blocking=True)
             target = target.to(cfg.device, non_blocking=True)
             output = model(image)
             loss = criterion(output, target)
             update_metrics(
-                metrics, image.shape[0], loss, output, target,
+                metrics,
+                image.shape[0],
+                loss,
+                output,
+                target,
             )
 
             acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
             batch_size = image.shape[0]
             update_metrics(
-                metrics, batch_size, loss, output, target,
+                metrics,
+                batch_size,
+                loss,
+                output,
+                target,
             )
-
 
     return metrics
 
@@ -107,30 +118,29 @@ def train_loop(cfg, model, train_dl, val_dl=None):
     # model = create_model(cfg, len(split_dls['train'].dataset.classes))
     # train_loop(cfg, model, split_dls['train'], val_dl=split_dls['val'])
 
-    criterion = get_criterion(cfg)
-    optim, lr_sched = get_optim(cfg, model)
+    criterion = mu.get_criterion(cfg)
+    optim, lr_sched = mu.get_optim(cfg, model)
     mu.checkpoint_model(cfg, model, "init_model")
 
     start_time = time.time()
     for epoch in range(cfg.epochs):
         print(f">> Start Epoch: {epoch}")
-        
+
         # Train
         tm = train_epoch(cfg, epoch, model, train_dl, criterion, optim)
         lr_sched.step()
-        tm_str = ' '.join([f"{k}={v}" for k, v in agg_metrics(tm))
+        tm_str = " ".join([f"{k}={v}" for k, v in agg_metrics(tm)])
         print(f":: TRAIN :: {tm_str}")
 
         # Val
         if val_dl is not None:
             vm = eval_model(cfg, model, val_dl, criterion)
-            vm_str = ' '.join([f"{k}={v}" for k, v in agg_metrics(vm))
+            vm_str = " ".join([f"{k}={v}" for k, v in agg_metrics(vm)])
             print(f":: VAL :: {vm_str}")
-        
+
         mu.checkpoint_model(cfg, model, f"epoch_{epoch}")
         print()
 
     total_time = time.time() - start_time
     total_ts = str(datetime.timedelta(seconds=int(total_time)))
     print(f"Training time {total_ts}")
-    

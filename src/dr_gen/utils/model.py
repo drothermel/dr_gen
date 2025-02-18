@@ -2,6 +2,10 @@ from pathlib import Path
 import torch
 import torchvision
 
+CRITERIONS = {"cross_entropy"}
+OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
+LR_SCHEDULERS = {"steplr", "cosineannealinglr", "exponentiallr"}
+
 
 def create_model(cfg, num_classes):
     model = torchvision.models.get_model(
@@ -11,42 +15,12 @@ def create_model(cfg, num_classes):
     )
     return model
 
-# Simplified from https://github.com/pytorch/vision/blob/main/references/classification/utils.py#L405
-def set_weight_decay(
-    model,
-    weight_decay,
-):
-    norm_classes = (
-        torch.nn.modules.batchnorm._BatchNorm,
-        torch.nn.LayerNorm,
-        torch.nn.GroupNorm,
-        torch.nn.modules.instancenorm._InstanceNorm,
-        torch.nn.LocalResponseNorm,
-    )
-    params = []
-    def _add_params(module, prefix=""):
-        for name, p in module.named_parameters(recurse=False):
-            if not p.requires_grad:
-                continue
-            params.append(p)
-
-        for child_name, child_module in module.named_children():
-            child_prefix = f"{prefix}.{child_name}" if prefix != "" else child_name
-            _add_params(child_module, prefix=child_prefix)
-
-    _add_params(model)
-
-    param_groups = []
-    for key in params:
-        if len(params[key]) > 0:
-            param_groups.append({"params": params[key], "weight_decay": params_weight_decay[key]})
-    return param_groups
 
 def create_optim_lrsched(cfg, model):
     opt_name = cfg.optim.name.lower()
-    assert apt_name in OPTIMIZERS, f"Invalid optimizer {cfg.optim.name}."
-    
-    params = set_weight_decay(model, cfg.optim.weight_decay)
+    assert opt_name in OPTIMIZERS, f"Invalid optimizer {cfg.optim.name}."
+
+    params = model.parameters()
 
     if opt_name.startswith("sgd"):
         optimizer = torch.optim.SGD(
@@ -67,10 +41,10 @@ def create_optim_lrsched(cfg, model):
         )
     elif opt_name == "adamw":
         optimizer = torch.optim.AdamW(
-            params, lr=cfg.optim.lr, weight_decay=args.weight_decay
+            params, lr=cfg.optim.lr, weight_decay=cfg.optim.weight_decay
         )
     else:
-        assert False, f"Invalid optimizer {cfg.optim.name}.")
+        assert False, f"Invalid optimizer {cfg.optim.name}"
 
     assert cfg.optim.lr_scheduler in LR_SCHEDULERS
     if cfg.optim.lr_scheduler == "steplr":
@@ -83,16 +57,16 @@ def create_optim_lrsched(cfg, model):
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
             T_max=cfg.epochs - cfg.optim.lr_warmup_epochs,
-            eta_min=cfg.optim.lr_min
+            eta_min=cfg.optim.lr_min,
         )
     elif cfg.optim.lr_scheduler == "exponentiallr":
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer,
-            gamma=cfg.optim.lr_gamma
+            optimizer, gamma=cfg.optim.lr_gamma
         )
     else:
         assert False, f"Invalid LRSched {cfg.optim.lr_scheduler}."
     return optimizer, lr_scheduler
+
 
 def get_model_optim_lrsched(cfg, num_classes):
     model = create_model(cfg, num_classes)
@@ -129,11 +103,13 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
     chpt_dir = Path(cfg.write_checkpoint)
     chpt_dir.mkdir(parents=True, exist_ok=True)
     chpt_path = chpt_dir / f"{checkpoint_name}.pt"
-    chpt = {k: v for k, v in [ 
-        ("model", model.state_dict()),
-        ("optimizer", optim),
-        ("lr_scheduler", lrsched),
-    ]}
+    chpt = {
+        k: v
+        for k, v in [
+            ("model", model.state_dict()),
+            ("optimizer", optim),
+            ("lr_scheduler", lrsched),
+        ]
+    }
     torch.save(chpt, chpt_path)
     print(f">> Saved checkpoint to: {chpt_path}")
-
