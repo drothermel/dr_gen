@@ -58,12 +58,12 @@ def get_transform_cfg(split=None, cfg=None):
 def get_download(cfg=None):
     if cfg is None:
         return None
-    return cfg.get(data, {}).get("download", DEFAULT_DOWNLOAD)
+    return cfg.get('data', {}).get("download", DEFAULT_DOWNLOAD)
 
 def get_shuffle(split=None, cfg=None):
     if cfg is None or split is None:
         return None
-    return cfg.get(data, {}).get(split, {}).get("shuffle", DEFAULT_SHUFFLE)
+    return cfg.get('data', {}).get(split, {}).get("shuffle", DEFAULT_SHUFFLE)
     
 
 # -------------------- Loader Utils -------------------
@@ -213,11 +213,11 @@ def get_dataset(
         )
     elif dataset_name == "cifar100":
         ds = datasets.CIFAR100(
-            root=cfg.paths.dataset_cache_root,
-            train=(data_source == "train"),
-            transform=xfs,
+            root=root,
+            train=(source_split == "train"),
+            transform=transform,
             target_transform=None,
-            download=cfg.data.download,
+            download=download,
         )
     else:
         assert False

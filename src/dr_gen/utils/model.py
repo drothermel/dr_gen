@@ -3,11 +3,11 @@ import torch
 import torchvision
 
 import dr_gen.schemas as vu
-from dr_gen.schemas import {
+from dr_gen.schemas import (
     OptimizerTypes,
     LRSchedTypes,
     CriterionTypes,
-}
+)
 
 # Match the torch defaults
 
@@ -130,8 +130,9 @@ def get_criterion(cfg):
         k: cfg.optim.get(k, v)
         for k, v in CRITERION_DEFAULTS.items()
     }
-    case cfg.optim.loss:
-        match CriterionTypes.CROSS_ENTROPY.value:
+
+    match cfg.optim.loss:
+        case CriterionTypes.CROSS_ENTROPY.value:
             return torch.nn.CrossEntropyLoss(**crit_params)
 
 

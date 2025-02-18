@@ -14,7 +14,7 @@ AVAIL_DATASETS = ["cifar10", "cifar100"]
 class StringMetaEnum(type):
     def __contains__(cls, val):
         try:
-            cls(item)
+            cls(val)
         except ValueError:
             return False
         return True
@@ -51,7 +51,7 @@ def validate_optimizer(optim):
     return True
 
 def validate_lrsched(lrsched):
-    if lrsched not in LR_SCHEDULERS and lrsched is not None:
+    if lrsched not in LRSchedTypes and lrsched is not None:
         logging.error(f">> Invalid LR Scheduler Type: {lrsched}")
         return False
     return True
@@ -92,25 +92,25 @@ def get_schema(config_type):
 @lenient_validate
 @dataclass
 class DataConfig:
-    name: str = ???
+    name: str = MISSING
 
 
 @lenient_validate
 @dataclass
 class ModelConfig:
-    name: str = ???
+    name: str = MISSING
 
 @lenient_validate
 @dataclass
 class OptimConfig:
-    name: str = ???
-    loss: str = ???
-    lr: float = ???
+    name: str = MISSING
+    loss: str = MISSING
+    lr: float = MISSING
 
 @lenient_validate
 @dataclass
 class RunConfig:
-    run: bool = ???
+    run: bool = MISSING
 
 
 #########################################################
@@ -143,7 +143,7 @@ class UsingDataConfig:
 @lenient_validate
 @dataclass
 class UsingModelConfig:
-    device: str = ???
+    device: str = MISSING
     md: any = None
     model: type = ModelConfig
 
@@ -151,7 +151,7 @@ class UsingModelConfig:
 @lenient_validate
 @dataclass
 class UsingOptimConfig:
-    device: str = ???
+    device: str = MISSING
     md: any = None
     model: type = ModelConfig
     optim: type = OptimConfig
@@ -160,8 +160,8 @@ class UsingOptimConfig:
 @lenient_validate
 @dataclass
 class PerformingRun:
-    seed: int = ???
-    epochs: int = ???
+    seed: int = MISSING
+    epochs: int = MISSING
     train: RunConfig
     val: RunConfig
 
