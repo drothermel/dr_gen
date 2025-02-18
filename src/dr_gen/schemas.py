@@ -66,6 +66,9 @@ def validate_criterion(criterion):
 class ConfigType(Enum):
     USES_METRICS = "uses_metrics"
     USES_DATA = "uses_data"
+    USES_MODEL = "uses_model"
+    USES_OPTIM = "uses_optim"
+    PERFORMS_RUN = "performs_run"
 
 def get_schema(config_type):
     match config_type:
@@ -73,6 +76,12 @@ def get_schema(config_type):
             return drutil_schemas.UsingMetricsConfig
         case ConfigType.USES_DATA.value:
             return UsingDataConfig
+        case ConfigType.USES_MODEL.value:
+            return UsingModelConfig
+        case ConfigType.USES_OPTIM.value:
+            return UsingOptimConfig
+        case ConfigType.PERFORMS_RUN.value:
+            return PerformingRun
     return None
 
 
@@ -135,13 +144,22 @@ class UsingModelConfig:
     device: str = ???
     md: any = None
     model: type = ModelConfig
+
+
+@lenient_validate
+@dataclass
+class UsingOptimConfig:
+    device: str = ???
+    md: any = None
+    model: type = ModelConfig
     optim: type = OptimConfig
 
 
 @lenient_validate
 @dataclass
-class UsingRun:
+class PerformingRun:
     seed: int = ???
     epochs: int = ???
     train: RunConfig
     val: RunConfig
+
