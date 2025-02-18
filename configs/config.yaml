@@ -21,11 +21,9 @@ metrics:
         - json
     init:
         batch_size: list
-        num_processed_samples: int
         loss: batch_weighted_avg_list
         acc1: batch_weighted_avg_list
         acc5: batch_weighted_avg_list
-        img_per_s: batch_weighted_avg_list
 
 model:
     name: resnet18
