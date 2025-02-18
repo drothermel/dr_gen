@@ -25,8 +25,8 @@ def plot(imgs, row_title=None, **imshow_kwargs):
     _, axs = plt.subplots(nrows=num_rows, ncols=num_cols, squeeze=False)
     for row_idx, row in enumerate(imgs):
         for col_idx, img in enumerate(row):
-            #boxes = None
-            #masks = None
+            # boxes = None
+            # masks = None
             if isinstance(img, tuple):
                 img, target = img
                 # if isinstance(target, dict):
