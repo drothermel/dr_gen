@@ -10,6 +10,28 @@ from dr_util.schema_utils import lenient_validate
 SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = ["cifar10", "cifar100"]
 
+# Do string in enum checking
+class StringMetaEnum(type):
+    def __contains__(cls, val):
+        try:
+            cls(item)
+        except ValueError:
+            return False
+        return True
+
+class OptimizerTypes(Enum, metaclass=StringMetaEnum):
+    SGD = "sgd"
+    RMSPROP = "rmsprop"
+    ADAMW = "adamw"
+
+class LRSchedTypes(Enum, metaclass=StringMetaEnum):
+    STEP_LR = "steplr"
+    EXPONENTIAL_LR = "exponentiallr"
+
+class CriterionTypes(Enum, metaclass=StringMetaEnum):
+    CROSS_ENTROPY = "cross_entropy"
+
+
 def validate_split(split):
     if split not in SPLIT_NAMES:
         logging.error(f"Split {split} should be in {SPLIT_NAMES}")
@@ -21,6 +43,22 @@ def validate_dataset(dataset):
         logging.error(f"Dataset {dataset} should be in {AVAIL_DATASETS}")
         return False
     return True
+
+def validate_optimizer(optim):
+    if optim not in OptimizerTypes:
+        logging.error(f">> Invalid Optimizer: {optim}")
+        return False
+    return True
+
+def validate_lrsched(lrsched):
+    if lrsched not in LR_SCHEDULERS and lrsched is not None:
+        logging.error(f">> Invalid LR Scheduler Type: {lrsched}")
+        return False
+    return True
+
+def validate_criterion(criterion):
+    if criterion not in CriterionTypes:
+        logging.error(f">> Invalid criterion: {criterion}")
         
 # -------------- Validate Configs --------------
 
@@ -71,3 +109,13 @@ class UsingDataConfig:
 #     shuffle
 #     transform
 ## ----------------------------------------------------------
+
+@lenient_validate
+@dataclass
+class UsingModelConfig:
+    model = ???
+
+## Using Model is setup to also use the following (optionally)
+#
+# model:
+#   weights

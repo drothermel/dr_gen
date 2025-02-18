@@ -2,69 +2,105 @@ from pathlib import Path
 import torch
 import torchvision
 
-CRITERIONS = {"cross_entropy"}
-OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
-LR_SCHEDULERS = {"steplr", "cosineannealinglr", "exponentiallr"}
+import dr_gen.schemas as vu
+from dr_gen.schemas import {
+    OptimizerTypes,
+    LRSchedTypes,
+    CriterionTypes,
+}
 
+# Match the torch defaults
 
+OPTIM_DEFAULTS = {
+    'momentum': 0,
+    'weight_decay': 0,
+    'nesterov': False,
+    'eps': 1e-08,
+    'alpha': 0.99,
+}
+
+# These match the torch defaults
+LRSCHED_DEFAULTS = {
+    'gamma': 0.1,
+}
+
+CRITERION_DEFAULTS = {
+    'label_smoothing': 0.0,
+}
+
+# ================== cfg free ==================
+
+def create_optim(name, model_params, optim_params):
+    assert 'lr' in optim_params
+    match name:
+        case OptimizerTypes.SGD.value:
+            return torch.optim.SGD(
+                model_params,
+                **optim_params,
+            )
+        case OptimizerTypes.RMSPROP.value:
+            return torch.optim.RMSprop(
+                model_params,
+                **optim_params,
+            )
+        case OptimizerTypes.ADAMW.value:
+            return torch.optim.AdamW(
+                model_params,
+                **optim_params,
+            )
+
+def create_lrsched(name, optimizer, lrsched_params):
+    match name:
+        case None:
+            return None
+        case LRSchedTypes.STEP_LR.value:
+            return torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                **lrsched_params,
+            )
+        case LRSchedTypes.EXPONENTIAL_LR.value:
+            return torch.optim.lr_scheduler.ExponentialLR(
+                optimizer,
+                **lrsched_params,
+            )
+
+# ================== cfg ==================
+
+# Config Req: cfg.model.name
 def create_model(cfg, num_classes):
     model = torchvision.models.get_model(
         cfg.model.name,
-        weights=cfg.model.weights,
+        weights=cfg.model.get("weights", None),
         num_classes=num_classes,
     )
     return model
 
-
+# Config Req: cfg.optim.name, cfg.optim.lr
 def create_optim_lrsched(cfg, model):
-    opt_name = cfg.optim.name.lower()
-    assert opt_name in OPTIMIZERS, f"Invalid optimizer {cfg.optim.name}."
+    vu.validate_optimizer(cfg.optim.name)
+    vu.validate_lrsched(cfg.optim.get('lr_scheduler', None))
+    model_params = model.parameters()
 
-    params = model.parameters()
+    # ---------- Optim -----------
+    optim_params = {
+        k: cfg.optim.get(k, v)
+        for k, v in OPTIM_DEFAULTS.items()
+    }
+    optim_params['lr'] = cfg.optim.lr
+    optimizer = create_optim(cfg.optim.name, model_params, optim_params)
 
-    if opt_name.startswith("sgd"):
-        optimizer = torch.optim.SGD(
-            params,
-            lr=cfg.optim.lr,
-            momentum=cfg.optim.momentum,
-            weight_decay=cfg.optim.weight_decay,
-            nesterov=cfg.optim.nesterov,
-        )
-    elif opt_name == "rmsprop":
-        optimizer = torch.optim.RMSprop(
-            params,
-            lr=cfg.optim.lr,
-            momentum=cfg.optim.momentum,
-            weight_decay=cfg.optim.weight_decay,
-            eps=cfg.optim.eps,
-            alpha=cfg.optim.alpha,
-        )
-    elif opt_name == "adamw":
-        optimizer = torch.optim.AdamW(
-            params, lr=cfg.optim.lr, weight_decay=cfg.optim.weight_decay
-        )
-    else:
-        assert False, f"Invalid optimizer {cfg.optim.name}"
-
-    assert cfg.optim.lr_scheduler in LR_SCHEDULERS
-    if cfg.optim.lr_scheduler == "steplr":
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=cfg.optim.lr_step_size,
-            gamma=cfg.optim.lr_gamma,
-        )
-    elif cfg.optim.lr_scheduler == "cosineannealinglr":
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer,
-            T_max=cfg.epochs - cfg.optim.lr_warmup_epochs,
-            eta_min=cfg.optim.lr_min,
-        )
-    elif cfg.optim.lr_scheduler == "exponentiallr":
-        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer, gamma=cfg.optim.lr_gamma
-        )
-    else:
-        assert False, f"Invalid LRSched {cfg.optim.lr_scheduler}."
+    # ---------- LR Sched -----------
+    lrsched_params = {
+        k: cfg.optim.get(k, v)
+        for k, v in LRSCHED_DEFAULTS.itmes()
+    }
+    if 'step_size' in cfg.optim:
+        lrsched_params['step_size'] = cfg.optim.step_size
+    lr_scheduler = create_lrsched(
+        cfg.optim.get('lr_scheduler', None),
+        optimizer,
+        lrsched_params,
+    )
     return optimizer, lr_scheduler
 
 
@@ -85,16 +121,18 @@ def get_model_optim_lrsched(cfg, num_classes):
     model.to(cfg.device)
     if optimizer is None or lr_scheduler is None:
         optimizer, lr_scheduler = create_optim_lrsched(cfg, model)
-
     return model, optimizer, lr_scheduler
 
 
 def get_criterion(cfg):
-    crit = cfg.optim.loss.lower()
-    assert crit in CRITERIONS
-    return torch.nn.CrossEntropyLoss(
-        label_smoothing=cfg.optim.label_smoothing,
-    )
+    vu.validate_criterion(cfg.optim.loss)
+    crit_params = {
+        k: cfg.optim.get(k, v)
+        for k, v in CRITERION_DEFAULTS.items()
+    }
+    case cfg.optim.loss:
+        match CriterionTypes.CROSS_ENTROPY.value:
+            return torch.nn.CrossEntropyLoss(**crit_params)
 
 
 def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
