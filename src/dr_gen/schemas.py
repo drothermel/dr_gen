@@ -27,14 +27,36 @@ def validate_dataset(dataset):
 
 class ConfigType(Enum):
     USES_METRICS = "uses_metrics"
+    USES_DATA = "uses_data"
 
 def get_schema(config_type):
     match config_type:
         case ConfigType.USES_METRICS.value:
             return drutil_schemas.UsingMetricsConfig
+        case ConfigType.USES_DATA.value:
+            return UsingDataConfig
     return None
 
-## We're setup to use (but optionally)
+
+#########################################################
+#                  Config Definitions
+#########################################################
+
+@lenient_validate
+@dataclass
+class DataConfig:
+    name: str = ???
+
+#########################################################
+#             Config Interface Definitions
+#########################################################
+
+@lenient_validate
+@dataclass
+class UsingDataConfig:
+    data: type = DataConfig
+
+## Using Data is setup to also use the following (optionally)
 #
 # split.batch_size 
 #
@@ -48,11 +70,4 @@ def get_schema(config_type):
 #     source_percent
 #     shuffle
 #     transform
-## ----------------------------------
-
-
-## -- Required --
-
-## For data
-# cfg.data.name
-
+## ----------------------------------------------------------
