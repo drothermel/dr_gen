@@ -1,5 +1,3 @@
-from collections import defaultdict
-from enum import Enum
 from datetime import datetime
 import time
 
@@ -13,10 +11,11 @@ import dr_gen.utils.model as mu
 
 CRITERIONS = {"cross_entropy"}
 OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
-LR_SCHEDULERS = "steplr", "cosineannealinglr", "exponentiallr"}
+LR_SCHEDULERS = {"steplr", "cosineannealinglr", "exponentiallr"}
 
 # md.clear_data() optional group_name=None
 # md.log_data(data, group_name, ns=1)
+
 
 def log_metrics(cfg, group_name, **kwargs):
     assert cfg.md is not None, "There should be a metrics obj"
@@ -30,11 +29,11 @@ def log_metrics(cfg, group_name, **kwargs):
 
     if not (output is None or target is None):
         acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
-        cfg.md.log_data(('acc1', acc1))
-        cfg.md.log_data(('acc5', acc5))
+        cfg.md.log_data(("acc1", acc1))
+        cfg.md.log_data(("acc5", acc5))
 
     if loss is not None:
-        cfg.md.log_data(('loss', loss))
+        cfg.md.log_data(("loss", loss))
 
 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
@@ -52,9 +51,12 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
             )
         optimizer.step()
         log_metrics(
-            cfg, 'train', loss=loss, output=output, target=target,
+            cfg,
+            "train",
+            loss=loss,
+            output=output,
+            target=target,
         )
-    return metrics
 
 
 def eval_model(cfg, model, dataloader, criterion, metrics):
@@ -66,7 +68,11 @@ def eval_model(cfg, model, dataloader, criterion, metrics):
             output = model(image)
             loss = criterion(output, target)
             log_metrics(
-                cfg, 'val', loss=loss, output=output, target=target,
+                cfg,
+                "val",
+                loss=loss,
+                output=output,
+                target=target,
             )
     return metrics
 
@@ -82,13 +88,13 @@ def train_loop(cfg, model, train_dl, val_dl=None):
         cfg.md.log(f">> Start Epoch: {epoch}")
 
         # Train
-        md = train_epoch(cfg, epoch, model, train_dl, criterion, optim, md)
+        train_epoch(cfg, epoch, model, train_dl, criterion, optim)
         lr_sched.step()
         cfg.md.agg_log("train")
 
         # Val
         if val_dl is not None:
-            md = eval_model(cfg, model, val_dl, criterion, md)
+            eval_model(cfg, model, val_dl, criterion)
             cfg.md.agg_log("val")
 
         mu.checkpoint_model(cfg, model, f"epoch_{epoch}")

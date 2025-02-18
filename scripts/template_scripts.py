@@ -1,11 +1,9 @@
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 from dr_util.config_verification import validate_cfg
 from dr_gen.utils.train_eval import GenMetrics
 from dr_util.schemas import get_schema
-
-from dr_gen.utils import data
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
@@ -14,7 +12,7 @@ def run(cfg: DictConfig):
         return
 
     # Make Metrics and Log Cfg
-    md  = GenMetrics(cfg)
+    md = GenMetrics(cfg)
     md.log(cfg)
     md.log(">> Welcome to your new script!")
 

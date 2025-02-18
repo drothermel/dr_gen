@@ -1,11 +1,18 @@
+from enum import Enum
 from functools import singledispatchmethod
 
 from dr_util.metrics import (
-    Metrics, MetricsSubgroup,
-    add_sum, add_list, agg_passthrough,
-    agg_none, agg_batch_weighted_list_avg,
+    BATCH_KEY,
+    Metrics,
+    MetricsSubgroup,
+    add_sum,
+    add_list,
+    agg_passthrough,
+    agg_none,
+    agg_batch_weighted_list_avg,
     create_logger,
 )
+
 
 class GenMetricType(Enum):
     INT = "int"
@@ -13,9 +20,11 @@ class GenMetricType(Enum):
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
     AVG_LIST = "avg_list"
 
+
 def agg_avg_list(data, key):
     data_sum = sum(data[key])
     return data_sum * 1.0 / len(data[key])
+
 
 class GenMetricsSubgroup(MetricsSubgroup):
     def _init_data(self):
@@ -58,13 +67,26 @@ class GenMetricsSubgroup(MetricsSubgroup):
 
     def clear_data(self):
         self._init_data_values()
-        
 
-    # Override to not log batch size when adding a tuple
+    ## Override these to handle batch size better ##
+    @singledispatchmethod
+    def add(self, data, ns=None):  # noqa: ARG002 (unused args)
+        assert False, f">> Unexpected data type: {type(data)}"  # noqa
+
     @add.register(tuple)
-    def _(self, data, ns=1):
+    def _(self, data, ns=None):
         assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
+        if ns is not None:
+            self._add_tuple(BATCH_KEY, ns)
+
+    @add.register(dict)
+    def _(self, data, ns=None):
+        for key, val in data.items():
+            self._add_tuple(key, val)
+        if ns is not None:
+            self._add_tuple(BATCH_KEY, ns)
+
 
 class GenMetrics(Metrics):
     def __init__(self, cfg):
@@ -75,7 +97,7 @@ class GenMetrics(Metrics):
         self.groups = {name: GenMetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log_data(self, data, group_name, ns=1):
+    def log_data(self, data, group_name, ns=None):
         if group_name not in self.groups:
             assert False, f">> Invalid group name: {group_name}"
         self.groups[group_name].add(data, ns=ns)
@@ -84,7 +106,3 @@ class GenMetrics(Metrics):
         for gname, group in self.groups.items():
             if group_name == gname or group_name is None:
                 group.clear_data()
-            
-        
-
-        
