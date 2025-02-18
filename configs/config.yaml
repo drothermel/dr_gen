@@ -61,6 +61,7 @@ eval:
 
 seed: 202
 device: cpu
+md: 
 epochs: 3
 load_checkpoint:
 write_checkpoint: ${paths.run_dir}/checkpoints/
