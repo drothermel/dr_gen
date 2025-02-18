@@ -344,7 +344,7 @@ dev = [
 [[package]]
 name = "dr-util"
 version = "0.1.0"
-source = { git = "https://github.com/drothermel/dr_util.git#e67274778528212c943b4dd72e18899b37a1068f" }
+source = { git = "https://github.com/drothermel/dr_util.git#0e94974e8a8a29e0f4822f57d8bb3d9017ff9633" }
 dependencies = [
     { name = "boto3" },
     { name = "hydra-core" },
