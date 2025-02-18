@@ -5,102 +5,38 @@ import time
 
 import torch
 import torch.nn as nn
+
+from dr_util.metrics import BATCH_KEY
+
 import dr_gen.utils.evaluate as eu
 import dr_gen.utils.model as mu
 
-from dr_util.metrics import (
-    Metrics, MetricsSubgroup,
-    add_sum, add_list, agg_passthrough,
-    agg_none, agg_batch_weighted_list_avg,
-    create_logger,
-)
-
 CRITERIONS = {"cross_entropy"}
 OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
-LR_SCHEDULERS = {"steplr", "cosineannealinglr", "exponentiallr"}
+LR_SCHEDULERS = "steplr", "cosineannealinglr", "exponentiallr"}
 
-class GenMetricType(Enum):
-    INT = "int"
-    LIST = "list"
-    BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
-    AVG_LIST = "avg_list"
+# md.clear_data() optional group_name=None
+# md.log_data(data, group_name, ns=1)
 
-def agg_avg_list(data, key):
-    data_sum = sum(data[key])
-    return data_sum * 1.0 / len(data[key])
+def log_metrics(cfg, group_name, **kwargs):
+    if cfg.md is None:
+        print(">> WARNING: No metrics object for logging")
+        return
 
+    output = kwargs.get("output", None)
+    target = kwargs.get("target", None)
+    loss = kwargs.get("loss", None)
 
-class GenMetricsSubgroup(MetricsSubgroup):
-    def _init_data(self):
-        if self.data_structure is None:
-            return
+    if output is not None:
+        cfg.md.log_data((BATCH_KEY, output.shape[0]))
 
-        for key, data_type in self.data_structure.items():
-            match data_type:
-                case GenMetricType.INT.value:
-                    self.data[key] = 0
-                    self.add_fxns[key] = add_sum
-                    self.agg_fxns[key] = agg_passthrough
-                case GenMetricType.LIST.value:
-                    self.data[key] = []
-                    self.add_fxns[key] = add_list
-                    self.agg_fxns[key] = agg_none
-                case GenMetricType.BATCH_WEIGHTED_AVG_LIST.value:
-                    self.data[key] = []
-                    self.add_fxns[key] = add_list
-                    self.agg_fxns[key] = agg_batch_weighted_list_avg
-                case GenMetricType.AVG_LIST.value:
-                    self.data[key] = []
-                    self.add_fxns[key] = add_list
-                    self.agg_fxns[key] = agg_avg_list
+    if not (output is None or target is None):
+        acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
+        cfg.md.log_data(('acc1', acc1))
+        cfg.md.log_data(('acc5', acc5))
 
-class GenMetrics(Metrics):
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.group_names = ["train", "val"]
-
-        # Initialize subgroups and loggers
-        self.groups = {name: GenMetricsSubgroup(cfg, name) for name in self.group_names}
-        self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
-
-
-def update_metrics(metrics, batch_size, loss, output, target, prefix=""):
-    # Calc and Add Metrics
-    acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
-    img_ps = -1
-    t_key = f"{prefix}_update_time"
-    metrics[t_key].append(time.time())
-    if len(metrics[t_key]) > 1:
-        diff_t = metrics[t_key][-1] - metrics[t_key][-2]
-        img_ps = batch_size * 1.0 / diff_t
-
-    metrics[f"{prefix}_batch_size"].append(batch_size)
-    metrics[f"{prefix}_loss"].append(loss.item())
-    metrics[f"{prefix}_acc1"].append(acc1.item())
-    metrics[f"{prefix}_acc5"].append(acc5.item())
-    metrics[f"{prefix}_img_per_s"].append(img_ps)
-
-    # Logging
-    n = sum(metrics[f"{prefix}_batch_size"])
-    print(f">> {prefix} {n}| {loss=} {acc1=} {acc5=} {img_ps=}")
-
-
-def agg_metrics(metrics):
-    agg_m = {}
-
-    # Scale and sum
-    bs_key = [k for k in metrics.keys() if "batch_size" in k][0]
-    for k, v in metrics.items():
-        agg_m[k] = 0
-        for i, vv in enumerate(v):
-            agg_m[k] += vv * metrics[bs_key][i]
-
-    # Normalize
-    total_bs = sum(metrics[bs_key])
-    for k in agg_m.keys():
-        agg_m[k] = agg_m[k] / total_bs
-
-    return agg_m
+    if loss is not None:
+        cfg.md.log_data(('loss', loss))
 
 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, metrics):

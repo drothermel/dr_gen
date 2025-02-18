@@ -71,7 +71,8 @@ def create_optim_lrsched(cfg, model):
 def get_model_optim_lrsched(cfg, num_classes):
     model = create_model(cfg, num_classes)
     if cfg.load_checkpoint is not None:
-        print(f">> Loading checkpoint: {cfg.load_checkpoint}")
+        if cfg.md is not None:
+            cfg.md.log(f">> Loading checkpoint: {cfg.load_checkpoint}")
         checkpoint = torch.load(
             cfg.load_checkpoint,
             map_location="cpu",
@@ -112,4 +113,5 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
         ]
     }
     torch.save(chpt, chpt_path)
-    print(f">> Saved checkpoint to: {chpt_path}")
+    if cfg.md is not None:
+        cfg.md.log(f">> Saved checkpoint to: {chpt_path}")
