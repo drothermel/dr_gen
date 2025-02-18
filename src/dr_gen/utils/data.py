@@ -1,6 +1,12 @@
 from collections import defaultdict
 import math
 import torch
+from torch.utils.data import (
+    Subset,
+    SequentialSampler,
+    RandomSampler, 
+    SubsetRandomSampler,
+)
 from torch.utils.data.dataloader import default_collate
 from torchvision import datasets
 from torchvision.transforms import v2 as transforms_v2
@@ -8,68 +14,110 @@ from torchvision.transforms import v2 as transforms_v2
 import dr_gen.schemas as vu
 from dr_gen.utils.run import seed_worker
 
-# -------------------- Loader Utils -------------------
+# ---------------- Default and Config Utils ---------------
 
 DEFAULT_DATASET_CACHE_ROOT = "../data/"
 DEFAULT_NUM_WORKERS = 4
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_DOWNLOAD = True
 DEFAULT_SOURCE_PERCENT = 1.0
+DEFAULT_SHUFFLE = True
 
+# Source is usually the split itself, but sometimes we need to split
+# a source into multiple splits (eg "train" becomes train and val).
+# If not specified, use the split as the source.
+def get_source(split, cfg=None):
+    if cfg is None or split not in cfg.data or "source" not in cfg.data[split]:
+        return split
+    return cfg.data[split].source
 
-def get_transforms(augment_cfg):
-    if augment_cfg is None:
+def get_source_percent(split=None, cfg=None):   
+    source_p = DEFAULT_SOURCE_PERCENT
+    if cfg is not None and split is not None:
+        source_p = cfg.get("data", {}).get(split, {}).get(
+            "source_percent", DEFAULT_SOURCE_PERCENT,
+        )
+    return source_p
+
+# Use a default dataset location if not provided
+def get_ds_root(cfg=None):
+    ds_root = DEFAULT_DATASET_CACHE_ROOT
+    if cfg is not None:
+        ds_root = cfg.get("paths", {}).get(
+        "dataset_cache_root", DEFAULT_DATASET_CACHE_ROOT
+    )
+    return ds_root
+
+# Transforms aren't required, so any of these can be None
+def get_transform_cfg(split=None, cfg=None):
+    if cfg is None or split is None:
+        return None
+    return cfg.get("data", {}).get(split, {}).get('transform', None)
+
+# Download param isn't required so any can be None
+def get_download(cfg=None):
+    if cfg is None:
+        return None
+    return cfg.get(data, {}).get("download", DEFAULT_DOWNLOAD)
+
+def get_shuffle(split=None, cfg=None):
+    if cfg is None or split is None:
+        return None
+    return cfg.get(data, {}).get(split, {}).get("shuffle", DEFAULT_SHUFFLE)
+    
+
+# -------------------- Loader Utils -------------------
+
+# Config Reqs: None
+# If a transform is selected, its hpms must be included.
+def build_transforms(xfm_cfg):
+    if xfm_cfg is None:
         return None
 
     xfs_list = [
         transforms_v2.ToImage(),
         transforms_v2.ToDtype(torch.float32, scale=True),
     ]
-    if augment_cfg.random_crop:
+    if xfm_cfg.get("random_crop", False):
         xfs_list.append(
             transforms_v2.RandomCrop(
-                augment_cfg.crop_size,
-                padding=augment_cfg.crop_padding,
+                xfm_cfg.crop_size,
+                padding=xfm_cfg.crop_padding,
             )
         )
 
-    if augment_cfg.random_horizontal_flip:
+    if xfm_cfg.get("random_horizontal_flip", False):
         xfs_list.append(
             transforms_v2.RandomHorizontalFlip(
-                p=augment_cfg.random_horizontal_flip_prob,
+                p=xfm_cfg.random_horizontal_flip_prob,
             )
         )
 
-    if augment_cfg.color_jitter:
+    if xfm_cfg.get("color_jitter", False):
         xfs_list.append(
             transforms_v2.ColorJitter(
-                brightness=augment_cfg.jitter_brightness,
+                brightness=xfm_cfg.jitter_brightness,
             )
         )
 
-    if augment_cfg.normalize:
+    if xfm_cfg.get("normalize", False):
         xfs_list.append(
             transforms_v2.Normalize(
-                mean=augment_cfg.normalize_mean,
-                std=augment_cfg.normalize_std,
+                mean=xfm_cfg.normalize_mean,
+                std=xfm_cfg.normalize_std,
             )
         )
     xfs = transforms_v2.Compose(xfs_list)
     return xfs
 
-# Config Reqs: cfg.data required, but can be empty
+# Config Reqs: None, default is source=split, percent=1.0
 def get_split_source_config(cfg):
     split_source_range = {}
     source_usage = defaultdict(int)
     for split in vu.SPLIT_NAMES:
-        if split not in cfg.data:
-            continue
-
-        # Validate split source availablility
-        source = cfg.data[split].source
-        source_p = cfg.data[split].get(
-            "source_percent", DEFAULT_SOURCE_PERCENT,
-        )
+        # Validate source cfg and save split source usage range
+        source = get_source(split, cfg=cfg)
+        source_p = get_source_percent(split=split, cfg=cfg)
         source_start = source_usage[source]
         source_end = source_usage[source] + source_p
         split_source_range[split] = (source_start, source_end)
@@ -82,40 +130,35 @@ def get_split_source_config(cfg):
 
 # -------------------- Config Based Loaders -------------------
 
-def get_source_dataset(cfg, split):
-    assert vu.validate_split(split)
+# Config Req: cfg.data.name
+# Select transforms based on split, data based on source 
+def get_source_dataset(cfg, split, source):
     assert vu.validate_dataset(cfg.data.name)
-    assert split in cfg.data
 
     # Use defaults to get dataset config info to make more general
-    dataset_cache_root = cfg.get("paths", {}).get(
-        "dataset_cache_root", DEFAULT_DATASET_CACHE_ROOT
-    )
-    transform_cfg = cfg.data[split].get('transform', None)
-    transform = get_transforms(transform_cfg)
     return get_dataset(
         cfg.data.name,
-        cfg.data[split].source,
-        root=dataset_cache_root,
-        transform=transform,
-        download=cfg.data.get("download", DEFAULT_DOWNLOAD),
+        source,
+        root=get_ds_root(cfg=cfg),
+        transform=build_transforms(get_transform_cfg(split=split, cfg=cfg)),
+        download=get_download(cfg=cfg),
     )
 
-# Config Reqs: cfg.data required, but can be empty
+# Config Reqs: cfg.data.name, and cfg.data must contain the
+#    name of any desired splits.
 def get_dataloaders(cfg, generator):
+    vu.validate_dataset(cfg.data.name) 
+
     # Each split comes from a single source, but each source can
     # supply multiple splits so fix the source range percents
     # before shuffling based on random seed
-    splits = list(cfg.data.keys())
+    splits = [k for k in vu.SPLIT_NAMES if k in cfg.data]
     sources_used, split_source_ranges = get_split_source_config(cfg)
-    ds_root = cfg.data[splits[0]].get(
-        "dataset_cache_root",
-        DEFAULT_DATASET_CACHE_ROOT,
-    )
 
     # For each source used, shuffle the indices once to have diff 
     # data splits per random seed.  Then fix to ensure the splits are
     # non-overlapping even if they come from the same source.
+    ds_root = get_ds_root(cfg=cfg)
     source_indices = {
         torch.randperm(len(get_dataset(cfg.data.name, source, root=ds_root)))
         for source in sources_used
@@ -125,29 +168,29 @@ def get_dataloaders(cfg, generator):
     split_dls = {}
     for split in splits:
         vu.validate_split(split)
+        shuffle = get_shuffle(split=split, cfg=cfg)
 
         # Select the indices for this split
-        source = cfg.data[split].source
+        source = get_source(split, cfg=cfg)
         num_source_samples = len(source_indices[source])
         start_perc, end_perc = split_source_ranges(split)
-        start_i = math.floor(num_source_samples * start_perc)
-        end_i = math.floor(num_source_samples * end_perc)
-        indices = source_indices[source][start_i : end_i]
-
-        # Use the indices to create a split sampler
-        if shuffle and (start_perc == 0 and end_perc == 1.0):
-            ds = get_source_dataset(cfg, split)
-            sampler = torch.utils.data.RandomSampler()
-        elif shuffle:
-            ds = get_source_dataset(cfg, split)
-            sampler = torch.utils.data.SubsetRandomSampler(indices)
+        ds = get_source_dataset(cfg, split, source)
+        if (start_perc, end_perc) == (0.0, 1.0):
+            # For full dataset, only the sampler changes with shuffle
+            sampler = RandomSampler() if shuffle else SequentialSampler()
         else:
-            ds = torch.utils.data.Subset(
-                get_source_dataset(cfg, split),
-                indices,
-            )
-            sampler = torch.utils.data.SequentialSampler(ds)
-        split_dls[split] = get_dataloader(cfg, ds, sampler, generator, split)
+            # For partial dataset, have to select indices of the subest
+            start_i = math.floor(num_source_samples * start_perc)
+            end_i = math.floor(num_source_samples * end_perc)
+            indices = source_indices[source][start_i : end_i]
+            if shuffle:
+                # Then select those indices via sampler if we want shuffle
+                sampler = SubsetRandomSampler(indices)
+            else:
+                # Or just subset the data if we don't want shuffle
+                ds = Subset(ds, indices)
+                sampler = SequentialSampler(ds)
+        split_dls[split] = get_dataloader(ds, sampler, generator, split, cfg=cfg)
     return split_dls
 
 # -------------------- General Purpose Loaders -------------------
@@ -180,19 +223,14 @@ def get_dataset(
         assert False
     return ds
 
-# Config Reqs: cfg can be None
-def get_dataloader(cfg, dataset, sampler, generator, split):
+# Config Reqs: None
+def get_dataloader(dataset, sampler, generator, split, cfg=None):
     assert vu.validate_split(split)
 
     # Set some defaults to make this more broadly usable
     cfg = cfg if cfg is not None else {}
-    cfg_split = cfg.get(split, {})
-    cfg_data = cfg.get("data", {})
-    batch_size = cfg_split.get("batch_size", DEFAULT_BATCH_SIZE)
-    num_workers = cfg_data.get("num_workers", DEFAULT_NUM_WORKERS)
-    if "batch_size" not in cfg_split or "num_workers" not in cfg_data:
-        warn_msg = ">> Using defaults in get_dataloader, intentional?"
-        cfg.md.log(warn_msg) if "md" in cfg else print(warn_msg)
+    batch_size = cfg.get(split, {}).get("batch_size", DEFAULT_BATCH_SIZE)
+    num_workers = cfg.get("data", {}).get("num_workers", DEFAULT_NUM_WORKERS)
 
     # assumes determinism has been set
     # assumes dataset is tensors not pil images

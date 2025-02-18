@@ -34,23 +34,25 @@ def get_schema(config_type):
             return drutil_schemas.UsingMetricsConfig
     return None
 
-## -- Don't require, but prefer --
-
-## For Data
+## We're setup to use (but optionally)
+#
+# split.batch_size 
+#
 # paths.dataset_cache_root
-# cfg.data.num_workers
-# cfg.data[split]
-# .download
-# .transform
-# cfg[split].batch_size
+#
+# data:
+#   download
+#   num_workers
+#   split:
+#     source
+#     source_percent
+#     shuffle
+#     transform
+## ----------------------------------
+
 
 ## -- Required --
 
 ## For data
-# cfg.data[split]
-# .source
-# .source_percent
-# .name
-# .shuffle
+# cfg.data.name
 
-## Required for paths
