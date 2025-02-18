@@ -122,6 +122,7 @@ class RunConfig:
 class UsingDataConfig:
     data: type = DataConfig
 
+"""
 ## Using Data is setup to also use the following (optionally)
 #
 # split.batch_size 
@@ -137,6 +138,7 @@ class UsingDataConfig:
 #     shuffle
 #     transform
 ## ----------------------------------------------------------
+"""
 
 @lenient_validate
 @dataclass
