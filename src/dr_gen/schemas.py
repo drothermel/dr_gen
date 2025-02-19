@@ -10,26 +10,43 @@ from dr_util.schema_utils import lenient_validate
 SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = ["cifar10", "cifar100"]
 
-# Do string in enum checking
-class StringMetaEnum(type):
-    def __contains__(cls, val):
-        try:
-            cls(val)
-        except ValueError:
-            return False
-        return True
 
-class OptimizerTypes(Enum, metaclass=StringMetaEnum):
+def check_contains(cls, val):
+    try:
+        cls(val)
+    except ValueError:
+        return False
+    return True
+
+
+# ---- Implemented Type Enums
+
+
+class OptimizerTypes(Enum):
     SGD = "sgd"
     RMSPROP = "rmsprop"
     ADAMW = "adamw"
 
-class LRSchedTypes(Enum, metaclass=StringMetaEnum):
+    def __contains__(self, val):
+        return check_contains(self, val)
+
+
+class LRSchedTypes(Enum):
     STEP_LR = "steplr"
     EXPONENTIAL_LR = "exponentiallr"
 
-class CriterionTypes(Enum, metaclass=StringMetaEnum):
+    def __contains__(self, val):
+        return check_contains(self, val)
+
+
+class CriterionTypes(Enum):
     CROSS_ENTROPY = "cross_entropy"
+
+    def __contains__(self, val):
+        return check_contains(self, val)
+
+
+# ---- Val Fxns
 
 
 def validate_split(split):
@@ -38,11 +55,13 @@ def validate_split(split):
         return False
     return True
 
+
 def validate_dataset(dataset):
     if dataset not in AVAIL_DATASETS:
         logging.error(f"Dataset {dataset} should be in {AVAIL_DATASETS}")
         return False
     return True
+
 
 def validate_optimizer(optim):
     if optim not in OptimizerTypes:
@@ -50,16 +69,19 @@ def validate_optimizer(optim):
         return False
     return True
 
+
 def validate_lrsched(lrsched):
     if lrsched not in LRSchedTypes and lrsched is not None:
         logging.error(f">> Invalid LR Scheduler Type: {lrsched}")
         return False
     return True
 
+
 def validate_criterion(criterion):
     if criterion not in CriterionTypes:
         logging.error(f">> Invalid criterion: {criterion}")
-        
+
+
 # -------------- Validate Configs --------------
 
 
@@ -69,6 +91,7 @@ class ConfigType(Enum):
     USES_MODEL = "uses_model"
     USES_OPTIM = "uses_optim"
     PERFORMS_RUN = "performs_run"
+
 
 def get_schema(config_type):
     match config_type:
@@ -89,6 +112,7 @@ def get_schema(config_type):
 #                  Config Definitions
 #########################################################
 
+
 @lenient_validate
 @dataclass
 class DataConfig:
@@ -100,12 +124,14 @@ class DataConfig:
 class ModelConfig:
     name: str = MISSING
 
+
 @lenient_validate
 @dataclass
 class OptimConfig:
     name: str = MISSING
     loss: str = MISSING
     lr: float = MISSING
+
 
 @lenient_validate
 @dataclass
@@ -117,10 +143,12 @@ class RunConfig:
 #             Config Interface Definitions
 #########################################################
 
+
 @lenient_validate
 @dataclass
 class UsingDataConfig:
     data: type = DataConfig
+
 
 """
 ## Using Data is setup to also use the following (optionally)
@@ -139,6 +167,7 @@ class UsingDataConfig:
 #     transform
 ## ----------------------------------------------------------
 """
+
 
 @lenient_validate
 @dataclass
@@ -164,4 +193,3 @@ class PerformingRun:
     epochs: int = MISSING
     train: RunConfig
     val: RunConfig
-

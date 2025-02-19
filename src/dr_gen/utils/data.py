@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import (
     Subset,
     SequentialSampler,
-    RandomSampler, 
+    RandomSampler,
     SubsetRandomSampler,
 )
 from torch.utils.data.dataloader import default_collate
@@ -23,6 +23,7 @@ DEFAULT_DOWNLOAD = True
 DEFAULT_SOURCE_PERCENT = 1.0
 DEFAULT_SHUFFLE = True
 
+
 # Source is usually the split itself, but sometimes we need to split
 # a source into multiple splits (eg "train" becomes train and val).
 # If not specified, use the split as the source.
@@ -31,42 +32,53 @@ def get_source(split, cfg=None):
         return split
     return cfg.data[split].source
 
-def get_source_percent(split=None, cfg=None):   
+
+def get_source_percent(split=None, cfg=None):
     source_p = DEFAULT_SOURCE_PERCENT
     if cfg is not None and split is not None:
-        source_p = cfg.get("data", {}).get(split, {}).get(
-            "source_percent", DEFAULT_SOURCE_PERCENT,
+        source_p = (
+            cfg.get("data", {})
+            .get(split, {})
+            .get(
+                "source_percent",
+                DEFAULT_SOURCE_PERCENT,
+            )
         )
     return source_p
+
 
 # Use a default dataset location if not provided
 def get_ds_root(cfg=None):
     ds_root = DEFAULT_DATASET_CACHE_ROOT
     if cfg is not None:
         ds_root = cfg.get("paths", {}).get(
-        "dataset_cache_root", DEFAULT_DATASET_CACHE_ROOT
-    )
+            "dataset_cache_root", DEFAULT_DATASET_CACHE_ROOT
+        )
     return ds_root
+
 
 # Transforms aren't required, so any of these can be None
 def get_transform_cfg(split=None, cfg=None):
     if cfg is None or split is None:
         return None
-    return cfg.get("data", {}).get(split, {}).get('transform', None)
+    return cfg.get("data", {}).get(split, {}).get("transform", None)
+
 
 # Download param isn't required so any can be None
 def get_download(cfg=None):
     if cfg is None:
         return None
-    return cfg.get('data', {}).get("download", DEFAULT_DOWNLOAD)
+    return cfg.get("data", {}).get("download", DEFAULT_DOWNLOAD)
+
 
 def get_shuffle(split=None, cfg=None):
     if cfg is None or split is None:
         return None
-    return cfg.get('data', {}).get(split, {}).get("shuffle", DEFAULT_SHUFFLE)
-    
+    return cfg.get("data", {}).get(split, {}).get("shuffle", DEFAULT_SHUFFLE)
+
 
 # -------------------- Loader Utils -------------------
+
 
 # Config Reqs: None
 # If a transform is selected, its hpms must be included.
@@ -110,6 +122,7 @@ def build_transforms(xfm_cfg):
     xfs = transforms_v2.Compose(xfs_list)
     return xfs
 
+
 # Config Reqs: None, default is source=split, percent=1.0
 def get_split_source_config(cfg):
     split_source_range = {}
@@ -130,8 +143,9 @@ def get_split_source_config(cfg):
 
 # -------------------- Config Based Loaders -------------------
 
+
 # Config Req: cfg.data.name
-# Select transforms based on split, data based on source 
+# Select transforms based on split, data based on source
 def get_source_dataset(cfg, split, source):
     assert vu.validate_dataset(cfg.data.name)
 
@@ -144,10 +158,11 @@ def get_source_dataset(cfg, split, source):
         download=get_download(cfg=cfg),
     )
 
+
 # Config Reqs: cfg.data.name, and cfg.data must contain the
 #    name of any desired splits.
 def get_dataloaders(cfg, generator):
-    vu.validate_dataset(cfg.data.name) 
+    vu.validate_dataset(cfg.data.name)
 
     # Each split comes from a single source, but each source can
     # supply multiple splits so fix the source range percents
@@ -155,7 +170,7 @@ def get_dataloaders(cfg, generator):
     splits = [k for k in vu.SPLIT_NAMES if k in cfg.data]
     sources_used, split_source_ranges = get_split_source_config(cfg)
 
-    # For each source used, shuffle the indices once to have diff 
+    # For each source used, shuffle the indices once to have diff
     # data splits per random seed.  Then fix to ensure the splits are
     # non-overlapping even if they come from the same source.
     ds_root = get_ds_root(cfg=cfg)
@@ -182,7 +197,7 @@ def get_dataloaders(cfg, generator):
             # For partial dataset, have to select indices of the subest
             start_i = math.floor(num_source_samples * start_perc)
             end_i = math.floor(num_source_samples * end_perc)
-            indices = source_indices[source][start_i : end_i]
+            indices = source_indices[source][start_i:end_i]
             if shuffle:
                 # Then select those indices via sampler if we want shuffle
                 sampler = SubsetRandomSampler(indices)
@@ -193,7 +208,9 @@ def get_dataloaders(cfg, generator):
         split_dls[split] = get_dataloader(ds, sampler, generator, split, cfg=cfg)
     return split_dls
 
+
 # -------------------- General Purpose Loaders -------------------
+
 
 # Config Reqs: None
 def get_dataset(
@@ -222,6 +239,7 @@ def get_dataset(
     else:
         assert False
     return ds
+
 
 # Config Reqs: None
 def get_dataloader(dataset, sampler, generator, split, cfg=None):

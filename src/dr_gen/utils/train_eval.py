@@ -9,6 +9,7 @@ from dr_util.metrics import BATCH_KEY
 import dr_gen.utils.evaluate as eu
 import dr_gen.utils.model as mu
 
+
 def log_metrics(cfg, group_name, **kwargs):
     assert cfg.md is not None, "There should be a metrics obj"
 
@@ -36,7 +37,7 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
         loss = criterion(output, target)
         optimizer.zero_grad()
         loss.backward()
-        if cfg.optim.get('clip_grad_norm', None) is not None:
+        if cfg.optim.get("clip_grad_norm", None) is not None:
             nn.utils.clip_grad_norm_(
                 model.paramteres(),
                 cfg.optim.clip_grad_norm,
