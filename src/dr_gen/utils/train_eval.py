@@ -1,146 +1,99 @@
-from collections import defaultdict
 from datetime import datetime
 import time
 
 import torch
 import torch.nn as nn
+
+from dr_util.metrics import BATCH_KEY
+
 import dr_gen.utils.evaluate as eu
 import dr_gen.utils.model as mu
 
-CRITERIONS = {"cross_entropy"}
-OPTIMIZERS = {"sgd", "rmsprop", "adamw"}
-LR_SCHEDULERS = {"steplr", "cosineannealinglr", "exponentiallr"}
 
+def log_metrics(cfg, group_name, **kwargs):
+    assert cfg.md is not None, "There should be a metrics obj"
 
-def update_metrics(metrics, batch_size, loss, output, target, prefix=""):
-    # Calc and Add Metrics
-    acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
-    img_ps = -1
-    t_key = f"{prefix}_update_time"
-    metrics[t_key].append(time.time())
-    if len(metrics[t_key]) > 1:
-        diff_t = metrics[t_key][-1] - metrics[t_key][-2]
-        img_ps = batch_size * 1.0 / diff_t
+    loss = kwargs.get("loss", None)
+    output = kwargs.get("output", None)
+    target = kwargs.get("target", None)
 
-    metrics[f"{prefix}_batch_size"].append(batch_size)
-    metrics[f"{prefix}_loss"].append(loss.item())
-    metrics[f"{prefix}_acc1"].append(acc1.item())
-    metrics[f"{prefix}_acc5"].append(acc5.item())
-    metrics[f"{prefix}_img_per_s"].append(img_ps)
+    if output is not None:
+        cfg.md.log_data((BATCH_KEY, output.shape[0]))
 
-    # Logging
-    n = sum(metrics[f"{prefix}_batch_size"])
-    print(f">> {prefix} {n}| {loss=} {acc1=} {acc5=} {img_ps=}")
+    if not (output is None or target is None):
+        acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
+        cfg.md.log_data(("acc1", acc1))
+        cfg.md.log_data(("acc5", acc5))
 
-
-def agg_metrics(metrics):
-    agg_m = {}
-
-    # Scale and sum
-    bs_key = [k for k in metrics.keys() if "batch_size" in k][0]
-    for k, v in metrics.items():
-        agg_m[k] = 0
-        for i, vv in enumerate(v):
-            agg_m[k] += vv * metrics[bs_key][i]
-
-    # Normalize
-    total_bs = sum(metrics[bs_key])
-    for k in agg_m.keys():
-        agg_m[k] = agg_m[k] / total_bs
-
-    return agg_m
+    if loss is not None:
+        cfg.md.log_data(("loss", loss))
 
 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer):
     model.train()
-
-    metrics = defaultdict(list)
     for i, (image, target) in enumerate(dataloader):
         image, target = image.to(cfg.device), target.to(cfg.device)
         output = model(image)
         loss = criterion(output, target)
         optimizer.zero_grad()
         loss.backward()
-        if cfg.optim.clip_grad_norm is not None:
+        if cfg.optim.get("clip_grad_norm", None) is not None:
             nn.utils.clip_grad_norm_(
                 model.paramteres(),
                 cfg.optim.clip_grad_norm,
             )
         optimizer.step()
-        update_metrics(
-            metrics,
-            image.shape[0],
-            loss,
-            output,
-            target,
-            "t",
+        log_metrics(
+            cfg,
+            "train",
+            loss=loss,
+            output=output,
+            target=target,
         )
-    return metrics
 
 
-def eval_model(cfg, model, dataloader, criterion):
+def eval_model(cfg, model, dataloader, criterion, metrics):
     model.eval()
-
-    metrics = defaultdict(list)
     with torch.inference_mode():
         for image, target in dataloader:
             image = image.to(cfg.device, non_blocking=True)
             target = target.to(cfg.device, non_blocking=True)
             output = model(image)
             loss = criterion(output, target)
-            update_metrics(
-                metrics,
-                image.shape[0],
-                loss,
-                output,
-                target,
+            log_metrics(
+                cfg,
+                "val",
+                loss=loss,
+                output=output,
+                target=target,
             )
-
-            acc1, acc5 = eu.accuracy(output, target, topk=(1, 5))
-            batch_size = image.shape[0]
-            update_metrics(
-                metrics,
-                batch_size,
-                loss,
-                output,
-                target,
-            )
-
     return metrics
 
 
 def train_loop(cfg, model, train_dl, val_dl=None):
-    # Things in main
-    # Setup logging here or elsewhere?
-    # cfg.device = torch.device(cfg.device)
-    # generator = ru.set_deterministic(cfg.seed)
-    # split_dls = du.get_dataloaders(cfg, generator)
-    # model = create_model(cfg, len(split_dls['train'].dataset.classes))
-    # train_loop(cfg, model, split_dls['train'], val_dl=split_dls['val'])
-
+    assert cfg.md is not None
     criterion = mu.get_criterion(cfg)
     optim, lr_sched = mu.get_optim(cfg, model)
     mu.checkpoint_model(cfg, model, "init_model")
 
     start_time = time.time()
     for epoch in range(cfg.epochs):
-        print(f">> Start Epoch: {epoch}")
+        cfg.md.log(f">> Start Epoch: {epoch}")
 
         # Train
-        tm = train_epoch(cfg, epoch, model, train_dl, criterion, optim)
+        train_epoch(cfg, epoch, model, train_dl, criterion, optim)
         lr_sched.step()
-        tm_str = " ".join([f"{k}={v}" for k, v in agg_metrics(tm)])
-        print(f":: TRAIN :: {tm_str}")
+        cfg.md.agg_log("train")
 
         # Val
         if val_dl is not None:
-            vm = eval_model(cfg, model, val_dl, criterion)
-            vm_str = " ".join([f"{k}={v}" for k, v in agg_metrics(vm)])
-            print(f":: VAL :: {vm_str}")
+            eval_model(cfg, model, val_dl, criterion)
+            cfg.md.agg_log("val")
 
         mu.checkpoint_model(cfg, model, f"epoch_{epoch}")
-        print()
+        cfg.md.clear_data()
+        cfg.md.log("")
 
     total_time = time.time() - start_time
     total_ts = str(datetime.timedelta(seconds=int(total_time)))
-    print(f"Training time {total_ts}")
+    cfg.md.log(f"Training time {total_ts}")

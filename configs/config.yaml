@@ -1,7 +1,10 @@
 defaults:
-    - _self_
     - paths: mac
     - data: cifar10_pycil
+    - _self_
+
+paths:
+    proj_dir_name: dr_util
 
 hydra:
     run:
@@ -11,6 +14,16 @@ hydra:
             simple:
                 format: "%(asctime)s - %(message)s"
                 datefmt: "%Y-%m-%d %H:%M:%S"
+
+metrics:
+    loggers:
+        - hydra
+        - json
+    init:
+        batch_size: list
+        loss: batch_weighted_avg_list
+        acc1: batch_weighted_avg_list
+        acc5: batch_weighted_avg_list
 
 model:
     name: resnet18
@@ -48,6 +61,7 @@ eval:
 
 seed: 202
 device: cpu
+md: 
 epochs: 3
 load_checkpoint:
 write_checkpoint: ${paths.run_dir}/checkpoints/

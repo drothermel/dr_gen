@@ -6,7 +6,6 @@ defaults:
 
 name: cifar10
 num_workers: 8
-cache_dataset: true
 download: true
 
 train:
