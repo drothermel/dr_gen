@@ -2,7 +2,7 @@ from hydra import compose, initialize
 from omegaconf import OmegaConf
 
 import torch
-from torch.utils.data import Dataset, SequentialSampler
+from torch.utils.data import Dataset, DataLoader, SequentialSampler, Subset, SubsetRandomSampler, RandomSampler
 from torch.utils.data.dataloader import default_collate
 from torchvision.transforms import v2 as transforms_v2
 
@@ -50,26 +50,75 @@ class DummyDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
-@pytest.fixture
-def data_cfg():
-    """Mocked config with deterministic seed and batch sizes."""
-    cfg = Mock()
-    cfg.seed = 101
-    cfg.data = {
-        "train": Mock(source="train", source_percent=0.6, shuffle=True),
-        "val": Mock(source="train", source_percent=0.2, shuffle=False),
-        "eval": Mock(source="eval", source_percent=0.2, shuffle=False),
-    }
-    return cfg
 
+# --- Fake __init__ functions for CIFAR datasets ---
+def fake_cifar10_init(self, root, train, transform, target_transform, download):
+    # Simply assign attributes without file checks.
+    self.train = train
+    self.root = root
+    self.transform = transform
+    self.target_transform = target_transform
+    self.download = download
 
-@pytest.fixture
-def hydra_cfg():
-    with initialize(config_path="../scripts/conf/", version_base=None):
-        cfg = compose(
-            config_name="config.yaml",
-        )
-    return cfg
+def fake_cifar100_init(self, root, train, transform, target_transform, download):
+    # Simply assign attributes without file checks.
+    self.train = train
+    self.root = root
+    self.transform = transform
+    self.target_transform = target_transform
+    self.download = download
+
+# Dummy implementations to override various helpers used in get_dataloaders
+
+def dummy_get_dataset(dataset_name, source_split, root, transform=None, download=False):
+    # Always return a DummyDataset of length 20
+    return DummyDataset(list(range(20)))
+
+def dummy_get_ds_root(cfg):
+    return "dummy_root"
+
+def dummy_build_transforms(transform_cfg):
+    # Return an identity transform (or simply None)
+    return None
+
+def dummy_get_transform_cfg(split, cfg):
+    return {}
+
+def dummy_get_download(cfg):
+    return False
+
+def dummy_get_source(split, cfg):
+    # Return the source as specified in the configuration for that split,
+    # or default to the split name.
+    return cfg.data.get(split, {}).get("source", split)
+
+def dummy_get_split_source_config(cfg):
+    """
+    For our dummy configuration assume:
+      - "train" uses source "source1" with 80% of the data (range: 0.0 to 0.8)
+      - "val" uses the same source "source1" for the remaining 20% (range: 0.8 to 1.0)
+      - "eval" uses source "eval" with full data (range: 0.0 to 1.0)
+    We return a tuple of:
+      sources_used, and a callable that returns the range for a given split.
+    """
+    sources_used = ["source1", "eval"]
+    def range_for_split(split):
+        mapping = {"train": (0.0, 0.8), "val": (0.8, 1.0), "eval": (0.0, 1.0)}
+        return mapping[split]
+    return sources_used, range_for_split
+
+def dummy_get_shuffle(split, cfg):
+    # For testing purposes, fix shuffle to False
+    return False
+
+def dummy_validate_dataset(name):
+    # Always validate successfully
+    return True
+
+def dummy_validate_split(split):
+    # Allow only our known splits
+    return split in ["train", "val", "eval"]
+
 
 # ---------------------------------------------------------
 # Tests
@@ -183,22 +232,6 @@ def test_full_pipeline(transform_cfg):
 
 # ------------ Test Simple Dataset and Dataloader Creation -------------
 
-# --- Fake __init__ functions for CIFAR datasets ---
-def fake_cifar10_init(self, root, train, transform, target_transform, download):
-    # Simply assign attributes without file checks.
-    self.train = train
-    self.root = root
-    self.transform = transform
-    self.target_transform = target_transform
-    self.download = download
-
-def fake_cifar100_init(self, root, train, transform, target_transform, download):
-    # Simply assign attributes without file checks.
-    self.train = train
-    self.root = root
-    self.transform = transform
-    self.target_transform = target_transform
-    self.download = download
 
 def test_get_dataset_cifar10(tmp_path, monkeypatch):
     """
@@ -346,104 +379,85 @@ def test_get_split_source_config_over_usage():
     with pytest.raises(AssertionError, match=">> Using more than 100% of official_train"):
         du.get_split_source_config(cfg)
 
-def test_prep_dataset_split_sources(data_cfg):
-    """Test if prep_dataset_split_sources correctly groups sources and their percentages."""
-    # result = du.prep_dataset_split_sources(data_cfg)
 
-    expected = {
-        "train": [("train", 0.6), ("val", 0.2)],
-        "eval": [("eval", 0.2)],
-    }
+# ---------------------- Test Combination Utils -----------------------------
 
-    assert expected == expected
+# Test for get_dataloaders
+def test_get_dataloaders(monkeypatch):
+    """
+    This test constructs a dummy configuration (via OmegaConf) and then patches
+    out helper functions so that get_dataloaders returns predictable DataLoaders.
+    We then check that each returned DataLoader has the expected batch_size and
+    that dataloaders are provided for the correct splits.
+    """
+    # Import the module that contains get_dataloaders and its helpers.
+    import dr_gen.utils.data as utils
+
+    # Patch helper functions with our dummy implementations.
+    monkeypatch.setattr(utils, "get_dataset", dummy_get_dataset)
+    monkeypatch.setattr(utils, "get_ds_root", dummy_get_ds_root)
+    monkeypatch.setattr(utils, "build_transforms", dummy_build_transforms)
+    monkeypatch.setattr(utils, "get_transform_cfg", dummy_get_transform_cfg)
+    monkeypatch.setattr(utils, "get_download", dummy_get_download)
+    monkeypatch.setattr(utils, "get_source", dummy_get_source)
+    monkeypatch.setattr(utils, "get_split_source_config", dummy_get_split_source_config)
+    monkeypatch.setattr(utils, "get_shuffle", dummy_get_shuffle)
+    monkeypatch.setattr(utils.vu, "validate_dataset", dummy_validate_dataset)
+    monkeypatch.setattr(utils.vu, "validate_split", dummy_validate_split)
+    # Force vu.SPLIT_NAMES to be predictable.
+    monkeypatch.setattr(utils.vu, "SPLIT_NAMES", ["train", "val", "eval"])
+
+    # Create a dummy OmegaConf configuration.
+    cfg = OmegaConf.create({
+        "data": {
+            "name": "dummy",  # Dummy dataset name
+            # For "train" and "val" we use the same source "source1" but different percentages.
+            "train": {"batch_size": 4, "source_percent": 0.8, "source": "source1"},
+            "val": {"batch_size": 4, "source_percent": 0.2, "source": "source1"},
+            # For "eval" use a separate source and default full percent.
+            "eval": {"batch_size": 2, "source_percent": 1.0, "source": "eval"},
+            "num_workers": 0,
+        }
+    })
+
+    generator = torch.Generator()
+
+    # Call the function under test.
+    dls = utils.get_dataloaders(cfg, generator)
+
+    # Check that we have DataLoaders for each expected split.
+    assert set(dls.keys()) == {"train", "val", "eval"}
+
+    # For each split, check that the DataLoader is an instance of torch.utils.data.DataLoader
+    # and that its batch_size matches what is specified in the configuration.
+    for split, dl in dls.items():
+        assert isinstance(dl, DataLoader)
+        expected_bs = OmegaConf.to_container(cfg.data).get(split, {}).get("batch_size", utils.DEFAULT_BATCH_SIZE)
+        assert dl.batch_size == expected_bs
+
+    # Optionally, verify that the dataset lengths (after subsetting) are as expected.
+    # For "train" and "val", the dummy dataset length is 20 so:
+    #   "train" should use approximately 80% (i.e. 16 samples) and "val" the remaining 20% (i.e. 4 samples).
+    # For "eval", since the full dataset is used, length should be 20.
+    # Note that due to floor rounding, you may have minor differences.
+    train_dl = dls["train"]
+    val_dl = dls["val"]
+    eval_dl = dls["eval"]
+
+    # Access the sampler length by checking the length of the dataset that the sampler iterates over.
+    # For "train" and "val", our dummy_get_dataloader calls get_dataloader with a subset.
+    train_indices = list(train_dl.sampler)
+    val_indices = list(val_dl.sampler)
+    eval_indices = list(eval_dl.sampler)  # full dataset sampler
+
+    # Since our dummy dataset always has 20 elements:
+    # For train, expected count ~ math.floor(20 * 0.8) = 16
+    # For val, expected count ~ math.floor(20 * 0.2) = 4
+    # For eval, expected count is 20.
+    assert len(train_indices) in (15, 16)  # rounding may vary
+    assert len(val_indices) in (4, 5)
+    assert len(eval_indices) == 20
 
 
-def test_prep_dataset_split_sources_invalid(data_cfg):
-    """Test if prep_dataset_split_sources raises assertion error when percentages exceed 1.0."""
-    data_cfg.data["train"].source_percent = 0.7
-    data_cfg.data["val"].source_percent = 0.5  # Exceeds 1.0
-
-    # with pytest.raises(
-    #    AssertionError, match="Cannot use more than 100% of a data source"
-    # ):
-    #    du.prep_dataset_split_sources(data_cfg)
-    assert True
 
 
-@pytest.fixture
-def source_percents():
-    """Mocked source_percents structure returned by prep_dataset_split_sources."""
-    return {
-        "train": [("train", 0.6), ("val", 0.2)],
-        "eval": [("eval", 0.2)],
-    }
-
-
-def test_get_source_range(data_cfg, source_percents):
-    """Test if get_source_range returns correct percentage range for each split."""
-    assert True
-    # assert du.get_source_range(data_cfg, source_percents, "train") == (0.0, 0.6)
-    # assert du.get_source_range(data_cfg, source_percents, "val") == (0.6, 0.8)
-    # assert du.get_source_range(data_cfg, source_percents, "eval") == (0.0, 0.2)
-
-
-def test_get_source_range_invalid(data_cfg, source_percents):
-    """Test if get_source_range raises assertion error when an invalid split is provided."""
-    # with pytest.raises(AssertionError, match="Split test should be in .*"):
-    #    du.get_source_range(data_cfg, source_percents, "test")
-    assert True
-
-
-# def test_determinism(hydra_cfg):
-# hydra_cfg.seed = 101
-# generator = ru.set_deterministic(hydra_cfg.seed)
-# dls = du.get_dataloaders(hydra_cfg, generator)
-# data_out = {}
-# for split in du.SPLIT_NAMES:
-# spl_iter = iter(dls[split])
-# for ind in range(3):
-# feats, labels = next(spl_iter)
-# assert feats.shape[0] == hydra_cfg[split].batch_size
-# data_out[f"{split}_{ind}_features"] = feats
-# data_out[f"{split}_{ind}_labels"] = labels
-#
-# del generator, dls
-# hydra_cfg.seed = 202
-# generator = ru.set_deterministic(hydra_cfg.seed)
-# dls = du.get_dataloaders(hydra_cfg, generator)
-# for split in du.SPLIT_NAMES:
-# spl_iter = iter(dls[split])
-# for ind in range(3):
-# feats, labels = next(spl_iter)
-# assert feats.shape[0] == hydra_cfg[split].batch_size
-# assert torch.isclose(feats, data_out[f"{split}_{ind}_features"]).all().item()
-# assert torch.isclose(labels, data_out[f"{split}_{ind}_labels"]).all().item()
-
-# def test_shuffle(hydra_cfg):
-# generator = ru.set_deterministic(hydra_cfg.seed)
-# dls = du.get_dataloaders(hydra_cfg, generator)
-#
-# for split in du.SPLIT_NAMES:
-# spl_iter = iter(dls[split])
-# feats, labels = next(spl_iter)
-# for _ in spl_iter:
-# continue
-#
-# spl_iter = iter(dls[split])
-# feats2, labels2 = next(spl_iter)
-#
-# if hydra_cfg.data[split].shuffle:
-# assert not torch.isclose(labels, labels2).all().item()
-# else:
-# assert torch.isclose(labels, labels2).all().item()
-#
-# if (
-# hydra_cfg.data[split].shuffle or
-# hydra_cfg.data[split].transform.random_crop or
-# hydra_cfg.data[split].transform.random_horizontal_flip or
-# hydra_cfg.data[split].transform.color_jitter
-# ):
-# assert torch.isclose(feats, feats2).all().item()
-#
-# else:
-# assert not torch.isclose(feats, feats2).all().item()
