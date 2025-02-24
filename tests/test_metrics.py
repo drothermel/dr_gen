@@ -16,7 +16,6 @@ from dr_gen.utils.metrics import GenMetricType, agg_avg_list, GenMetricsSubgroup
 # ---------------------------------------------------
 
 
-
 @pytest.fixture
 def dummy_data_structure():
     # Define a sample data structure mapping keys to our metric types.
@@ -32,14 +31,14 @@ def dummy_cfg(dummy_data_structure):
     # Minimal dummy config; note that GenMetricsSubgroup expects a cfg and a group name.
     return OmegaConf.create({
         "data": {"name": "dummy", "train": {"batch_size": 4}, "val": {"batch_size": 4}},
-		"metrics": {
-			"loggers": [],
-			"init": {
-				'batch_size': 'list',
-				**dummy_data_structure,
-			}
-		},
-	})
+        "metrics": {
+            "loggers": [],
+            "init": {
+                'batch_size': 'list',
+                **dummy_data_structure,
+            }
+        },
+    })
 
 @pytest.fixture
 def subgroup_with_fake_add(dummy_cfg):
@@ -137,18 +136,12 @@ def test_add_dict_dispatch(subgroup_with_fake_add):
 def test_gen_metrics_log_data(dummy_cfg):
     # Create a dummy config that includes two groups: train and val.
     metrics = GenMetrics(dummy_cfg)
-    # For testing, override each subgroup's add method (_add_tuple) so that we can observe calls.
-    for group in metrics.groups.values():
-        group.data = {}
-        def fake_add_tuple(key, value):
-            group.data.setdefault(key, []).append(value)
-        group._add_tuple = fake_add_tuple
-
     # Log some data to the "train" group.
     metrics.log_data({"metric_int": 5}, "train", ns=10)
     # Expect that for group "train" the dict version of add was used.
     group_data = metrics.groups["train"].data
-    assert group_data.get("metric_int") == [5]
+
+    assert group_data.get("metric_int") == 5
     assert group_data.get(BATCH_KEY) == [10]
 
 def test_gen_metrics_log_data_invalid_group(dummy_cfg):
@@ -159,16 +152,27 @@ def test_gen_metrics_log_data_invalid_group(dummy_cfg):
 
 def test_gen_metrics_clear_data(dummy_cfg):
     metrics = GenMetrics(dummy_cfg)
-    # For testing, simulate that each subgroup's data is nonzero.
-    for group in metrics.groups.values():
-        group.data = {"metric_int": 42}
-        # Replace clear_data with a simple reset using _init_data_values:
-        original_clear = group.clear_data
-        group.clear_data = lambda: group.data.update({"metric_int": 0})
+    metrics.log_data({"metric_list": 2}, "val", ns=None)
+    metrics.log_data({"metric_list": 4}, "train", ns=10)
+    metrics.log_data({"metric_int": 3, "metric_batch_weighted": 5, "metric_avg": 6}, "train", ns=None)
+
+    assert metrics.groups["val"].data.get("metric_list") == [2]
+    group_data = metrics.groups["train"].data
+    assert group_data.get("metric_int") == 3
+    assert group_data.get("metric_list") == [4]
+    assert group_data.get("metric_batch_weighted") == [5]
+    assert group_data.get("metric_avg") == [6]
+    assert group_data.get(BATCH_KEY) == [10]
+    
 
     # Clear only the "train" group.
     metrics.clear_data("train")
-    assert metrics.groups["train"].data["metric_int"] == 0
-    # The "val" group should remain unchanged.
-    assert metrics.groups["val"].data["metric_int"] == 42
+    assert metrics.groups["val"].data.get("metric_list") == [2]
+    group_data = metrics.groups["train"].data
+    assert group_data.get("metric_int") == 0
+    assert group_data.get("metric_list") == []
+    assert group_data.get("metric_batch_weighted") == []
+    assert group_data.get("metric_avg") == []
+    assert group_data.get(BATCH_KEY) == []
+
 
