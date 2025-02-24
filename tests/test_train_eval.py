@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import pytest
@@ -9,6 +8,7 @@ from dr_util.metrics import BATCH_KEY
 import dr_gen.utils.train_eval as te
 import dr_gen.utils.evaluate as eu
 import dr_gen.utils.model as mu
+
 
 # ----------------------
 # Dummy Metrics Logger
@@ -37,6 +37,7 @@ def dummy_accuracy(output, target, topk=(1,)):
     # For testing, simply return fixed perfect accuracies.
     return (100.0, 100.0)
 
+
 # Dummy implementations to override model utils functions.
 def dummy_get_criterion(cfg):
     return nn.CrossEntropyLoss()
@@ -45,6 +46,7 @@ def dummy_get_criterion(cfg):
 def dummy_checkpoint_model(cfg, model, name):
     # Do nothing for checkpointing during tests.
     pass
+
 
 # A dummy dataset that returns a fixed tensor and target.
 class DummyDataset(torch.utils.data.Dataset):
@@ -59,11 +61,13 @@ class DummyDataset(torch.utils.data.Dataset):
         # Return a dummy "image" (e.g. 3x32x32) and a target label (0)
         return torch.randn(3, 32, 32), torch.tensor(0)
 
+
 @pytest.fixture
 def dummy_dataloader():
     dataset = DummyDataset()
     # Use a standard PyTorch DataLoader.
     return torch.utils.data.DataLoader(dataset, batch_size=2)
+
 
 @pytest.fixture
 def dummy_model():
@@ -71,24 +75,28 @@ def dummy_model():
     model = nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
     return model
 
+
 @pytest.fixture
 def dummy_cfg(tmp_path):
     # Create a dummy OmegaConf configuration.
-    cfg = OmegaConf.create({
-        "device": "cpu",
-        "epochs": 2,
-        "optim": {
-            "lr": 0.01,
-            "name": "sgd",
-            "loss": "cross_entropy",
-        },
-        "model": {
-            "name": "resnet18",  # Not used because we override model creation in tests.
-            "weights": None,
-        },
-        "write_checkpoint": str(tmp_path / "checkpoints"),
-    })
+    cfg = OmegaConf.create(
+        {
+            "device": "cpu",
+            "epochs": 2,
+            "optim": {
+                "lr": 0.01,
+                "name": "sgd",
+                "loss": "cross_entropy",
+            },
+            "model": {
+                "name": "resnet18",  # Not used because we override model creation in tests.
+                "weights": None,
+            },
+            "write_checkpoint": str(tmp_path / "checkpoints"),
+        }
+    )
     return cfg
+
 
 # ----------------------
 # Tests for log_metrics
@@ -116,6 +124,7 @@ def test_log_metrics(dummy_cfg):
     finally:
         eu.accuracy = original_accuracy
 
+
 # ----------------------
 # Tests for train_epoch
 # ----------------------
@@ -125,9 +134,12 @@ def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(dummy_model.parameters(), lr=dummy_cfg.optim.lr)
     # Run one epoch of training.
-    te.train_epoch(dummy_cfg, 0, dummy_model, dummy_dataloader, criterion, optimizer, md=md)
+    te.train_epoch(
+        dummy_cfg, 0, dummy_model, dummy_dataloader, criterion, optimizer, md=md
+    )
     # Check that some log entries were recorded.
     assert len(md.logs) > 0
+
 
 # ----------------------
 # Tests for eval_model
@@ -139,6 +151,7 @@ def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model):
     te.eval_model(dummy_cfg, dummy_model, dummy_dataloader, criterion, md=md)
     # Verify that some logging occurred.
     assert len(md.logs) > 0
+
 
 # ----------------------
 # Test for train_loop
@@ -161,7 +174,9 @@ def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch):
 
     logs = md.logs
     # Verify that for each epoch, a start message was logged.
-    start_epoch_logs = [msg for typ, msg in logs if typ == "log" and "Start Epoch" in msg]
+    start_epoch_logs = [
+        msg for typ, msg in logs if typ == "log" and "Start Epoch" in msg
+    ]
     assert len(start_epoch_logs) >= dummy_cfg.epochs
 
     # Verify that aggregation logs were recorded for "train" and "val".
@@ -173,4 +188,3 @@ def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch):
     # Finally, verify that a training time log was output.
     time_logs = [msg for typ, msg in logs if typ == "log" and "Training time" in msg]
     assert time_logs, "Expected a training time log at the end of train_loop"
-

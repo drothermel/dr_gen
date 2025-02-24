@@ -45,6 +45,7 @@ def test_set_deterministic_torch_random_np():
     expected_rand2 = random.random()
     assert rand_val2 == expected_rand2
 
+
 def test_seed_worker():
     # Set a known global torch seed.
     torch.manual_seed(123)
@@ -67,4 +68,3 @@ def test_seed_worker():
     # The values produced after seed_worker should match those when re-seeded with worker_seed.
     assert np.isclose(np_val, expected_np)
     assert rand_val == expected_rand
-
