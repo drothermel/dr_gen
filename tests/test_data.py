@@ -1,10 +1,23 @@
 import pytest
+from hydra import compose, initialize
+from omegaconf import OmegaConf
+
 from unittest.mock import Mock
 from torchvision.transforms import v2 as transforms_v2
 
 from hydra import initialize, compose
 
 import dr_gen.utils.data as du
+
+# ---------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------
+
+
+@pytest.fixture
+def base_cfg():
+    with initialize(version_base=None, config_path="../configs"):
+        return compose(config_name="base_config", overrides=[])
 
 
 @pytest.fixture
@@ -45,7 +58,27 @@ def hydra_cfg():
         )
     return cfg
 
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
 
+@pytest.mark.parametrize("split, cfg, expected", [
+    # No configuration provided: should return the split.
+    ("train", None, "train"),
+    # Config provided but no data for the split: returns the split.
+    ("train", OmegaConf.create({"data": {}}), "train"),
+    # Split exists in config but without a "source" key: returns the split.
+    ("train", OmegaConf.create({"data": {"train": {}}}), "train"),
+    # Split exists and contains a "source": returns the custom source.
+    ("train", OmegaConf.create({"data": {"train": {"source": "custom_train"}}}), "custom_train"),
+    # Another split missing from the config: returns the split.
+    ("val", OmegaConf.create({"data": {"train": {"source": "custom_train"}}}), "val"),
+])
+def test_get_source(split, cfg, expected):
+    assert du.get_source(split, cfg) == expected
+
+
+# ---------------------------------------------------------
 def test_basic_transforms(augment_cfg):
     """Test if base transforms (ToImage and ToDtype) are always included."""
     transforms = du.build_transforms(augment_cfg)
