@@ -7,7 +7,6 @@ from dr_util.metrics import (
     agg_passthrough,
     agg_none,
     agg_batch_weighted_list_avg,
-    create_logger,
 )
 from dr_gen.utils.metrics import GenMetricType, agg_avg_list, GenMetricsSubgroup, GenMetrics
 

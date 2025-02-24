@@ -9,7 +9,7 @@ from dr_gen.schemas import get_schema
 import torch
 import dr_gen.run_utils as ru
 import dr_gen.data_utils as du
-import dr_gen.model_utils as mu
+import dr_gen.train_eval as te
 
 
 def validate_run_cfg(cfg):

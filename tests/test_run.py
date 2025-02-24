@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import torch
-import pytest
 
 import dr_gen.utils.run as ru
 
@@ -23,12 +22,12 @@ def test_set_deterministic_torch_random_np():
     assert torch.allclose(x, y)
 
     # Test that numpy produces identical values after re-seeding.
-    np_val1 = np.random.rand()
+    np.random.rand()
     # Reset seeds for numpy.
     np.random.seed(seed)
-    expected_np = np.random.rand()
+    np.random.rand()
     # After set_deterministic, numpy seed should have been set.
-    generator3 = ru.set_deterministic(seed)
+    ru.set_deterministic(seed)
     np_val2 = np.random.rand()
     np.random.seed(seed)
     expected_np2 = np.random.rand()
@@ -36,11 +35,11 @@ def test_set_deterministic_torch_random_np():
     assert np.isclose(np_val2, expected_np2)
 
     # Test Python's random module.
-    rand_val1 = random.random()
+    random.random()
     random.seed(seed)
-    expected_rand = random.random()
+    random.random()
     # After set_deterministic, random.seed was called.
-    generator4 = ru.set_deterministic(seed)
+    ru.set_deterministic(seed)
     rand_val2 = random.random()
     random.seed(seed)
     expected_rand2 = random.random()

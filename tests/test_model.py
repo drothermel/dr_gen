@@ -1,9 +1,6 @@
-import os
-from pathlib import Path
 
 import pytest
 import torch
-import torchvision
 from omegaconf import OmegaConf
 
 import dr_gen.utils.model as mu
