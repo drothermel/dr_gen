@@ -28,8 +28,8 @@ def agg_avg_list(data, key):
 
 class GenMetricsSubgroup(MetricsSubgroup):
     def _init_data(self):
-        self.init_data_values()
-        self.init_data_fxns()
+        self._init_data_values()
+        self._init_data_fxns()
 
     def _init_data_values(self):
         if self.data_structure is None:
