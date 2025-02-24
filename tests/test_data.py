@@ -2,8 +2,7 @@ from hydra import compose, initialize
 from omegaconf import OmegaConf
 
 import torch
-from torch.utils.data import Dataset, DataLoader, SequentialSampler, Subset, SubsetRandomSampler, RandomSampler
-from torch.utils.data.dataloader import default_collate
+from torch.utils.data import Dataset, DataLoader, SequentialSampler
 from torchvision.transforms import v2 as transforms_v2
 
 import pytest
@@ -60,6 +59,7 @@ def fake_cifar10_init(self, root, train, transform, target_transform, download):
     self.target_transform = target_transform
     self.download = download
 
+
 def fake_cifar100_init(self, root, train, transform, target_transform, download):
     # Simply assign attributes without file checks.
     self.train = train
@@ -68,29 +68,37 @@ def fake_cifar100_init(self, root, train, transform, target_transform, download)
     self.target_transform = target_transform
     self.download = download
 
+
 # Dummy implementations to override various helpers used in get_dataloaders
+
 
 def dummy_get_dataset(dataset_name, source_split, root, transform=None, download=False):
     # Always return a DummyDataset of length 20
     return DummyDataset(list(range(20)))
 
+
 def dummy_get_ds_root(cfg):
     return "dummy_root"
+
 
 def dummy_build_transforms(transform_cfg):
     # Return an identity transform (or simply None)
     return None
 
+
 def dummy_get_transform_cfg(split, cfg):
     return {}
 
+
 def dummy_get_download(cfg):
     return False
+
 
 def dummy_get_source(split, cfg):
     # Return the source as specified in the configuration for that split,
     # or default to the split name.
     return cfg.data.get(split, {}).get("source", split)
+
 
 def dummy_get_split_source_config(cfg):
     """
@@ -102,18 +110,23 @@ def dummy_get_split_source_config(cfg):
       sources_used, and a callable that returns the range for a given split.
     """
     sources_used = ["source1", "eval"]
+
     def range_for_split(split):
         mapping = {"train": (0.0, 0.8), "val": (0.8, 1.0), "eval": (0.0, 1.0)}
         return mapping[split]
+
     return sources_used, range_for_split
+
 
 def dummy_get_shuffle(split, cfg):
     # For testing purposes, fix shuffle to False
     return False
 
+
 def dummy_validate_dataset(name):
     # Always validate successfully
     return True
+
 
 def dummy_validate_split(split):
     # Allow only our known splits
@@ -126,49 +139,70 @@ def dummy_validate_split(split):
 
 # ------------------- Cfg Getters -------------------------
 
-@pytest.mark.parametrize("split, cfg, expected", [
-    # No configuration provided: should return the split.
-    ("train", None, "train"),
-    # Config provided but no data for the split: returns the split.
-    ("train", OmegaConf.create({"data": {}}), "train"),
-    # Split exists in config but without a "source" key: returns the split.
-    ("train", OmegaConf.create({"data": {"train": {}}}), "train"),
-    # Split exists and contains a "source": returns the custom source.
-    ("train", OmegaConf.create({"data": {"train": {"source": "custom_train"}}}), "custom_train"),
-    # Another split missing from the config: returns the split.
-    ("val", OmegaConf.create({"data": {"train": {"source": "custom_train"}}}), "val"),
-])
+
+@pytest.mark.parametrize(
+    "split, cfg, expected",
+    [
+        # No configuration provided: should return the split.
+        ("train", None, "train"),
+        # Config provided but no data for the split: returns the split.
+        ("train", OmegaConf.create({"data": {}}), "train"),
+        # Split exists in config but without a "source" key: returns the split.
+        ("train", OmegaConf.create({"data": {"train": {}}}), "train"),
+        # Split exists and contains a "source": returns the custom source.
+        (
+            "train",
+            OmegaConf.create({"data": {"train": {"source": "custom_train"}}}),
+            "custom_train",
+        ),
+        # Another split missing from the config: returns the split.
+        (
+            "val",
+            OmegaConf.create({"data": {"train": {"source": "custom_train"}}}),
+            "val",
+        ),
+    ],
+)
 def test_get_source(split, cfg, expected):
     assert du.get_source(split, cfg) == expected
 
-@pytest.mark.parametrize("split, cfg, expected", [
-    # If no config is provided, default is returned.
-    (None, None, du.DEFAULT_SOURCE_PERCENT),
-    # If config is None, default is returned even if split is given.
-    ("train", None, du.DEFAULT_SOURCE_PERCENT),
-    # If split is None, default is returned even if config is provided.
-    (None, OmegaConf.create({"data": {"train": {"source_percent": 0.8}}}), du.DEFAULT_SOURCE_PERCENT),
-    # If cfg is an empty dict, default is returned.
-    ("train", OmegaConf.create({}), du.DEFAULT_SOURCE_PERCENT),
-    # If cfg has no "data" key, default is returned.
-    ("train", OmegaConf.create({"other_key": {}}), du.DEFAULT_SOURCE_PERCENT),
-    # If "data" exists but split is missing, default is returned.
-    ("train", OmegaConf.create({"data": {}}), du.DEFAULT_SOURCE_PERCENT),
-    # If the split exists but without a "source_percent" key, default is returned.
-    ("train", OmegaConf.create({"data": {"train": {}}}), du.DEFAULT_SOURCE_PERCENT),
-    # If the split exists and has a custom "source_percent" value, return that.
-    ("train", OmegaConf.create({"data": {"train": {"source_percent": 0.8}}}), 0.8),
-    # Test with a different split (e.g., val) having a different source percent.
-    ("val", OmegaConf.create({"data": {"val": {"source_percent": 0.2}}}), 0.2),
-    # Test with eval split having a custom source percent.
-    ("eval", OmegaConf.create({"data": {"eval": {"source_percent": 1.0}}}), 1.0),
-])
+
+@pytest.mark.parametrize(
+    "split, cfg, expected",
+    [
+        # If no config is provided, default is returned.
+        (None, None, du.DEFAULT_SOURCE_PERCENT),
+        # If config is None, default is returned even if split is given.
+        ("train", None, du.DEFAULT_SOURCE_PERCENT),
+        # If split is None, default is returned even if config is provided.
+        (
+            None,
+            OmegaConf.create({"data": {"train": {"source_percent": 0.8}}}),
+            du.DEFAULT_SOURCE_PERCENT,
+        ),
+        # If cfg is an empty dict, default is returned.
+        ("train", OmegaConf.create({}), du.DEFAULT_SOURCE_PERCENT),
+        # If cfg has no "data" key, default is returned.
+        ("train", OmegaConf.create({"other_key": {}}), du.DEFAULT_SOURCE_PERCENT),
+        # If "data" exists but split is missing, default is returned.
+        ("train", OmegaConf.create({"data": {}}), du.DEFAULT_SOURCE_PERCENT),
+        # If the split exists but without a "source_percent" key, default is returned.
+        ("train", OmegaConf.create({"data": {"train": {}}}), du.DEFAULT_SOURCE_PERCENT),
+        # If the split exists and has a custom "source_percent" value, return that.
+        ("train", OmegaConf.create({"data": {"train": {"source_percent": 0.8}}}), 0.8),
+        # Test with a different split (e.g., val) having a different source percent.
+        ("val", OmegaConf.create({"data": {"val": {"source_percent": 0.2}}}), 0.2),
+        # Test with eval split having a custom source percent.
+        ("eval", OmegaConf.create({"data": {"eval": {"source_percent": 1.0}}}), 1.0),
+    ],
+)
 def test_get_source_percent(split, cfg, expected):
     result = du.get_source_percent(split, cfg)
     assert result == expected
 
 
 # ---------------------- Test Transforms -----------------------------
+
 
 def test_basic_transforms(transform_cfg):
     """Test if base transforms (ToImage and ToDtype) are always included."""
@@ -239,6 +273,7 @@ def test_get_dataset_cifar10(tmp_path, monkeypatch):
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
+
     monkeypatch.setattr(datasets.CIFAR10, "__init__", fake_cifar10_init)
     root = str(tmp_path)
     dataset = du.get_dataset("cifar10", "train", root=root, download=False)
@@ -246,12 +281,14 @@ def test_get_dataset_cifar10(tmp_path, monkeypatch):
     # For CIFAR10, when source_split=="train", train should be True.
     assert dataset.train is True
 
+
 def test_get_dataset_cifar100(tmp_path, monkeypatch):
     """
     Test that get_dataset returns a CIFAR100 dataset.
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
+
     monkeypatch.setattr(datasets.CIFAR100, "__init__", fake_cifar100_init)
     root = str(tmp_path)
     dataset = du.get_dataset("cifar100", "val", root=root, download=False)
@@ -270,6 +307,7 @@ def test_get_dataset_invalid():
 
 # --- Tests for get_dataloader ---
 
+
 def test_get_dataloader_default_config():
     """
     Test get_dataloader with no custom configuration.
@@ -280,9 +318,12 @@ def test_get_dataloader_default_config():
     generator = torch.Generator()
     valid_split = "train"
     # Assume vu.validate_split(valid_split) returns True.
-    dataloader = du.get_dataloader(dummy_data, sampler, generator, valid_split, cfg=None)
+    dataloader = du.get_dataloader(
+        dummy_data, sampler, generator, valid_split, cfg=None
+    )
     assert dataloader.batch_size == du.DEFAULT_BATCH_SIZE
     assert dataloader.num_workers == du.DEFAULT_NUM_WORKERS
+
 
 def test_get_dataloader_custom_config():
     """
@@ -294,13 +335,16 @@ def test_get_dataloader_custom_config():
     generator = torch.Generator()
     valid_split = "train"
     # Create an OmegaConf configuration with custom values.
-    cfg = OmegaConf.create({
-        "train": {"batch_size": 4},
-        "data": {"num_workers": 2},
-    })
+    cfg = OmegaConf.create(
+        {
+            "train": {"batch_size": 4},
+            "data": {"num_workers": 2},
+        }
+    )
     dataloader = du.get_dataloader(dummy_data, sampler, generator, valid_split, cfg=cfg)
     assert dataloader.batch_size == 4
     assert dataloader.num_workers == 2
+
 
 def test_get_dataloader_invalid_split(monkeypatch):
     """
@@ -319,21 +363,25 @@ def test_get_dataloader_invalid_split(monkeypatch):
 
 # ---------------------- Test Source Calcs -----------------------------
 
+
 def test_get_split_source_config_defaults():
     """
     When no configuration is provided, each split should use itself as the source
     with the default percentage.
     """
     sources, ranges = du.get_split_source_config(cfg=None)
-    
+
     # Each split uses itself as the source.
     expected_sources = list(vu.SPLIT_NAMES)
     # For each split, the range is (0, du.DEFAULT_SOURCE_PERCENT) i.e. (0, 1.0)
-    expected_ranges = {split: (0, du.DEFAULT_SOURCE_PERCENT) for split in vu.SPLIT_NAMES}
-    
+    expected_ranges = {
+        split: (0, du.DEFAULT_SOURCE_PERCENT) for split in vu.SPLIT_NAMES
+    }
+
     # Order may depend on SPLIT_NAMES; we compare sorted lists for safety.
     assert sorted(sources) == sorted(expected_sources)
     assert ranges == expected_ranges
+
 
 def test_get_split_source_config_custom():
     """
@@ -341,15 +389,17 @@ def test_get_split_source_config_custom():
     For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
     while 'eval' uses the default (its own name and 1.0).
     """
-    cfg = OmegaConf.create({
-        "data": {
-            "train": {"source": "official_train", "source_percent": 0.8},
-            "val": {"source": "official_train", "source_percent": 0.2},
-            # "eval" is not specified, so it uses defaults.
+    cfg = OmegaConf.create(
+        {
+            "data": {
+                "train": {"source": "official_train", "source_percent": 0.8},
+                "val": {"source": "official_train", "source_percent": 0.2},
+                # "eval" is not specified, so it uses defaults.
+            }
         }
-    })
+    )
     sources, ranges = du.get_split_source_config(cfg)
-    
+
     # For train: range is (0, 0.8); for val: since it uses the same source "official_train",
     # its range is (0.8, 1.0). For eval: default is used (source "eval", range (0, 1.0)).
     expected_ranges = {
@@ -359,28 +409,34 @@ def test_get_split_source_config_custom():
     }
     # Since 'train' and 'val' share the same source, sources used should be ["official_train", "eval"].
     expected_sources = ["official_train", "eval"]
-    
+
     assert sorted(sources) == sorted(expected_sources)
     assert ranges == expected_ranges
+
 
 def test_get_split_source_config_over_usage():
     """
     Test that an assertion error is raised if the total allocated percentage
     for a shared source exceeds 100% (i.e. > 1.0).
     """
-    cfg = OmegaConf.create({
-        "data": {
-            "train": {"source": "official_train", "source_percent": 0.6},
-            "val": {"source": "official_train", "source_percent": 0.6},
-            # "eval" remains default.
+    cfg = OmegaConf.create(
+        {
+            "data": {
+                "train": {"source": "official_train", "source_percent": 0.6},
+                "val": {"source": "official_train", "source_percent": 0.6},
+                # "eval" remains default.
+            }
         }
-    })
+    )
     # Since train (0.6) and val (0.6) sum to 1.2 (> 1.0), an AssertionError should be raised.
-    with pytest.raises(AssertionError, match=">> Using more than 100% of official_train"):
+    with pytest.raises(
+        AssertionError, match=">> Using more than 100% of official_train"
+    ):
         du.get_split_source_config(cfg)
 
 
 # ---------------------- Test Combination Utils -----------------------------
+
 
 # Test for get_dataloaders
 def test_get_dataloaders(monkeypatch):
@@ -408,20 +464,22 @@ def test_get_dataloaders(monkeypatch):
     monkeypatch.setattr(utils.vu, "SPLIT_NAMES", ["train", "val", "eval"])
 
     # Create a dummy OmegaConf configuration.
-    cfg = OmegaConf.create({
-		"train": {"batch_size": 4},
-		"val": {"batch_size": 3},
-		"eval": {"batch_size": 2},
-        "data": {
-            "name": "dummy",  # Dummy dataset name
-            # For "train" and "val" we use the same source "source1" but different percentages.
-            "train": {"source_percent": 0.8, "source": "source1"},
-            "val": {"source_percent": 0.2, "source": "source1"},
-            # For "eval" use a separate source and default full percent.
-            "eval": {"source_percent": 1.0, "source": "eval"},
-            "num_workers": 0,
+    cfg = OmegaConf.create(
+        {
+            "train": {"batch_size": 4},
+            "val": {"batch_size": 3},
+            "eval": {"batch_size": 2},
+            "data": {
+                "name": "dummy",  # Dummy dataset name
+                # For "train" and "val" we use the same source "source1" but different percentages.
+                "train": {"source_percent": 0.8, "source": "source1"},
+                "val": {"source_percent": 0.2, "source": "source1"},
+                # For "eval" use a separate source and default full percent.
+                "eval": {"source_percent": 1.0, "source": "eval"},
+                "num_workers": 0,
+            },
         }
-    })
+    )
 
     generator = torch.Generator()
 
@@ -435,7 +493,11 @@ def test_get_dataloaders(monkeypatch):
     # and that its batch_size matches what is specified in the configuration.
     for split, dl in dls.items():
         assert isinstance(dl, DataLoader)
-        expected_bs = OmegaConf.to_container(cfg).get(split, {}).get("batch_size", utils.DEFAULT_BATCH_SIZE)
+        expected_bs = (
+            OmegaConf.to_container(cfg)
+            .get(split, {})
+            .get("batch_size", utils.DEFAULT_BATCH_SIZE)
+        )
         assert dl.batch_size == expected_bs
 
     # Optionally, verify that the dataset lengths (after subsetting) are as expected.
@@ -460,7 +522,3 @@ def test_get_dataloaders(monkeypatch):
     assert len(train_indices) in (15, 16)  # rounding may vary
     assert len(val_indices) in (4, 5)
     assert len(eval_indices) == 20
-
-
-
-
