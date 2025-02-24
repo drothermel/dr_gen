@@ -98,7 +98,7 @@ def create_optim_lrsched(cfg, model):
     optimizer = create_optim(cfg.optim.name, model_params, optim_params)
 
     # ---------- LR Sched -----------
-    lrsched_params = {k: cfg.optim.get(k, v) for k, v in LRSCHED_DEFAULTS.itmes()}
+    lrsched_params = {k: cfg.optim.get(k, v) for k, v in LRSCHED_DEFAULTS.items()}
     if "step_size" in cfg.optim:
         lrsched_params["step_size"] = cfg.optim.step_size
     lr_scheduler = create_lrsched(
@@ -111,6 +111,8 @@ def create_optim_lrsched(cfg, model):
 
 def get_model_optim_lrsched(cfg, num_classes):
     model = create_model(cfg, num_classes)
+    optimizer = None
+    lr_scheduler = None
     if cfg.get("load_checkpoint", None) is not None:
         if cfg.md is not None:
             cfg.md.log(f">> Loading checkpoint: {cfg.load_checkpoint}")

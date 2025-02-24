@@ -103,7 +103,7 @@ def test_get_model_optim_lrsched():
     })
     model, optimizer, lr_scheduler = mu.get_model_optim_lrsched(cfg, num_classes=10)
     assert isinstance(model, torch.nn.Module)
-    assert model.device.type == "cpu"
+    assert next(model.parameters()).device.type == "cpu"
     # Check that the optimizer is of the correct type
     assert isinstance(optimizer, torch.optim.AdamW)
     # If no lr_scheduler was provided in the config, one will be created;
