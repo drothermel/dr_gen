@@ -181,7 +181,6 @@ class UsingModelConfig:
 @dataclass
 class UsingOptimConfig:
     device: str = MISSING
-    md: any = None
     model: type = ModelConfig
     optim: type = OptimConfig
 
