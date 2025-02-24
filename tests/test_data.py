@@ -456,7 +456,6 @@ def test_get_dataloaders(monkeypatch):
     monkeypatch.setattr(utils, "get_transform_cfg", dummy_get_transform_cfg)
     monkeypatch.setattr(utils, "get_download", dummy_get_download)
     monkeypatch.setattr(utils, "get_source", dummy_get_source)
-    monkeypatch.setattr(utils, "get_split_source_config", dummy_get_split_source_config)
     monkeypatch.setattr(utils, "get_shuffle", dummy_get_shuffle)
     monkeypatch.setattr(utils.vu, "validate_dataset", dummy_validate_dataset)
     monkeypatch.setattr(utils.vu, "validate_split", dummy_validate_split)
