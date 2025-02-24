@@ -37,17 +37,23 @@ def create_optim(name, model_params, optim_params):
         case OptimizerTypes.SGD.value:
             return torch.optim.SGD(
                 model_params,
-                **optim_params,
+                **{ k: v for k, v in optim_params.items() if k in [
+                    'lr', 'momentum', 'dampening', 'weight_decay', 'nesterov',
+                ]},
             )
         case OptimizerTypes.RMSPROP.value:
             return torch.optim.RMSprop(
                 model_params,
-                **optim_params,
+                **{ k:v for k, v in optim_params.items() if k in [
+                    'lr', 'alpha', 'eps', 'weight_decay', 'momentum',
+                ]},
             )
         case OptimizerTypes.ADAMW.value:
             return torch.optim.AdamW(
                 model_params,
-                **optim_params,
+                **{ k:v for k, v in optim_params.items() if k in [
+                    'lr', 'betas', 'eps', 'weight_decay', 'amsgrad',
+                ]},
             )
 
 
