@@ -143,6 +143,6 @@ def test_checkpoint_model(tmp_path):
     # Verify that the checkpoint file exists and contains the required keys.
     chpt_path = chpt_dir / f"{checkpoint_name}.pt"
     assert chpt_path.exists()
-    chpt = torch.load(chpt_path, map_location="cpu")
+    chpt_data = torch.load(chpt_path, map_location="cpu", weights_only=False)
     for key in ["model", "optimizer", "lr_scheduler"]:
-        assert key in chpt
+        assert key in chpt_data
