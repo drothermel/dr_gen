@@ -175,7 +175,7 @@ def get_dataloaders(cfg, generator):
     # non-overlapping even if they come from the same source.
     ds_root = get_ds_root(cfg=cfg)
     source_indices = {
-        torch.randperm(len(get_dataset(cfg.data.name, source, root=ds_root)))
+        source: torch.randperm(len(get_dataset(cfg.data.name, source, root=ds_root)))
         for source in sources_used
     }
 
@@ -192,7 +192,7 @@ def get_dataloaders(cfg, generator):
         ds = get_source_dataset(cfg, split, source)
         if (start_perc, end_perc) == (0.0, 1.0):
             # For full dataset, only the sampler changes with shuffle
-            sampler = RandomSampler() if shuffle else SequentialSampler()
+            sampler = RandomSampler() if shuffle else SequentialSampler(ds)
         else:
             # For partial dataset, have to select indices of the subest
             start_i = math.floor(num_source_samples * start_perc)

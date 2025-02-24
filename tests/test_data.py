@@ -409,13 +409,16 @@ def test_get_dataloaders(monkeypatch):
 
     # Create a dummy OmegaConf configuration.
     cfg = OmegaConf.create({
+		"train": {"batch_size": 4},
+		"val": {"batch_size": 3},
+		"eval": {"batch_size": 2},
         "data": {
             "name": "dummy",  # Dummy dataset name
             # For "train" and "val" we use the same source "source1" but different percentages.
-            "train": {"batch_size": 4, "source_percent": 0.8, "source": "source1"},
-            "val": {"batch_size": 4, "source_percent": 0.2, "source": "source1"},
+            "train": {"source_percent": 0.8, "source": "source1"},
+            "val": {"source_percent": 0.2, "source": "source1"},
             # For "eval" use a separate source and default full percent.
-            "eval": {"batch_size": 2, "source_percent": 1.0, "source": "eval"},
+            "eval": {"source_percent": 1.0, "source": "eval"},
             "num_workers": 0,
         }
     })
@@ -432,7 +435,7 @@ def test_get_dataloaders(monkeypatch):
     # and that its batch_size matches what is specified in the configuration.
     for split, dl in dls.items():
         assert isinstance(dl, DataLoader)
-        expected_bs = OmegaConf.to_container(cfg.data).get(split, {}).get("batch_size", utils.DEFAULT_BATCH_SIZE)
+        expected_bs = OmegaConf.to_container(cfg).get(split, {}).get("batch_size", utils.DEFAULT_BATCH_SIZE)
         assert dl.batch_size == expected_bs
 
     # Optionally, verify that the dataset lengths (after subsetting) are as expected.
