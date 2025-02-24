@@ -45,11 +45,8 @@ def run(cfg: DictConfig):
     split_dls = du.get_dataloaders(cfg, generator)
     cfg.md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
-    # Model
-    model = mu.create_model(cfg, len(split_dls["train"].dataset.classes))
-
     # Run Train
-    # te.train_loop(cfg, model, split_dls["train"], val_dl=split_dls["val"])
+    te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"])
 
 
 if __name__ == "__main__":

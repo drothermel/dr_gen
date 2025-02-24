@@ -70,10 +70,12 @@ def eval_model(cfg, model, dataloader, criterion, metrics):
     return metrics
 
 
-def train_loop(cfg, model, train_dl, val_dl=None):
+def train_loop(cfg, train_dl, val_dl=None, eval_dl=None):
     assert cfg.md is not None
+    model, optim, lr_sched = mu.get_model_optim_lrsched(
+        cfg, len(train_dl.dataset.classes)
+    )
     criterion = mu.get_criterion(cfg)
-    optim, lr_sched = mu.get_optim(cfg, model)
     mu.checkpoint_model(cfg, model, "init_model")
 
     start_time = time.time()
@@ -89,6 +91,11 @@ def train_loop(cfg, model, train_dl, val_dl=None):
         if val_dl is not None:
             eval_model(cfg, model, val_dl, criterion)
             cfg.md.agg_log("val")
+
+        # Eval
+        if eval_dl is not None:
+            eval_model(cfg, model, eval_dl, criterion)
+            cfg.md.agg_log("eval")
 
         mu.checkpoint_model(cfg, model, f"epoch_{epoch}")
         cfg.md.clear_data()
