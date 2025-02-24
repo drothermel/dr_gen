@@ -2,7 +2,7 @@ from dataclasses import MISSING, dataclass
 from enum import Enum
 import logging
 
-import dr_util.schema_utils as drutil_schemas
+import dr_util.schemas as drutil_schemas
 from dr_util.schema_utils import lenient_validate
 
 # -------------- Validate Enums --------------
@@ -173,7 +173,6 @@ class UsingDataConfig:
 @dataclass
 class UsingModelConfig:
     device: str = MISSING
-    md: any = None
     model: type = ModelConfig
 
 

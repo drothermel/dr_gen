@@ -1,15 +1,15 @@
 import hydra
 from omegaconf import DictConfig
 
-from dr_util.config_verification import validate_cfg
-from dr_gen.utils.train_eval import GenMetrics
-from dr_gen.schemas import get_schema
-
-
 import torch
-import dr_gen.run_utils as ru
-import dr_gen.data_utils as du
-import dr_gen.train_eval as te
+
+from dr_util.config_verification import validate_cfg
+
+from dr_gen.schemas import get_schema
+from dr_gen.utils.metrics import GenMetrics
+import dr_gen.utils.run as ru
+import dr_gen.utils.data as du
+import dr_gen.utils.train_eval as te
 
 
 def validate_run_cfg(cfg):
@@ -36,7 +36,6 @@ def run(cfg: DictConfig):
     md.log(">> Running Training")
 
     # Setup
-    cfg.device = torch.device(cfg.device)
     generator = ru.set_deterministic(cfg.seed)
 
     # Data
@@ -45,7 +44,7 @@ def run(cfg: DictConfig):
     md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
     # Run Train
-    te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"], md=md)
+    #te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"], md=md)
 
 
 if __name__ == "__main__":

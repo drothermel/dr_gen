@@ -1,0 +1,11 @@
+root: /scratch/ddr8143
+proj_dir_name:
+data: ${paths.root}/data
+logs: ${paths.root}/logs
+
+my_data: ${paths.data}/${paths.proj_dir_name}
+my_logs: ${paths.logs}/${paths.proj_dir_name}
+
+run_dir: ${paths.my_logs}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+dataset_cache_root: ${paths.data}/${data.name}/
