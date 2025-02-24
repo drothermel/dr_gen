@@ -32,21 +32,20 @@ def run(cfg: DictConfig):
     # Make Metrics and Log Cfg
     md = GenMetrics(cfg)
     md.log(cfg)
-    cfg.md = md
 
-    cfg.md.log(">> Running Training")
+    md.log(">> Running Training")
 
     # Setup
     cfg.device = torch.device(cfg.device)
     generator = ru.set_deterministic(cfg.seed)
 
     # Data
-    cfg.md.log(" :: Loading Dataloaders :: ")
+    md.log(" :: Loading Dataloaders :: ")
     split_dls = du.get_dataloaders(cfg, generator)
-    cfg.md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
+    md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
     # Run Train
-    te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"])
+    te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"], md=md)
 
 
 if __name__ == "__main__":
