@@ -1,10 +1,10 @@
 defaults:
-    - paths: mac
+    - paths: cluster
     - data: cifar10_pycil
     - _self_
 
 paths:
-    proj_dir_name: dr_util
+    proj_dir_name: dr_gen
 
 hydra:
     run:
@@ -36,32 +36,31 @@ optim:
     weight_decay: 1e-4
     clip_grad_norm:
     lr: 0.1
+    step_size: 90
+    gamma: 0.1
     momentum: 0.9
     eps: 0.0316
     alpha: 0.9
     nesterov: false
     lr_scheduler: steplr
-    lr_step_size: 30
-    lr_gamma: 0.1
     lr_min: 0.0
     lr_warmup_epochs: 0
 
 train:
     run: true
-    batch_size: 100
+    batch_size: 500
 
 val:
     run: true
     batch_size: 10000
 
 eval:
-    run: false
+    run: true
     batch_size: 10000
 
 
-seed: 202
-device: cpu
-md: 
-epochs: 3
+seed: 0
+device: cuda
+epochs: 270
 load_checkpoint:
 write_checkpoint: ${paths.run_dir}/checkpoints/

@@ -17,6 +17,7 @@ OPTIM_DEFAULTS = {
     "nesterov": False,
     "eps": 1e-08,
     "alpha": 0.99,
+    "step_size": 30,
 }
 
 # These match the torch defaults
@@ -37,17 +38,50 @@ def create_optim(name, model_params, optim_params):
         case OptimizerTypes.SGD.value:
             return torch.optim.SGD(
                 model_params,
-                **optim_params,
+                **{
+                    k: v
+                    for k, v in optim_params.items()
+                    if k
+                    in [
+                        "lr",
+                        "momentum",
+                        "dampening",
+                        "weight_decay",
+                        "nesterov",
+                    ]
+                },
             )
         case OptimizerTypes.RMSPROP.value:
             return torch.optim.RMSprop(
                 model_params,
-                **optim_params,
+                **{
+                    k: v
+                    for k, v in optim_params.items()
+                    if k
+                    in [
+                        "lr",
+                        "alpha",
+                        "eps",
+                        "weight_decay",
+                        "momentum",
+                    ]
+                },
             )
         case OptimizerTypes.ADAMW.value:
             return torch.optim.AdamW(
                 model_params,
-                **optim_params,
+                **{
+                    k: v
+                    for k, v in optim_params.items()
+                    if k
+                    in [
+                        "lr",
+                        "betas",
+                        "eps",
+                        "weight_decay",
+                        "amsgrad",
+                    ]
+                },
             )
 
 
@@ -92,7 +126,7 @@ def create_optim_lrsched(cfg, model):
     optimizer = create_optim(cfg.optim.name, model_params, optim_params)
 
     # ---------- LR Sched -----------
-    lrsched_params = {k: cfg.optim.get(k, v) for k, v in LRSCHED_DEFAULTS.itmes()}
+    lrsched_params = {k: cfg.optim.get(k, v) for k, v in LRSCHED_DEFAULTS.items()}
     if "step_size" in cfg.optim:
         lrsched_params["step_size"] = cfg.optim.step_size
     lr_scheduler = create_lrsched(
@@ -103,11 +137,13 @@ def create_optim_lrsched(cfg, model):
     return optimizer, lr_scheduler
 
 
-def get_model_optim_lrsched(cfg, num_classes):
+def get_model_optim_lrsched(cfg, num_classes, md=None):
     model = create_model(cfg, num_classes)
+    optimizer = None
+    lr_scheduler = None
     if cfg.get("load_checkpoint", None) is not None:
-        if cfg.md is not None:
-            cfg.md.log(f">> Loading checkpoint: {cfg.load_checkpoint}")
+        if md is not None:
+            md.log(f">> Loading checkpoint: {cfg.load_checkpoint}")
         checkpoint = torch.load(
             cfg.load_checkpoint,
             map_location="cpu",
@@ -132,7 +168,7 @@ def get_criterion(cfg):
             return torch.nn.CrossEntropyLoss(**crit_params)
 
 
-def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
+def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None, md=None):
     if cfg.get("write_checkpoint", None) is None:
         return
 
@@ -148,5 +184,5 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None):
         ]
     }
     torch.save(chpt, chpt_path)
-    if cfg.md is not None:
-        cfg.md.log(f">> Saved checkpoint to: {chpt_path}")
+    if md is not None:
+        md.log(f">> Saved checkpoint to: {chpt_path}")

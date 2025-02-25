@@ -125,7 +125,7 @@ def build_transforms(xfm_cfg):
 
 # Config Reqs: None, default is source=split, percent=1.0
 def get_split_source_config(cfg):
-    split_source_range = {}
+    split_source_range_dict = {}
     source_usage = defaultdict(int)
     for split in vu.SPLIT_NAMES:
         # Validate source cfg and save split source usage range
@@ -133,12 +133,12 @@ def get_split_source_config(cfg):
         source_p = get_source_percent(split=split, cfg=cfg)
         source_start = source_usage[source]
         source_end = source_usage[source] + source_p
-        split_source_range[split] = (source_start, source_end)
+        split_source_range_dict[split] = (source_start, source_end)
         if source_end > 1.0:
             assert False, f">> Using more than 100% of {source}"
         source_usage[source] = source_end
     sources_used = list(source_usage.keys())
-    return sources_used, split_source_range
+    return sources_used, split_source_range_dict
 
 
 # -------------------- Config Based Loaders -------------------
@@ -168,14 +168,14 @@ def get_dataloaders(cfg, generator):
     # supply multiple splits so fix the source range percents
     # before shuffling based on random seed
     splits = [k for k in vu.SPLIT_NAMES if k in cfg.data]
-    sources_used, split_source_ranges = get_split_source_config(cfg)
+    sources_used, split_source_rs = get_split_source_config(cfg)
 
     # For each source used, shuffle the indices once to have diff
     # data splits per random seed.  Then fix to ensure the splits are
     # non-overlapping even if they come from the same source.
     ds_root = get_ds_root(cfg=cfg)
     source_indices = {
-        torch.randperm(len(get_dataset(cfg.data.name, source, root=ds_root)))
+        source: torch.randperm(len(get_dataset(cfg.data.name, source, root=ds_root)))
         for source in sources_used
     }
 
@@ -188,11 +188,11 @@ def get_dataloaders(cfg, generator):
         # Select the indices for this split
         source = get_source(split, cfg=cfg)
         num_source_samples = len(source_indices[source])
-        start_perc, end_perc = split_source_ranges(split)
+        start_perc, end_perc = split_source_rs[split]
         ds = get_source_dataset(cfg, split, source)
         if (start_perc, end_perc) == (0.0, 1.0):
             # For full dataset, only the sampler changes with shuffle
-            sampler = RandomSampler() if shuffle else SequentialSampler()
+            sampler = RandomSampler() if shuffle else SequentialSampler(ds)
         else:
             # For partial dataset, have to select indices of the subest
             start_i = math.floor(num_source_samples * start_perc)
