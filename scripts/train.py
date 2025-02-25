@@ -44,7 +44,11 @@ def run(cfg: DictConfig):
 
     # Run Train
     te.train_loop(
-        cfg, split_dls["train"], val_dl=split_dls["val"], eval_dl=split_dls['eval'], md=md,
+        cfg,
+        split_dls["train"],
+        val_dl=split_dls["val"],
+        eval_dl=split_dls["eval"],
+        md=md,
     )
     md.log(">> End Run")
 

@@ -93,9 +93,7 @@ class GenMetricsSubgroup(MetricsSubgroup):
 class GenMetrics(Metrics):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.group_names = [
-            s for s in SPLIT_NAMES if cfg.get(s, {}).get('run', False)
-        ]
+        self.group_names = [s for s in SPLIT_NAMES if cfg.get(s, {}).get("run", False)]
 
         # Initialize subgroups and loggers
         self.groups = {name: GenMetricsSubgroup(cfg, name) for name in self.group_names}

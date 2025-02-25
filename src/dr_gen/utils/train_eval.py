@@ -33,7 +33,7 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
     model.train()
     for i, (image, target) in enumerate(dataloader):
         if i % 10 == 0:
-            md.log(f">> Sample: {i*image.shape[0]} / {len(dataloader.dataset)}")
+            md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")
         image, target = image.to(cfg.device), target.to(cfg.device)
         output = model(image)
         loss = criterion(output, target)
@@ -74,7 +74,9 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
 def train_loop(cfg, train_dl, val_dl=None, eval_dl=None, md=None):
     assert md is not None  # Temporarily
     model, optim, lr_sched = mu.get_model_optim_lrsched(
-        cfg, len(train_dl.dataset.classes), md=md,
+        cfg,
+        len(train_dl.dataset.classes),
+        md=md,
     )
     criterion = mu.get_criterion(cfg)
     mu.checkpoint_model(cfg, model, "init_model", md=md)
@@ -91,15 +93,15 @@ def train_loop(cfg, train_dl, val_dl=None, eval_dl=None, md=None):
 
         # Val
         if val_dl is not None:
-            eval_model(cfg, model, val_dl, criterion, 'val', md=md)
+            eval_model(cfg, model, val_dl, criterion, "val", md=md)
             md.agg_log("val")
 
         # Eval
         if eval_dl is not None:
-            eval_model(cfg, model, eval_dl, criterion, 'eval', md=md)
+            eval_model(cfg, model, eval_dl, criterion, "eval", md=md)
             md.agg_log("eval")
 
-        #mu.checkpoint_model(cfg, model, f"epoch_{epoch}", md=md)
+        # mu.checkpoint_model(cfg, model, f"epoch_{epoch}", md=md)
         md.clear_data()
         md.log("")
 
