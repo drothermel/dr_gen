@@ -13,7 +13,7 @@ hydra:
         formatters:
             simple:
                 format: "%(asctime)s - %(message)s"
-                datefmt: "%Y-%m-%d %H:%M:%s"
+                datefmt: "%Y-%m-%d %H:%M:%S"
 
 metrics:
     loggers:
@@ -49,7 +49,7 @@ optim:
 
 train:
     run: true
-    batch_size: 1000
+    batch_size: 500
 
 val:
     run: true
@@ -62,6 +62,6 @@ eval:
 
 seed: 0
 device: cuda
-epochs: 2
+epochs: 90
 load_checkpoint:
 write_checkpoint: ${paths.run_dir}/checkpoints/
