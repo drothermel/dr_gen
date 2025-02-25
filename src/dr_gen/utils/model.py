@@ -106,11 +106,13 @@ def create_lrsched(name, optimizer, lrsched_params):
 
 # Config Req: cfg.model.name
 def create_model(cfg, num_classes):
+    assert "resnet" in cfg.model.name
     model = torchvision.models.get_model(
         cfg.model.name,
         weights=cfg.model.get("weights", None),
-        num_classes=num_classes,
     )
+    if model.fc.out_features != num_classes:
+        model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
     return model
 
 

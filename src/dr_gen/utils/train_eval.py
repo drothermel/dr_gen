@@ -32,7 +32,7 @@ def log_metrics(md, group_name, **kwargs):
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
     model.train()
     for i, (image, target) in enumerate(dataloader):
-        #if i % 10 == 0:
+        # if i % 10 == 0:
         #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")
         image, target = image.to(cfg.device), target.to(cfg.device)
         output = model(image)
