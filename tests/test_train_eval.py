@@ -17,7 +17,7 @@ class DummyMetrics:
     def __init__(self):
         self.logs = []  # collect all log calls for inspection
 
-    def log_data(self, data):
+    def log_data(self, data, group_name, ns=None):
         self.logs.append(("log_data", data))
 
     def log(self, msg):
@@ -35,7 +35,7 @@ class DummyMetrics:
 # ----------------------
 def dummy_accuracy(output, target, topk=(1,)):
     # For testing, simply return fixed perfect accuracies.
-    return (100.0, 100.0)
+    return torch.tensor([100.0, 100.0])
 
 
 # Dummy implementations to override model utils functions.
@@ -43,7 +43,7 @@ def dummy_get_criterion(cfg):
     return nn.CrossEntropyLoss()
 
 
-def dummy_checkpoint_model(cfg, model, name):
+def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None):
     # Do nothing for checkpointing during tests.
     pass
 
@@ -83,6 +83,9 @@ def dummy_cfg(tmp_path):
         {
             "device": "cpu",
             "epochs": 2,
+            "train": {"run": True},
+            "val": {"run": True},
+            "eval": {"run": True},
             "optim": {
                 "lr": 0.01,
                 "name": "sgd",
@@ -135,7 +138,7 @@ def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
     optimizer = torch.optim.SGD(dummy_model.parameters(), lr=dummy_cfg.optim.lr)
     # Run one epoch of training.
     te.train_epoch(
-        dummy_cfg, 0, dummy_model, dummy_dataloader, criterion, optimizer, md=md
+        dummy_cfg, 0, dummy_model, dummy_dataloader, criterion, optimizer, md=md,
     )
     # Check that some log entries were recorded.
     assert len(md.logs) > 0

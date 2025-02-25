@@ -36,6 +36,9 @@ def dummy_cfg(dummy_data_structure):
     # Minimal dummy config; note that GenMetricsSubgroup expects a cfg and a group name.
     return OmegaConf.create(
         {
+            "train": {"run": True},
+            "dev": {"run": True},
+            "val": {"run": True},
             "data": {
                 "name": "dummy",
                 "train": {"batch_size": 4},
