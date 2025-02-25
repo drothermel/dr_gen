@@ -112,5 +112,5 @@ class GenMetrics(Metrics):
     def agg_log(self, data_name):
         try:
             super().agg_log(data_name)
-        except:
+        except:  # noqa: E722
             self.log(f">> Aggregation failed for {data_name}")

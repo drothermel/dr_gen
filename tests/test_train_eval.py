@@ -138,7 +138,13 @@ def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
     optimizer = torch.optim.SGD(dummy_model.parameters(), lr=dummy_cfg.optim.lr)
     # Run one epoch of training.
     te.train_epoch(
-        dummy_cfg, 0, dummy_model, dummy_dataloader, criterion, optimizer, md=md,
+        dummy_cfg,
+        0,
+        dummy_model,
+        dummy_dataloader,
+        criterion,
+        optimizer,
+        md=md,
     )
     # Check that some log entries were recorded.
     assert len(md.logs) > 0
