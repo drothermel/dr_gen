@@ -13,6 +13,8 @@ from dr_util.metrics import (
     create_logger,
 )
 
+from dr_gen.schemas import SPLIT_NAMES
+
 
 class GenMetricType(Enum):
     INT = "int"
@@ -91,7 +93,9 @@ class GenMetricsSubgroup(MetricsSubgroup):
 class GenMetrics(Metrics):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.group_names = ["train", "val"]
+        self.group_names = [
+            s for s in SPLIT_NAMES if cfg.get(s, {}).get('run', False)
+        ]
 
         # Initialize subgroups and loggers
         self.groups = {name: GenMetricsSubgroup(cfg, name) for name in self.group_names}
@@ -106,3 +110,9 @@ class GenMetrics(Metrics):
         for gname, group in self.groups.items():
             if group_name == gname or group_name is None:
                 group.clear_data()
+
+    def agg_log(self, data_name):
+        try:
+            super().agg_log(data_name)
+        except:
+            self.log(f">> Aggregation failed for {data_name}")

@@ -13,7 +13,7 @@ hydra:
         formatters:
             simple:
                 format: "%(asctime)s - %(message)s"
-                datefmt: "%Y-%m-%d %H:%M:%S"
+                datefmt: "%Y-%m-%d %H:%M:%s"
 
 metrics:
     loggers:
@@ -36,6 +36,7 @@ optim:
     weight_decay: 1e-4
     clip_grad_norm:
     lr: 0.1
+    step_size: 30
     momentum: 0.9
     eps: 0.0316
     alpha: 0.9
@@ -55,7 +56,7 @@ val:
     batch_size: 10000
 
 eval:
-    run: false
+    run: true
     batch_size: 10000
 
 

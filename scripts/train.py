@@ -8,6 +8,7 @@ from dr_gen.schemas import get_schema
 from dr_gen.utils.metrics import GenMetrics
 import dr_gen.utils.run as ru
 import dr_gen.utils.data as du
+import dr_gen.utils.train_eval as te
 
 
 def validate_run_cfg(cfg):
@@ -42,7 +43,10 @@ def run(cfg: DictConfig):
     md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
     # Run Train
-    # te.train_loop(cfg, split_dls["train"], val_dl=split_dls["val"], md=md)
+    te.train_loop(
+        cfg, split_dls["train"], val_dl=split_dls["val"], eval_dl=split_dls['eval'], md=md,
+    )
+    md.log(">> End Run")
 
 
 if __name__ == "__main__":
