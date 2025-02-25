@@ -4,7 +4,7 @@ defaults:
     - _self_
 
 paths:
-    proj_dir_name: dr_util
+    proj_dir_name: dr_gen
 
 hydra:
     run:
@@ -49,7 +49,7 @@ optim:
 
 train:
     run: true
-    batch_size: 100
+    batch_size: 1000
 
 val:
     run: true
@@ -60,8 +60,8 @@ eval:
     batch_size: 10000
 
 
-seed: 202
-device: cpu
+seed: 0
+device: cuda
 epochs: 2
 load_checkpoint:
 write_checkpoint: ${paths.run_dir}/checkpoints/
