@@ -40,7 +40,7 @@ class RunLogConfig:
         pretty=True,
     ):
         sweep_cfg = {}
-        for k, v in self.flat_cfg:
+        for k, v in self.flat_cfg.items():
             if k not in keys:
                 continue
             if pretty:
