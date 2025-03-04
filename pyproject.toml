@@ -11,6 +11,7 @@ dependencies = [
     "dr-util",
     "hydra-core==1.3",
     "matplotlib>=3.10.0",
+    "prettytable>=3.15.1",
     "scipy>=1.15.2",
     "torch>=2.6.0",
     "torchaudio>=2.6.0",
