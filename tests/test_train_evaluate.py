@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-import dr_gen.utils.evaluate as eu
+import dr_gen.train.evaluate as eu
 
 
 def test_accuracy_top1_top5():
