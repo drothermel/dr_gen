@@ -63,4 +63,4 @@ seed: 0
 device: cuda
 epochs: 270
 load_checkpoint:
-write_checkpoint: ${paths.run_dir}/checkpoints/
+write_checkpoint: 

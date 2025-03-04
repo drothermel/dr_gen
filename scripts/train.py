@@ -1,14 +1,13 @@
 import hydra
 from omegaconf import DictConfig
 
-
 from dr_util.config_verification import validate_cfg
 
 from dr_gen.schemas import get_schema
 from dr_gen.utils.metrics import GenMetrics
-import dr_gen.utils.run as ru
-import dr_gen.utils.data as du
-import dr_gen.utils.train_eval as te
+from dr_gen.utils.run import set_deterministic
+from dr_gen.data.load_data import get_dataloaders
+from dr_gen.train.loops import train_loop
 
 
 def validate_run_cfg(cfg):
@@ -35,15 +34,15 @@ def run(cfg: DictConfig):
     md.log(">> Running Training")
 
     # Setup
-    generator = ru.set_deterministic(cfg.seed)
+    generator = set_deterministic(cfg.seed)
 
     # Data
     md.log(" :: Loading Dataloaders :: ")
-    split_dls = du.get_dataloaders(cfg, generator)
+    split_dls = get_dataloaders(cfg, generator)
     md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
 
     # Run Train
-    te.train_loop(
+    train_loop(
         cfg,
         split_dls["train"],
         val_dl=split_dls["val"],

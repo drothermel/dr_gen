@@ -6,8 +6,8 @@ import torch.nn as nn
 
 from dr_util.metrics import BATCH_KEY
 
-import dr_gen.utils.evaluate as eu
-import dr_gen.utils.model as mu
+import dr_gen.train.evaluate as eu
+import dr_gen.train.model as mu
 
 
 def log_metrics(md, group_name, **kwargs):
