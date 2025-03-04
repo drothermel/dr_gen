@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from dr_gen.analyze.plot_utils import plcv, get_plt_cfg
+from dr_gen.analyze.plot_utils import plcv
 
 def plot_histogram(
     plc,
@@ -40,7 +40,7 @@ def plot_histogram_compare(
 
     plt.xlabel(plcv(plc, "xlabel", "acc1"))
     plt.ylabel(plcv(plc, "ylabel", "Frequency"))
-    plt.title(plcv(plc, "title", f"Histogram"))
+    plt.title(plcv(plc, "title", "Histogram"))
     if plc.legend:
         plt.legend()
     plt.grid(plc.grid)

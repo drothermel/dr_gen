@@ -2,8 +2,6 @@ from pathlib import Path
 import random
 from collections import defaultdict
 from datetime import datetime
-import copy
-from prettytable import PrettyTable
 
 import dr_util.file_utils as fu
 
@@ -15,7 +13,7 @@ def get_all_logs(base_dir):
     log_dir = Path(base_dir)
     all_files = [f.resolve() for f in log_dir.rglob("*.jsonl") if f.is_file()]
     print(f">> Found {len(all_files):,} files")
-    print(f">> Loading files")
+    print(">> Loading files")
     return [{
         "log_path": f,
         "log_data": fu.load_file(f),
@@ -71,13 +69,13 @@ def get_train_time_from_file(file_lines):
 def get_metrics_from_file(file_lines):
     metrics = defaultdict(list)
     epoch = defaultdict(int)
-    for l in file_lines:
-        if "type" in l: # Metrics lines don't have a type
+    for ln in file_lines:
+        if "type" in ln: # Metrics lines don't have a type
             continue
 
         # If the data has a name and agg_stats, collect it
-        split = l.get("data_name", None)
-        stats = l.get("agg_stats", None)
+        split = ln.get("data_name", None)
+        stats = ln.get("agg_stats", None)
         if split is not None and stats is not None:
             metrics[split].append({"epoch": epoch[split], **stats})
             epoch[split] += 1

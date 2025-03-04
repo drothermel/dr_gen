@@ -107,22 +107,6 @@ def plot_split_summaries(
     )
     return 
     
-    
-    _, kvstr = get_run_sweep_kvs(
-        runs, sweep_info['combo_key_order'], run_ind,
-    )
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_lines(
-        plc,
-        [
-            rp.get_run_metrics(
-                remapped_metrics, split, metric, run_ind,
-            ) for split in splits
-        ],
-    )
 
 def plot_combo_histogram(
     runs,
@@ -288,7 +272,10 @@ def ks_stats_plot_cdfs(
     
     
     plc_args = {
-        "labels": labels_kvstrs,
+        "labels": [
+            f"{label} | #seed: {ns[i]}" for i, label in enumerate(labels_kvstrs)
+        ],
+        "title": f"CDF | {title_kvstr}",
     }
     plc_args.update(kwargs)
     plc = pu.get_plt_cfg(
