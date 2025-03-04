@@ -90,7 +90,7 @@ class LogFileData:
         if not all([len(vals) == expected_epochs for vals in all_vals.values()]):
             self.parse_errors.append(">> Not all vals are the expected length")
 
-    def get_flat_confg(self):
+    def get_flat_config(self):
         if self.config is None:
             return {}
         return self.config.flat_cfg
@@ -110,7 +110,7 @@ class LogFileData:
         # (split, metric_name, x_name): list
         return flatten_dict_tuple_keys(nested_xs)
 
-    def get_all_vs(self):
+    def get_all_vals(self):
         vals = {}  # split: metric_name: x_name: list
         for split, split_metrics in self.metrics_by_split.items():
             vals[split] = split_metrics.get_all_vals()

@@ -1,7 +1,9 @@
 defaults:
     - paths: mac
+    - _self_
 
 paths:
+    run_dir: ${paths.my_logs}/${now:%Y-%m-%d}/${now:%H-%M-%s}
     proj_dir_name: dr_gen_analyze
 
 hydra:

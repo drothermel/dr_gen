@@ -29,7 +29,7 @@ class SplitMetrics:
             self.curves[metric_name] = MetricCurves(
                 self.config,
                 self.split,
-                self.metric_name,
+                metric_name,
             )
         self.curves[metric_name].add_x_v(
             x,
@@ -50,7 +50,7 @@ class SplitMetrics:
 
     def get_all_xs(self):
         xs = {}  # metric_name: x_name: list
-        for metric_name, metric_curves in self.curves:
+        for metric_name, metric_curves in self.curves.items():
             xs[metric_name] = metric_curves.get_all_xs()
         return xs
 
@@ -61,7 +61,7 @@ class SplitMetrics:
 
     def get_all_vals(self):
         vals = {}  # metric_name: x_name: list
-        for metric_name, metric_curves in self.curves:
+        for metric_name, metric_curves in self.curves.items():
             vals[metric_name] = metric_curves.get_all_vals()
         return vals
 
