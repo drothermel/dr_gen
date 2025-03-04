@@ -3,10 +3,11 @@ import dr_gen.analyze.plot_utils as pu
 import dr_gen.analyze.histogram_plotting as hp
 import dr_gen.analyze.ks_stats as ks
 
+
 def kvs_to_str(kvs):
     kv_strs = []
     for k, v in kvs:
-        kstr = k.split('.')[-1]
+        kstr = k.split(".")[-1]
         if k == "model.weights":
             kstr = "init"
             vstr = "random" if v == "None" else "pretrain"
@@ -15,6 +16,7 @@ def kvs_to_str(kvs):
         kv_strs.append(f"{kstr}={vstr}")
     return " ".join(kv_strs)
 
+
 def get_run_sweep_kvs(
     run_logs,
     combo_key_order,
@@ -22,35 +24,38 @@ def get_run_sweep_kvs(
     seed=False,
     ignore_keys=[],
 ):
-    keys = [*combo_key_order, 'seed' if seed else ""]
+    keys = [*combo_key_order, "seed" if seed else ""]
     keys = [k for k in keys if k != "" and k not in ignore_keys]
-    
+
     run_cfg, _, _ = run_logs[ind]
     kvs = [(k, run_cfg[k]) for k in keys]
     kv_str = kvs_to_str(kvs)
     return kvs, kv_str
-    
+
 
 def plot_run_splits(
     runs,
     remapped_metrics,
     sweep_info,
     run_ind,
-    splits=['train', 'val', 'eval'],
+    splits=["train", "val", "eval"],
     metric="acc1",
     ignore_keys=[],
     **kwargs,
 ):
     _, kvstr = get_run_sweep_kvs(
-        runs, sweep_info['combo_key_order'], run_ind,
-        seed=True, ignore_keys=ignore_keys,
+        runs,
+        sweep_info["combo_key_order"],
+        run_ind,
+        seed=True,
+        ignore_keys=ignore_keys,
     )
     plc_args = {
         "ylim": (70, 100),
         "labels": splits,
         "title": f"{metric} | {kvstr}",
         "ylabel": metric,
-    } 
+    }
     plc_args.update(kwargs)
     plc = pu.get_plt_cfg(
         **plc_args,
@@ -59,8 +64,12 @@ def plot_run_splits(
         plc,
         [
             rp.get_run_metrics(
-                remapped_metrics, split, metric, run_ind,
-            ) for split in splits
+                remapped_metrics,
+                split,
+                metric,
+                run_ind,
+            )
+            for split in splits
         ],
     )
 
@@ -70,7 +79,7 @@ def plot_split_summaries(
     remapped_metrics,
     sweep_info,
     kv_select,
-    splits=['train', 'val', 'eval'],
+    splits=["train", "val", "eval"],
     metric="acc1",
     ignore_keys=[],
     num_seeds=None,
@@ -99,14 +108,14 @@ def plot_split_summaries(
         "labels": [f"{spl} mean {metric}" for spl in splits],
         "title": kv_str,
         "ylabel": metric,
-    } 
+    }
     plc_args.update(kwargs)
     pu.plot_summary_lines(
         pu.get_plt_cfg(**plc_args),
         [split_vals[split][0] for split in splits],
     )
-    return 
-    
+    return
+
 
 def plot_combo_histogram(
     runs,
@@ -114,8 +123,8 @@ def plot_combo_histogram(
     sweep_info,
     kv_select,
     split,
-    epoch, 
-    metric='acc1',
+    epoch,
+    metric="acc1",
     ignore_keys=[],
     num_seeds=None,
     **kwargs,
@@ -133,17 +142,19 @@ def plot_combo_histogram(
 
     all_ind_stats = []
     for split_vals in all_split_vals[split]:
-        all_ind_stats.append(pu.get_runs_data_stats_ind(
-            split_vals,
-            ind=epoch,
-        ))
+        all_ind_stats.append(
+            pu.get_runs_data_stats_ind(
+                split_vals,
+                ind=epoch,
+            )
+        )
 
     if len(all_ind_stats) > 1:
         print(f">> Just using first of {len(all_ind_stats)} combos")
 
-    n = all_ind_stats[0]['n']
+    n = all_ind_stats[0]["n"]
     plc_args = {
-        "nbins": n//4,
+        "nbins": n // 4,
         "hist_range": (80, 90),
         "title": f"Accuracy Distribution, {n} Seeds",
         "ylabel": "Num Runs",
@@ -152,11 +163,12 @@ def plot_combo_histogram(
     plc = pu.get_plt_cfg(
         **plc_args,
     )
-        
+
     hp.plot_histogram(
         plc,
-        all_ind_stats[0]['vals'],
+        all_ind_stats[0]["vals"],
     )
+
 
 def plot_combo_histogram_compare(
     runs,
@@ -164,11 +176,11 @@ def plot_combo_histogram_compare(
     sweep_info,
     kv_select,
     split,
-    epoch, 
-    metric='acc1',
+    epoch,
+    metric="acc1",
     ignore_keys=[],
     num_seeds=None,
-    vary_key='model.weights',
+    vary_key="model.weights",
     **kwargs,
 ):
     all_kvs, all_split_vals, _ = rp.get_selected_combo(
@@ -192,16 +204,12 @@ def plot_combo_histogram_compare(
         )
 
     labels_kvstrs = [
-        kvs_to_str(
-            [(k, v) for k, v in kvs if k == vary_key]
-        ) for kvs in all_kvs
+        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in all_kvs
     ]
-    title_kvstr = kvs_to_str(
-        [(k, v) for k, v in all_kvs[0] if k != vary_key]
-    )
-    ns = [sts['n'] for sts in all_ind_stats]
+    title_kvstr = kvs_to_str([(k, v) for k, v in all_kvs[0] if k != vary_key])
+    ns = [sts["n"] for sts in all_ind_stats]
     plc_args = {
-        "nbins": max(ns)//4,
+        "nbins": max(ns) // 4,
         "hist_range": (80, 90),
         "title": f"Accuracy Distribution | {title_kvstr}",
         "ylabel": "Num Runs",
@@ -214,17 +222,18 @@ def plot_combo_histogram_compare(
 
     hp.plot_histogram_compare(plc, all_ind_stats)
 
+
 def ks_stats_plot_cdfs(
     runs,
     remapped_metrics,
     sweep_info,
     kv_select,
     split,
-    epoch, 
-    metric='acc1',
+    epoch,
+    metric="acc1",
     ignore_keys=[],
     num_seeds=None,
-    vary_key='model.weights',
+    vary_key="model.weights",
     vary_vals=None,
     **kwargs,
 ):
@@ -249,11 +258,12 @@ def ks_stats_plot_cdfs(
         if vary_vals is None or v in vary_vals:
             all_ind_vals.append(
                 pu.get_runs_data_stats_ind(
-                    split_vals, ind=epoch,
-                )['vals']
+                    split_vals,
+                    ind=epoch,
+                )["vals"]
             )
             selected_kvs.append(kv)
-        
+
     assert len(all_ind_vals) == 2
     results = ks.calculate_ks_for_run_sets(
         all_ind_vals[0],
@@ -261,16 +271,11 @@ def ks_stats_plot_cdfs(
     )
 
     labels_kvstrs = [
-        kvs_to_str(
-            [(k, v) for k, v in kvs if k == vary_key]
-        ) for kvs in selected_kvs
+        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
     ]
-    title_kvstr = kvs_to_str(
-        [(k, v) for k, v in selected_kvs[0] if k != vary_key]
-    )
+    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
     ns = [len(vs) for vs in all_ind_vals]
-    
-    
+
     plc_args = {
         "labels": [
             f"{label} | #seed: {ns[i]}" for i, label in enumerate(labels_kvstrs)
@@ -283,9 +288,10 @@ def ks_stats_plot_cdfs(
     )
     pu.plot_cdfs(
         plc,
-        results['all_vals'],
-        [results['cdf1'], results['cdf2']],
+        results["all_vals"],
+        [results["cdf1"], results["cdf2"]],
     )
+
 
 def ks_stat_plot_cdfs_histograms(
     runs,
@@ -293,11 +299,11 @@ def ks_stat_plot_cdfs_histograms(
     sweep_info,
     kv_select,
     split,
-    epoch, 
-    metric='acc1',
+    epoch,
+    metric="acc1",
     ignore_keys=[],
     num_seeds=None,
-    vary_key='model.weights',
+    vary_key="model.weights",
     vary_vals=None,
     **kwargs,
 ):
@@ -322,27 +328,23 @@ def ks_stat_plot_cdfs_histograms(
         if vary_vals is None or v in vary_vals:
             all_ind_stats.append(
                 pu.get_runs_data_stats_ind(
-                    split_vals, ind=epoch,
+                    split_vals,
+                    ind=epoch,
                 )
             )
             selected_kvs.append(kv)
-        
+
     assert len(all_ind_stats) == 2
     results = ks.calculate_ks_for_run_sets(
-        all_ind_stats[0]['vals'],
-        all_ind_stats[1]['vals'],
+        all_ind_stats[0]["vals"],
+        all_ind_stats[1]["vals"],
     )
 
     labels_kvstrs = [
-        kvs_to_str(
-            [(k, v) for k, v in kvs if k == vary_key]
-        ) for kvs in selected_kvs
+        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
     ]
-    title_kvstr = kvs_to_str(
-        [(k, v) for k, v in selected_kvs[0] if k != vary_key]
-    )
+    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
     ns = [len(vs) for vs in all_ind_stats]
-    
 
     # Plot the CDFs
     plc_args = {
@@ -354,13 +356,13 @@ def ks_stat_plot_cdfs_histograms(
     )
     pu.plot_cdfs(
         plc,
-        results['all_vals'],
-        [results['cdf1'], results['cdf2']],
+        results["all_vals"],
+        [results["cdf1"], results["cdf2"]],
     )
 
     # Plot the histograms
     plc_args = {
-        "nbins": max(ns)//4,
+        "nbins": max(ns) // 4,
         "hist_range": (80, 90),
         "title": f"Accuracy Distribution | {title_kvstr}",
         "ylabel": "Num Runs",
@@ -373,5 +375,3 @@ def ks_stat_plot_cdfs_histograms(
     )
 
     hp.plot_histogram_compare(plc, all_ind_stats)
-
-    

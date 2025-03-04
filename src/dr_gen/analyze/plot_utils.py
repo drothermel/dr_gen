@@ -4,20 +4,22 @@ import numpy as np
 
 
 def get_plt_cfg(**kwargs):
-    base_plt_cfg = OmegaConf.create({
-        "figsize": (10, 6),
-        "legend": False,
-        "grid": True,
-        "nbins": 10,
-        "hist_range": None,
-        "title": None,
-        "xlabel": None,
-        "ylabel": None,
-        "labels": None,
-        "xlim": None,
-        "ylim": None,
-        "density": False,
-    })
+    base_plt_cfg = OmegaConf.create(
+        {
+            "figsize": (10, 6),
+            "legend": False,
+            "grid": True,
+            "nbins": 10,
+            "hist_range": None,
+            "title": None,
+            "xlabel": None,
+            "ylabel": None,
+            "labels": None,
+            "xlim": None,
+            "ylim": None,
+            "density": False,
+        }
+    )
     plc = base_plt_cfg.copy()
     plc.hist_range = (80.0, 100.0)
     plc.nbins = 100
@@ -28,10 +30,12 @@ def get_plt_cfg(**kwargs):
             plc[k] = v
     return plc
 
+
 def plcv(plc, key, default):
     if key in plc and plc[key] is not None:
         return plc[key]
     return default
+
 
 def plot_lines(
     plc,
@@ -41,11 +45,11 @@ def plot_lines(
         print(">> invalid data")
         return
     plt.figure(figsize=plc.figsize)
-    labels = plcv(plc, 'labels', range(len(data_lists)))
+    labels = plcv(plc, "labels", range(len(data_lists)))
     x = range(len(data_lists[0]))
     for i, data in enumerate(data_lists):
-        plt.plot(x, data, linestyle='-', label=labels[i])
-        
+        plt.plot(x, data, linestyle="-", label=labels[i])
+
     plt.xlabel(plcv(plc, "xlabel", "Epoch"))
     plt.ylabel(plcv(plc, "ylabel", "Loss"))
     plt.title(plcv(plc, "title", "Loss During Training"))
@@ -57,6 +61,7 @@ def plot_lines(
     if plc.ylim is not None:
         plt.ylim(plc.ylim)
     plt.show()
+
 
 def get_runs_data_stats(runs_data):
     n = len(runs_data)
@@ -78,19 +83,18 @@ def get_runs_data_stats(runs_data):
         "max": np.max(v_array, axis=0),
     }
 
+
 def get_runs_data_stats_ind(runs_data, ind):
     stats = get_runs_data_stats(runs_data)
-    ind_stats = {
-        k: v[ind] for k, v in stats.items() if k != "n"
-    }
-    ind_stats['n'] = stats['n']
-    ind_stats['vals'] = [rd[ind] for rd in runs_data]
+    ind_stats = {k: v[ind] for k, v in stats.items() if k != "n"}
+    ind_stats["n"] = stats["n"]
+    ind_stats["vals"] = [rd[ind] for rd in runs_data]
     return ind_stats
-    
+
 
 # Expected: [list_of_data = [metrics_per_epoch ...] ...]
 def plot_summary_lines(
-    plc, 
+    plc,
     data_lists,
 ):
     # Expected data_list shapes: Num Datasets x Num Runs x Num Epochs
@@ -98,27 +102,34 @@ def plot_summary_lines(
     assert len(data_lists) > 0, ">> Invalid Data: Need at least one dataset"
     assert len(data_lists[0]) > 0, ">> Inv. Data: Dataset needs at least one run"
     assert len(data_lists[0][0]) > 0, ">> Inv. D: Run needs at least one epoch metric"
-    
+
     plt.figure(figsize=plc.figsize)
-    labels = plcv(plc, 'labels', ['train mean', 'val mean', 'eval mean'])
+    labels = plcv(plc, "labels", ["train mean", "val mean", "eval mean"])
 
     for i, runs_data in enumerate(data_lists):
         rd_stats = get_runs_data_stats(runs_data)
-        x = rd_stats['epochs']
-        line_mean, = plt.plot(x, rd_stats['mean'], linewidth=3, label=labels[i])
+        x = rd_stats["epochs"]
+        (line_mean,) = plt.plot(x, rd_stats["mean"], linewidth=3, label=labels[i])
         color = line_mean.get_color()
-        plt.fill_between(x, rd_stats['min'], rd_stats['max'], color=color, alpha=0.1)
+        plt.fill_between(x, rd_stats["min"], rd_stats["max"], color=color, alpha=0.1)
         plt.fill_between(
-            x, rd_stats['std_lower'], rd_stats['std_upper'],
-            color=color, alpha=0.3
+            x, rd_stats["std_lower"], rd_stats["std_upper"], color=color, alpha=0.3
         )
         plt.plot(
-            x, rd_stats['sem_lower'], linestyle='-', linewidth=1,
-            color=color, alpha=0.5, 
+            x,
+            rd_stats["sem_lower"],
+            linestyle="-",
+            linewidth=1,
+            color=color,
+            alpha=0.5,
         )
         plt.plot(
-            x, rd_stats['sem_upper'], linestyle='-', linewidth=1,
-            color=color, alpha=0.5, 
+            x,
+            rd_stats["sem_upper"],
+            linestyle="-",
+            linewidth=1,
+            color=color,
+            alpha=0.5,
         )
 
     plt.xlabel(plcv(plc, "xlabel", "Epoch"))
@@ -133,12 +144,13 @@ def plot_summary_lines(
         plt.ylim(plc.ylim)
     plt.show()
 
+
 def plot_cdf(plc, vals, cdf):
     plt.figure(figsize=plc.figsize)
-    #labels = plcv(plc, 'labels', range(len(data_lists)))
-    plt.plot(vals, cdf, linestyle='-', label='CDF')
-    plt.fill_between(vals, cdf, color='skyblue', alpha=0.4)
-        
+    # labels = plcv(plc, 'labels', range(len(data_lists)))
+    plt.plot(vals, cdf, linestyle="-", label="CDF")
+    plt.fill_between(vals, cdf, color="skyblue", alpha=0.4)
+
     plt.xlabel(plcv(plc, "xlabel", "Epoch"))
     plt.ylabel(plcv(plc, "ylabel", "Loss"))
     plt.title(plcv(plc, "title", "CDF"))
@@ -150,18 +162,16 @@ def plot_cdf(plc, vals, cdf):
     if plc.ylim is not None:
         plt.ylim(plc.ylim)
     plt.show()
-    
-    
+
+
 def plot_cdfs(plc, vals, cdfs):
     plt.figure(figsize=plc.figsize)
-    labels = plcv(plc, 'labels', [f"CDF {i}" for i in range(len(cdfs))])
+    labels = plcv(plc, "labels", [f"CDF {i}" for i in range(len(cdfs))])
     for i, cdf in enumerate(cdfs):
-        line, = plt.plot(vals, cdf, linestyle='-', label=labels[i])
+        (line,) = plt.plot(vals, cdf, linestyle="-", label=labels[i])
         color = line.get_color()
-        plt.fill_between(
-            vals, cdf, color=color, alpha=0.3
-        )
-        
+        plt.fill_between(vals, cdf, color=color, alpha=0.3)
+
     plt.xlabel(plcv(plc, "xlabel", "Epoch"))
     plt.ylabel(plcv(plc, "ylabel", "Loss"))
     plt.title(plcv(plc, "title", "CDF"))
@@ -173,7 +183,3 @@ def plot_cdfs(plc, vals, cdfs):
     if plc.ylim is not None:
         plt.ylim(plc.ylim)
     plt.show()
-    
-        
-
-    
