@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 from collections import defaultdict
 from datetime import datetime
 import copy
@@ -207,10 +208,10 @@ def get_combo_table_contents(key_order, combo_inds):
         contents.append([k[i] for i in ind_order] + [len(v)])
     return field_names, contents
 
-def get_inds_by_kvs(key_order, combo_inds, kv_specs):
+def get_inds_by_kvs(key_order, combo_inds, kv_select):
     selected_rows = list(combo_inds.keys())
     name_to_ind = {k: i for i, k in enumerate(key_order)}
-    for k, v in kv_specs.items():
+    for k, v in kv_select.items():
         # Can't control keys that aren't swept
         if k not in key_order:
             continue
@@ -273,6 +274,52 @@ def get_selected_run_metrics(
             inds,
         )
     return selected_metrics
+
+def get_selected_combo(
+    runs,
+    remapped_metrics,
+    sweep_info,
+    kv_select,
+    splits=['train', 'val', 'eval'],
+    metric="acc1",
+    ignore_keys=[],
+    num_seeds=None,
+):
+    # Get the inds associated with these kv_select
+    selected_inds = get_inds_by_kvs(
+        sweep_info['combo_key_order'],
+        sweep_info['combo_inds'],
+        kv_select,
+    )
+
+    # Get the metrics associated with these inds
+    split_keys = defaultdict(list)
+    split_vals = defaultdict(list)
+    for split in splits:
+        selected_metrics = get_selected_run_metrics(
+            remapped_metrics,
+            split,
+            metric,
+            selected_inds,
+        )
+        for sm_k, sm_vals in selected_metrics.items():
+            split_keys[split].append(sm_k)
+            if num_seeds is None or len(sm_vals) <= num_seeds:
+                split_vals[split].append(sm_vals)
+            else:
+                split_vals[split].append(random.sample(sm_vals, num_seeds))
+
+    all_kvs = []
+    for klist in split_keys[splits[0]]:
+        all_kvs.append([
+            (k, v) for k, v in zip(
+                sweep_info['combo_key_order'],
+                klist,
+            ) if k not in ignore_keys
+        ])
+    return all_kvs, split_vals, selected_inds
+    
+    
         
     
 
