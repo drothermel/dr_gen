@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from dr_gen.utils.plot_utils import plcv, get_plt_cfg
+from dr_gen.analyze.plot_utils import plcv, get_plt_cfg
 
 def plot_histogram(
     plc,
