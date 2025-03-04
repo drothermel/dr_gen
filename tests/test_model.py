@@ -2,7 +2,7 @@ import pytest
 import torch
 from omegaconf import OmegaConf
 
-import dr_gen.utils.model as mu
+import dr_gen.train.model as mu
 from dr_gen.schemas import (
     OptimizerTypes,
     LRSchedTypes,
