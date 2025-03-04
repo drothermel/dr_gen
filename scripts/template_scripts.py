@@ -2,8 +2,9 @@ import hydra
 from omegaconf import DictConfig
 
 from dr_util.config_verification import validate_cfg
-from dr_gen.utils.train_eval import GenMetrics
 from dr_util.schemas import get_schema
+
+from dr_gen.utils.metrics import GenMetrics
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
