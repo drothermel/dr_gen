@@ -3,6 +3,7 @@ from omegaconf import DictConfig
 
 from dr_gen.analyze.log_file_data import LogFileData
 
+
 @hydra.main(version_base=None, config_path="../configs", config_name="analyze")
 def run(cfg: DictConfig):
     print(f">> Analyze: {cfg.log_file}")

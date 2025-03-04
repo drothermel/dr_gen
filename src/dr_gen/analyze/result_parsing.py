@@ -1,7 +1,6 @@
 from pathlib import Path
 import random
 from collections import defaultdict
-from datetime import datetime
 
 import dr_util.file_utils as fu
 
