@@ -87,7 +87,7 @@ class RunGroup:
                 self.error_inds.add(i)
 
         print(
-            ">> Loaded {len(self.log_files)}, {len(self.error_inds)} with parse errors"
+            f">> Loaded {len(self.log_files)}, {len(self.error_inds)} with parse errors"
         )
 
     def extract_sweeps(self):
