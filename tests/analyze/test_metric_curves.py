@@ -3,6 +3,7 @@ from dr_gen.analyze.metric_curves import (
     DEFAULT_XNAME,
     MetricCurve,  
     MetricCurves,
+    SplitMetrics,
 )
 
 # A dummy configuration for testing (not used in the methods)
@@ -154,3 +155,91 @@ def test_get_by_xval_nonexistent_curve():
     # Attempting to retrieve from a non-existent curve should raise an assertion error.
     with pytest.raises(AssertionError, match=">> .* not in curves"):
         mc.get_by_xval(1, x_name="nonexistent")
+    
+
+def test_initialization():
+    sm = SplitMetrics(DUMMY_CONFIG, "train")
+    # Initially, curves should be empty.
+    assert sm.curves == {}
+
+def test_add_x_v_default_metric():
+    sm = SplitMetrics(DUMMY_CONFIG, "train")
+    # Add a point for the "loss" metric using the default x_name ("epoch").
+    sm.add_x_v(1, 0.8, metric_name="loss")
+    xs = sm.get_xs(metric_name="loss")
+    vals = sm.get_vals(metric_name="loss")
+    assert xs == [1]
+    assert vals == [0.8]
+
+def test_add_x_v_custom_xname():
+    sm = SplitMetrics(DUMMY_CONFIG, "train")
+    custom_xname = "step"
+    # Add a point for the "accuracy" metric using a custom x_name.
+    sm.add_x_v(10, 0.95, metric_name="accuracy", x_name=custom_xname)
+    xs = sm.get_xs(metric_name="accuracy", x_name=custom_xname)
+    vals = sm.get_vals(metric_name="accuracy", x_name=custom_xname)
+    assert xs == [10]
+    assert vals == [0.95]
+
+def test_get_all_xs_and_vals():
+    sm = SplitMetrics(DUMMY_CONFIG, "val")
+    # Add a point for metric "loss" (default x_name "epoch")
+    sm.add_x_v(1, 0.8, metric_name="loss")
+    # Add a point for metric "accuracy" with a custom x_name "step"
+    sm.add_x_v(5, 0.95, metric_name="accuracy", x_name="step")
+    
+    all_xs = sm.get_all_xs()
+    all_vals = sm.get_all_vals()
+    
+    # Check that both metric names appear.
+    assert "loss" in all_xs
+    assert "accuracy" in all_xs
+    # Verify the inner dictionaries.
+    assert all_xs["loss"].get(DEFAULT_XNAME) == [1]
+    assert all_xs["accuracy"].get("step") == [5]
+    assert all_vals["loss"].get(DEFAULT_XNAME) == [0.8]
+    assert all_vals["accuracy"].get("step") == [0.95]
+
+def test_get_all_xs_flat():
+    sm = SplitMetrics(DUMMY_CONFIG, "test")
+    # Add multiple points to "loss" and one point for "accuracy" on a custom x_name.
+    sm.add_x_v(1, 0.8, metric_name="loss")
+    sm.add_x_v(2, 0.75, metric_name="loss")
+    sm.add_x_v(10, 0.95, metric_name="accuracy", x_name="step")
+    
+    flat_xs = sm.get_all_xs_flat()
+    # Expected flattened keys: "loss.epoch" and "accuracy.step"
+    assert ("loss", "epoch") in flat_xs
+    assert ("accuracy", "step") in flat_xs
+    assert flat_xs[("loss", "epoch")] == [1, 2]
+    assert flat_xs[("accuracy", "step")] == [10]
+
+def test_get_all_vals_flat():
+    sm = SplitMetrics(DUMMY_CONFIG, "test")
+    # Add points similarly.
+    sm.add_x_v(1, 0.8, metric_name="loss")
+    sm.add_x_v(2, 0.75, metric_name="loss")
+    sm.add_x_v(10, 0.95, metric_name="accuracy", x_name="step")
+    
+    flat_vals = sm.get_all_vals_flat()
+    # Expected flattened keys.
+    assert ("loss", "epoch") in flat_vals
+    assert ("accuracy", "step") in flat_vals
+    assert flat_vals[("loss", "epoch")] == [0.8, 0.75]
+    assert flat_vals[("accuracy", "step")] == [0.95]
+
+def test_get_by_xval():
+    sm = SplitMetrics(DUMMY_CONFIG, "test")
+    # Add two points for the "loss" metric.
+    sm.add_x_v(3, 0.85, metric_name="loss")
+    sm.add_x_v(7, 0.90, metric_name="loss")
+    # Retrieve the metric value by its x value.
+    val = sm.get_by_xval(7, metric_name="loss")
+    assert val == 0.90
+
+def test_get_by_xval_invalid_metric():
+    sm = SplitMetrics(DUMMY_CONFIG, "test")
+    # Attempting to get a value for a non-existent metric should raise an assertion error.
+    with pytest.raises(AssertionError, match=">> .* not in curves"):
+        sm.get_by_xval(1, metric_name="nonexistent")
+
