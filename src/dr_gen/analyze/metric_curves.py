@@ -127,7 +127,7 @@ class MetricCurves:
         return vals
 
     def get_by_xval(self, xval, x_name=DEFAULT_XNAME):
-        assert x_name in self.cuves, f">> {x_name} not in curves"
+        assert x_name in self.curves, f">> {x_name} not in curves"
         return self.curves[x_name].get_by_xval(xval)
 
 
