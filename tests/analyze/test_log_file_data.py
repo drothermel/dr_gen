@@ -1,7 +1,3 @@
-import pytest
-from collections import defaultdict
-from datetime import datetime
-
 import dr_gen.analyze.log_file_data as lfd
 from dr_gen.analyze.log_file_data import LogFileData
 
@@ -17,34 +13,46 @@ LOG_STRING_LINE = {"type": "str", "value": "Some log message"}
 
 # Build a valid file content list.
 VALID_FILE_CONTENTS = [
-    VALID_CONFIG,      # line 1: config
-    METRIC_LINE1,      # line 2: metric data
-    METRIC_LINE2,      # line 3: metric data
-    TRAIN_TIME_LINE,   # line 4: used for train_time (second-last line)
-    LOG_STRING_LINE,   # line 5: additional log string
+    VALID_CONFIG,  # line 1: config
+    METRIC_LINE1,  # line 2: metric data
+    METRIC_LINE2,  # line 3: metric data
+    TRAIN_TIME_LINE,  # line 4: used for train_time (second-last line)
+    LOG_STRING_LINE,  # line 5: additional log string
 ]
+
 
 # Dummy loader functions to simulate different file scenarios.
 def dummy_load_file_valid(file_path):
     return VALID_FILE_CONTENTS
 
+
 def dummy_load_file_none(file_path):
     return None
+
 
 def dummy_load_file_few(file_path):
     # Return only two lines (too few to parse)
     return [VALID_CONFIG, METRIC_LINE1]
 
+
 def dummy_load_file_invalid_config(file_path):
     # Config line is invalid because it does not have type "dict_config".
     invalid_config = {"type": "str", "value": "invalid"}
-    return [invalid_config, METRIC_LINE1, METRIC_LINE2, TRAIN_TIME_LINE, LOG_STRING_LINE]
+    return [
+        invalid_config,
+        METRIC_LINE1,
+        METRIC_LINE2,
+        TRAIN_TIME_LINE,
+        LOG_STRING_LINE,
+    ]
+
 
 def test_get_train_time_valid():
     # A valid input should strip the prefix and return the training time.
     train_time_json = {"type": "str", "value": "Training time 5:30"}
     result = lfd.get_train_time(train_time_json)
     assert result == "5:30"
+
 
 def test_get_train_time_invalid():
     # Missing "type" key.
@@ -53,6 +61,7 @@ def test_get_train_time_invalid():
     assert lfd.get_train_time({"type": "dict", "value": "Training time 5:30"}) is None
     # Missing "value" key.
     assert lfd.get_train_time({"type": "str"}) is None
+
 
 def test_get_logged_strings():
     jsonl_contents = [
@@ -65,6 +74,7 @@ def test_get_logged_strings():
     result = lfd.get_logged_strings(jsonl_contents)
     # Only non-empty string lines should be returned, trimmed.
     assert result == ["hello", "world"]
+
 
 def test_get_logged_metrics_infer_epoch():
     # Dummy config can be an empty dict.
@@ -82,13 +92,13 @@ def test_get_logged_metrics_infer_epoch():
         # A line missing "agg_stats" should be ignored.
         {"data_name": "val"},
     ]
-    
+
     metrics_by_split = lfd.get_logged_metrics_infer_epoch(config, jsonl_contents)
-    
+
     # We expect two splits: "train" and "val"
     assert "train" in metrics_by_split
     assert "val" in metrics_by_split
-    
+
     # For split "train", check that the curves contain points in order of appearance.
     train_metrics = metrics_by_split["train"]
     # For metric "loss" in "train", the x values should be [0, 1, 2] and corresponding values [0.8, 0.7, 0.65]
@@ -96,13 +106,13 @@ def test_get_logged_metrics_infer_epoch():
     vals_loss = train_metrics.get_vals(metric_name="loss")
     assert xs_loss == [0, 1, 2]
     assert vals_loss == [0.8, 0.7, 0.65]
-    
+
     # For metric "accuracy" in "train", there were only two lines.
     xs_accuracy = train_metrics.get_xs(metric_name="accuracy")
     vals_accuracy = train_metrics.get_vals(metric_name="accuracy")
     assert xs_accuracy == [0, 1]
     assert vals_accuracy == [0.75, 0.78]
-    
+
     # For split "val", only "loss" was provided, with x value 0.
     val_metrics = metrics_by_split["val"]
     xs_loss_val = val_metrics.get_xs(metric_name="loss")
@@ -119,6 +129,7 @@ def test_log_file_data_file_not_found(monkeypatch):
     assert f">> Unable to load file: {file_path}" in lfd.parse_errors
     assert lfd.config is None
 
+
 # Test when the file has too few lines.
 def test_log_file_data_file_too_few_lines(monkeypatch):
     monkeypatch.setattr("dr_util.file_utils.load_file", dummy_load_file_few)
@@ -126,6 +137,7 @@ def test_log_file_data_file_too_few_lines(monkeypatch):
     lfd = LogFileData(file_path)
     assert ">> File two lines or less, unable to parse" in lfd.parse_errors
     assert lfd.config is None
+
 
 # Test when the configuration (first line) is invalid.
 def test_log_file_data_invalid_config(monkeypatch):
@@ -136,6 +148,7 @@ def test_log_file_data_invalid_config(monkeypatch):
     assert ">> Config json doesn't have {type: dict_config}" in lfd.parse_errors
     # The config attribute is set (though erroneous).
     assert lfd.config is not None
+
 
 # Test a valid file and all the resulting parsed properties.
 def test_log_file_data_valid(monkeypatch):
@@ -161,7 +174,6 @@ def test_log_file_data_valid(monkeypatch):
 
     # Metrics should be parsed for the "train" split.
     assert "train" in lfd.metrics_by_split
-    train_metrics = lfd.metrics_by_split["train"]
 
     # The helper get_logged_metrics_infer_epoch adds points using an epoch counter per split.
     # Since our valid file provided two metric lines for "train", we expect each metric to have 2 entries.
@@ -180,4 +192,3 @@ def test_log_file_data_valid(monkeypatch):
     vals_loss = split_metrics.get_vals(metric_name="loss")
     assert xs_loss == [0, 1]
     assert vals_loss == [0.8, 0.75]
-
