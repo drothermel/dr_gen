@@ -2,6 +2,8 @@ from omegaconf import OmegaConf
 import matplotlib.pyplot as plt
 import numpy as np
 
+from dr_gen.utils.utils import make_list_of_lists
+
 # -----------------------------------------------------------
 #                 Plot Configs
 # -----------------------------------------------------------
@@ -56,13 +58,6 @@ def init_plc_lists(plc, list_len):
 # -----------------------------------------------------------
 #               Misc & Calc Plot Elements
 # -----------------------------------------------------------
-
-
-def make_list_of_lists(data_list):
-    # Protect against receiving the wrong input format
-    if not isinstance(data_list[0], list):
-        data_list = [data_list]
-    return data_list
 
 
 def get_multi_curve_summary_stats(data_list):

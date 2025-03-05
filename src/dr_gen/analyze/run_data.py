@@ -1,0 +1,210 @@
+from collections.abc import MutableMapping
+from datetime import datetime
+from collections import defaultdict
+import dr_util.file_utils as fu
+
+from dr_gen.utils.utils import flatten_dict, flatten_dict_tuple_keys
+from dr_gen.analyze.metric_curves import SplitMetrics
+
+EPOCHS_KEY = "epochs"
+
+
+def parse_cfg_log_line(cfg_json):
+    errors = []
+    if cfg_json.get("type", None) != "dict_config":
+        errors.append(">> Config json doesn't have {type: dict_config}")
+    if "value" not in cfg_json:
+        errors.append(">> Config 'value' not set")
+    elif not isinstance(cfg_json["value"], dict):
+        errors.append(">> Config type isn't dict")
+    elif len(cfg_json["value"]) == 0:
+        errors.append(">> The config is empty")
+    if len(errors) > 0:
+        return {}, errors
+    return cfg_json['value'], errors
+
+def get_train_time(train_time_json):
+    if train_time_json.get("type", None) == "str" and "value" in train_time_json:
+        return train_time_json["value"].strip("Training time ")
+    return None
+
+
+def get_logged_strings(jsonl_contents):
+    all_strings = []
+    for jl in jsonl_contents:
+        if jl.get("type", None) == "str" and jl.get("value", "").strip() != "":
+            all_strings.append(jl["value"].strip())
+    return all_strings
+
+
+def get_logged_metrics_infer_epoch(config, jsonl_contents):
+    metrics_by_split = {}
+
+    epochs = defaultdict(int)
+    x_name = "epoch"
+    for jl in jsonl_contents:
+        if "agg_stats" not in jl or "data_name" not in jl:
+            continue
+
+        split = jl["data_name"]
+        if split not in metrics_by_split:
+            metrics_by_split[split] = SplitMetrics(config, split)
+
+        metrics_dict = jl["agg_stats"]
+        for metric_name, metric_val in metrics_dict.items():
+            metrics_by_split[split].add_x_v(
+                x=epochs[split],
+                val=metric_val,
+                metric_name=metric_name,
+                x_name=x_name,
+                x_val_hashable=True,
+            )
+        epochs[split] += 1
+    return metrics_by_split
+
+
+def validate_metrics(expected_epochs, metrics_by_split):
+    if expected_epochs is None or len(metrics_by_split) == 0:
+        return False
+    for split, split_metrics in metrics_by_split:
+        for xs in split_metrics.get_all_xs().values():
+            if len(xs) != expected_epochs:
+                return False
+        for vs in split_metrics.get_all_vals().values():
+            if len(vs) != expected_epochs:
+                return False
+    return True
+    
+
+# Hashable: can serve as key to a dictionary
+class Hpm(MutableMapping):
+    def __init__(
+        self,
+        all_vals={},
+    ):
+        self._all_values = gu.flatten_dict(all_vals)
+        self.important_values = {}
+        self.reset_important()
+
+    def __getitem__(self, key):
+        return self._all_values(key)
+
+    def __setitem__(self, key, value):
+        self._all_values[key] = value
+
+    def __delitem__(self, key):
+        del self._all_values[key]
+        self.exclude_from_important([key])
+
+    def __iter__(self):
+        return iter(self.important_values)
+
+    def __len__(self):
+        return len(self.important_values)
+
+    def __eq__(self, other):
+        if not isinstance(other, Hpm):
+            return NotImplemented
+        self.important_values == other.important_values
+
+    def __hash__(self):
+        return hash(self.as_tupledict())
+
+    def __str__(self):
+        return " ".join(self.as_strings())
+
+    def reset_important(self):
+        self.important_values = {k: v for k, v in self._all_values.items()}
+
+    def exclude_from_important(self, excludes):
+        self.important_values = {
+            k: v in self.important_values.items() if k not in excludes
+        }
+
+    def exclude_prefixes_from_important(self, exclude_prefixes):
+        self.important_values = {}
+        for k, v in self.important_values.items():
+            if gu.check_prefix_exclude(k, exclude_prefixes):
+                continue
+            self.important_values[k] = v
+
+    def set_important(self, keys):
+        self.important_values = {k: self._all_values[k] for k in keys}
+
+    def as_dict(self):
+        return self.important_values
+
+    def as_tupledict(self):
+        return gu.dict_to_tupledict(self.important_values)
+
+    def as_strings(self):
+        # Use as_tupledict to get consistent sort order
+        return [f"{k}={v}" for k, v in self.as_tupledict()]
+
+    def as_valstrings(self):
+        # Use as_tupledict to get consistent sort order
+        return [str(v) for _, v in self.as_tupledict())]
+
+
+
+
+class RunData:
+    def __init__(
+        self,
+        file_path,
+    ):
+        self.file_path = file_path
+        self.hpms = {}
+        self.metadata = {}
+        self.metrics_by_split = {}  # split: SplitMetrics
+
+        self.parse_errors = []
+        self.parse_log_file()
+
+
+    @property
+    def cfg(self):
+        self.config.cfg
+
+
+    @property
+    def flat_cfg(self):
+        if self.config is None:
+            return {}
+        return self.config.flat_cfg
+
+    def get_subset_cfg(self, subset_keys):
+        return self.config.get_subset_cfg(subset_keys)
+
+
+    def parse_log_file(self):
+        contents = fu.load_file(self.file_path)
+        if contents is None:
+            self.parse_errors.append(f">> Unable to load file: {self.file_path}")
+            return
+        elif len(contents) <= 2:
+            self.parse_errors.append(">> File two lines or less, unable to parse")
+            return
+        
+        # Extract Run Hyperparameters
+        cfg, errors = parse_cfg_log_line(contents[0])
+        if len(errors) > 0:
+            self.parse_errors.extend(self.config.parse_errors)
+            return
+        self.hpms = Hpm(cfg)
+
+        # Extract Run Metadata
+        self.metadata["time_parsed"] = datetime.now()
+        self.metadata["train_time"] = get_train_time(contents[-2])
+        self.metadata['log_strs'] = get_logged_strings(contents)
+
+        # Extract and validate metrics
+        self.metrics_by_split = get_logged_metrics_infer_epoch(self.config, contents)
+        expected_epochs = self.hpms.get(EPOCH_KEY, None)
+        if not validate_metrics(expected_epochs, self.metrics_by_split):
+            self.parse_errors.append(">> Metrics validation failed")
+
+
+    def get_split_metrics(self, split):
+        assert split in self.metrics_by_split, f">> {split} not in metrics"
+        return self.metrics_by_split[split]

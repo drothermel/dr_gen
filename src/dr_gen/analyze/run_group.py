@@ -1,37 +1,18 @@
 from collections import defaultdict
 from pathlib import Path
 
-from dr_gen.utils.utils import hash_from_time
-from dr_gen.analyze.log_file_data import LogFileData
+import dr_gen.utils.utils as gu
+from dr_gen.analyze.run_data import RunData
 
 
-def check_prefix_exclude(check_string, excluded_prefixes):
-    for pre in excluded_prefixes:
-        if check_string.startswith(pre):
-            return True
-    return False
-
-
-def filter_entries_by_selection(all_entries, select_dict):
-    """
-    Filter a dictionary whose keys are tuples of key-value pairs (tuple of tuples)
-    based on a selection dictionary.
-
-    Parameters:
-        all_entries (dict): Keys are tuple-of-tuples (e.g. ((key1, val1), (key2, val2), ...))
-                            mapping to some value.
-        select_dict (dict): A dict where each key maps to a list of acceptable values.
-
-    Returns:
-        dict: A new dictionary containing only those entries where, for each key in select_dict,
-              the value in the tuple-of-tuples matches one of the allowed values.
-    """
+def filter_entries_by_selection(all_entries, **kwargs):
     result = {}
     for key_tuple, value in all_entries.items():
         # Convert the tuple-of-tuples into a dict for easy lookup.
         key_dict = dict(key_tuple)
         match = True
-        for sel_key, sel_vals in select_dict.items():
+        for sel_key, sel_vals in kwargs.items():
+            sel_vals = gu.make_list(sel_vals)
             if sel_key not in key_dict or key_dict[sel_key] not in sel_vals:
                 match = False
                 break
@@ -40,13 +21,78 @@ def filter_entries_by_selection(all_entries, select_dict):
     return result
 
 
+class HpmGroup:
+    def __init__(
+        self,
+    ):
+        # hpm hash depends on important_values so store
+        #  as {rid: hpm} and build {hpm: rids} on demand
+        self.rid_to_hpm = {}
+        self.varying_kvs = {}
+
+    @property
+    def hpm_to_rids(self):
+        hpm_to_rids = defaultdict(list)
+        for rid, hpm in self.rid_to_hpm.items():
+            hpm_to_rids[hpm].append(rid)
+        return hpm_to_rids
+
+    def add_hpm(self, hpm, rid):
+        self.rid_to_hpm[rid] = hpm
+
+    def reset_all_hpms(self):
+        for hpm in self.hpm_to_rid:
+            hpm.reset_important()
+
+        
+    def update_important_keys_by_varying(self, exclude_prefixes=[]):
+        # Start with a clean slate
+        self.reset_all_hpms()
+
+        # Set the hpm keys-to-ignore when looking for changing values
+        self._exclude_prefixes_all_hpms(exclude_prefixes)
+
+        # Calculate which (key, value) pairs are changing
+        self._calc_varying_kvs()
+
+        # Set those changing keys as the important ones in hpms
+        #   so that the hashes are built based on those values
+        self._set_all_hpms_important_to_varying_keys()
+        
+
+    def _exclude_prefixes_all_hpms(self, exclude_prefixes):
+        if len(exclude_prefixes) == 0:
+            return
+
+        for hpm in self.hpm_to_rid:
+            hpm.exclude_prefixes_from_important(exclude_prefixes)
+
+    def _calc_varying_kvs(self):
+        all_kvs = defaultdict(set)
+        for k, v in hpm.as_dict().items():
+            all_kvs[k].append(str(v))
+        self.varying_kvs = {
+            k: vs for k, vs in all_kvs.items() if len(vs) > 1
+        }
+
+    def _set_all_hpms_important_to_varying_keys(self):
+        for hpm in self.rid_to_hpm.values():
+            hpm.set_important(self.varying_kvs.keys())
+            
+
 class RunGroup:
     def __init__(
         self,
     ):
-        self.log_file_paths = []
-        self.log_files = []
-        self.name = f"temp_rg_{hash_from_time(5)}"
+        self.name = f"temp_rg_{gu.hash_from_time(5)}"
+
+        self.rid_to_file = []
+        self.rid_to_run_data = {}
+        self.ignored_rids = {}
+        self.hpm_group = HpmGroup()
+
+        self.error_rids = set()
+
         self.cfg_key_remap = {
             "model.weights": "Init",
             "optim.lr": "LR",
@@ -54,133 +100,87 @@ class RunGroup:
         }
         self.cfg_val_remap = {
             "model.weights": {
-                "None": "random",
+                None: "random",
+                "None": "ranodm",
                 "DEFAULT": "pretrain",
             },
         }
-
-        self.error_inds = set()
-        self.ignore_inds = set()
-
         self.sweep_exclude_key_prefixes = [
             "paths",
             "write_checkpoint",
             "seed",
         ]
+
         self.all_cfg_vals = None
+        self.swept_kvs = None
         self.swept_vals = None
         self.hpm_combo_to_run_inds = None
 
-    def load_logs_from_base_dir(self, base_dir):
-        log_dir = Path(base_dir)
-        self.log_file_paths = [
-            f.resolve() for f in log_dir.rglob("*.jsonl") if f.is_file()
-        ]
-        print(f">> Found {len(self.log_file_paths)} log files")
+    @property
+    def rids(self):
+       return set(self.rid_to_run_data.keys())
 
-        # Parse all log files
-        self.log_files = [LogFileData(fpath) for fpath in self.log_file_paths]
+    @property
+    def num_runs(self):
+        return len(self.rids)
 
-        # Mark the data with parse errors to ignore later
-        for i, lfd in enumerate(self.log_files):
-            if len(lfd.parse_errors) > 0:
-                self.error_inds.add(i)
+    def filter_rids(self, potential_rids):
+        if isinstance(potential_rids, list):
+            potential_rids = set(potential_rids)
+        return list(self.rids & potential_rids)
 
-        print(
-            f">> Loaded {len(self.log_files)}, {len(self.error_inds)} with parse errors"
+    def load_run(self, rid, file_path):
+        run_data = RunData(file_path)
+        if len(run_data.parse_errors) > 0:
+            self.error_rids.add(rid)
+            return
+        self.rid_to_run_data[rid] = run_data
+        self.hpm_group.add_hpm(run_data.hpms, rid)
+        
+
+    def load_runs_from_base_dir(self, base_dir):
+        for fp in Path(base_dir).rglob("*.jsonl"):
+            if not fp.is_file():
+                continue
+            rid = len(self.rid_to_file)
+            self.rid_to_file.append(fp.resolve)
+            self.load_run(rid, file_path)
+        print(f">> Loaded {self.num_runs} Runs")
+        print(f">> Num Parse Errors: {len(self.error_rids)}")
+
+
+    def update_hpm_sweep_info(self):
+        self.hpm_group.update_important_keys_by_varying(
+            exclude_prefixes=self.sweep_exclude_key_prefixes,
         )
-
-    def extract_sweeps(self):
-        if len(self.log_files) == 0:
-            return {}
-
-        # cfg_key: cfg_vals: list_of_runs_with_this_value
-        all_cfg_vals = defaultdict(lambda: defaultdict(list))
-        for run_ind, lf in enumerate(self.log_files):
-            for k, v in lf.get_flat_cfg().items():
-                if check_prefix_exclude(k, self.sweep_exclude_key_prefixes):
-                    continue
-                all_cfg_vals[k][str(v)].append(run_ind)
-        all_cfg_vals = {k: dict(v) for k, v in all_cfg_vals.items()}
-
-        # Identify the keys that have multiple values
-        swept_vals = {}
-        for k, v in all_cfg_vals.items():
-            if len(v) > 1:
-                swept_vals[k] = v
-
-        # Identify the runs in each combination of the swept keys
-        hpm_combo_to_run_inds = defaultdict(list)
-        for run_ind, lf in enumerate(self.log_files):
-            run_sweep_cfg = lf.config.get_sweep_cfg(
-                keys=swept_vals.keys(),
-                pretty=False,  # get the raw keys
-            )
-            run_sweep_cfg_tuples = tuple(sorted(list(run_sweep_cfg.items())))
-            hpm_combo_to_run_inds[run_sweep_cfg_tuples].append(run_ind)
-
-        self.all_cfg_vals = all_cfg_vals
-        self.swept_vals = swept_vals
-        self.hpm_combo_to_run_inds = hpm_combo_to_run_inds
-
-    def sweep_cfg_tuples_to_string_tuples(self, sweep_cfg_tuples):
-        kv_strs = []
-        for k, v in sweep_cfg_tuples:
-            kstr = self.cfg_key_remap.get(k, k.split(".")[-1])
-            vstr = str(v)
-            if k in self.cfg_val_remap:
-                vstr = self.cfg_val_remap[k].get(v, vstr)
-            kv_strs.append((kstr, vstr))
-        return sorted(kv_strs)
-
-    def sweep_cfg_tuples_to_string(self, sweep_cfg_tuples):
-        kv_str_tuples = self.sweep_cfg_tuples_to_string_tuples(
-            sweep_cfg_tuples,
-        )
-        kv_strs = [f"{k}={v}" for k, v in kv_str_tuples]
-        return " ".join(kv_strs)
 
     def get_swept_table_data(self):
         field_names = ["Key", "Values", "Count"]
-        rows = []
-        for k, v in self.swept_vals.items():
-            rrs = []
-            for vv, inds in v.items():
-                kstr = k if len(rrs) == 0 else ""
-                rrs.append([kstr, vv, len(inds)])
-            rows.append(rrs)
+        row_groups = []
+        for k, vs in self.hpm_group.varying_kvs.items():
+            rows = []
+            for i, (v, inds) in enumerate(vs.items()):
+                rows.append([
+                    k if i == 0 else "", v, len(inds)
+                ])
+            row_groups.append(rows)
         return field_names, rows
 
     def get_hpm_combo_table_data(self):
-        field_names = None
+        field_names = [*self.hpm_group.varying_kvs.keys(), "Count"]
         rows = []
-
-        good_inds = set(range(len(self.log_files))) - self.error_inds - self.ignore_inds
-        for sweep_cfg_tuples, run_inds in self.hpm_combo_to_run_inds.items():
-            num_runs = len([ri for ri in run_inds if ri in good_inds])
-            kv_str_tuples = self.sweep_cfg_tuples_to_string_tuples(sweep_cfg_tuples)
-            if field_names is None:
-                field_names = [k for k, _ in kv_str_tuples] + ["Count"]
-            rows.append([v for _, v in kv_str_tuples] + [num_runs])
+        for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
+            rids = self.filter_rids(potential_rids)
+            if len(rids) > 0:
+                rows.append([*hpm.as_valstrings(), len(rids)])
         return field_names, rows
 
-    def select_by_hpm_combo(self, kv_select):
-        # make kv_select correct format
-        for k in kv_select:
-            if not isinstance(kv_select[k], list):
-                kv_select[k] = list(kv_select[k])
-
-        # filter the combos by kv_select
-        results_dict = filter_entries_by_selection(
-            self.hpm_combo_to_run_inds,
-            kv_select,
-        )
-
-        # drop any inds that have errors or we choose to ignore
-        good_inds = set(range(len(self.log_files))) - self.error_inds - self.ignore_inds
-        hpm_combos = {}
-        for ktuples, inds in results_dict.items():
-            good_res = [i for i in inds if i in good_inds]
-            if len(good_res) > 0:
-                hpm_combos[ktuples] = good_res
-        return hpm_combos
+    def select_run_data_by_hpms(self, **kwargs):
+        selected = {}
+        for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
+            if not all([hpm.get(k, v) == v for k, v in kwargs.items()]):
+                continue
+            rids = self.filter_rids(potential_rids)
+            if len(rids) > 0:
+                selected[hpm] = [self.rid_to_run_data[rid] for rid in rids]
+        return selected
