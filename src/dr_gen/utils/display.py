@@ -2,6 +2,8 @@ from prettytable import PrettyTable
 
 
 def make_table(fns, rows):
+    if len(rows) == 0 or len(rows[0]) == 0:
+        return None
     table = PrettyTable()
     table.field_names = fns
     if isinstance(rows[0][0], list):

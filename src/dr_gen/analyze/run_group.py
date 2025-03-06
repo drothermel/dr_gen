@@ -37,11 +37,15 @@ class HpmGroup:
             hpm_to_rids[hpm].append(rid)
         return hpm_to_rids
 
+    @property
+    def ordered_varying_keys(self):
+        return sorted(list(self.varying_kvs.keys()))
+
     def add_hpm(self, hpm, rid):
         self.rid_to_hpm[rid] = hpm
 
     def reset_all_hpms(self):
-        for hpm in self.hpm_to_rid:
+        for hpm in self.rid_to_hpm.values():
             hpm.reset_important()
 
     def update_important_keys_by_varying(self, exclude_prefixes=[]):
@@ -62,7 +66,7 @@ class HpmGroup:
         if len(exclude_prefixes) == 0:
             return
 
-        for hpm in self.hpm_to_rid:
+        for hpm in self.rid_to_hpm.values():
             hpm.exclude_prefixes_from_important(exclude_prefixes)
 
     def _calc_varying_kvs(self):
@@ -98,8 +102,8 @@ class RunGroup:
         self.cfg_val_remap = {
             "model.weights": {
                 None: "random",
-                "None": "ranodm",
-                "DEFAULT": "pretrain",
+                "None": "random",
+                "DEFAULT": "pretrained",
             },
         }
         self.sweep_exclude_key_prefixes = [
@@ -126,9 +130,18 @@ class RunGroup:
             potential_rids = set(potential_rids)
         return list(self.rids & potential_rids)
 
+    def ignore_rid(self, rid):
+        if rid not in self.rid_to_run_data:
+            return
+        self.ignored_rids[rid] = self.rid_to_run_data[rid]
+        del self.rid_to_run_data[rid]
+        del self.hpm_group.rid_to_hpm[rid]
+
     def load_run(self, rid, file_path):
         run_data = RunData(file_path)
         if len(run_data.parse_errors) > 0:
+            for pe in run_data.parse_errors:
+                print(pe)
             self.error_rids.add(rid)
             return
         self.rid_to_run_data[rid] = run_data
@@ -141,39 +154,64 @@ class RunGroup:
             rid = len(self.rid_to_file)
             self.rid_to_file.append(fp.resolve)
             self.load_run(rid, fp)
-        print(f">> Loaded {self.num_runs} Runs")
-        print(f">> Num Parse Errors: {len(self.error_rids)}")
+        print(f">> {len(self.error_rids)} / {self.num_runs} files failed parsing")
+        self.update_hpm_sweep_info()
+        print(f">> Updated hpm sweep info")
 
     def update_hpm_sweep_info(self):
         self.hpm_group.update_important_keys_by_varying(
             exclude_prefixes=self.sweep_exclude_key_prefixes,
         )
 
+    def get_display_hpm_key(self, k):
+        return self.cfg_key_remap.get(k, k.split(".")[-1])
+        
     def get_swept_table_data(self):
-        field_names = ["Key", "Values", "Count"]
+        field_names = ["Key", "Values"]
         row_groups = []
         for k, vs in self.hpm_group.varying_kvs.items():
             rows = []
-            for i, (v, inds) in enumerate(vs.items()):
-                rows.append([k if i == 0 else "", v, len(inds)])
+            for i, v in enumerate(vs):
+                kstr = self.get_display_hpm_key(k if i==0 else "")
+                vstr = self.cfg_val_remap.get(k, {}).get(v, str(v))
+                rows.append([kstr, vstr])
             row_groups.append(rows)
-        return field_names, rows
+        return field_names, row_groups
 
-    def get_hpm_combo_table_data(self):
-        field_names = [*self.hpm_group.varying_kvs.keys(), "Count"]
+    def get_hpms_sweep_table(self):
+        raw_keys = self.hpm_group.ordered_varying_keys
+        remapped_names = [self.get_display_hpm_key(k) for k in raw_keys] 
+        field_names = [*remapped_names, "Count"]
+            
         rows = []
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
             rids = self.filter_rids(potential_rids)
-            if len(rids) > 0:
-                rows.append([*hpm.as_valstrings(), len(rids)])
+            if len(rids) == 0:
+                continue
+            val_strs = hpm.as_valstrings(remap_kvs=self.cfg_val_remap)
+            rows.append([*val_strs, len(rids)])
         return field_names, rows
 
     def select_run_data_by_hpms(self, **kwargs):
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
-            if not all([hpm.get(k, v) == v for k, v in kwargs.items()]):
+            def comp_hpm(k, vs):
+                new_vs = [str(v) for v in gu.make_list(vs)]
+                hpm_v = hpm.get(k, None)
+                return hpm_v is None or str(hpm_v) in new_vs
+            if not all([comp_hpm(k, vs) for k, vs in kwargs.items()]):
                 continue
             rids = self.filter_rids(potential_rids)
             if len(rids) > 0:
-                selected[hpm] = [self.rid_to_run_data[rid] for rid in rids]
+                selected[hpm] = [(rid, self.rid_to_run_data[rid]) for rid in rids]
         return selected
+
+    def ignore_runs_by_hpms(self, **kwargs):
+        runs_to_ignore = self.select_run_data_by_hpms(**kwargs)
+        for runs_list in runs_to_ignore.values():
+            for rid, _ in runs_list:
+                self.ignore_rid(rid)
+                print(f">> Ignoring rid: {rid}")
+        self.update_hpm_sweep_info()
+        print(f">> Updated hpm sweep info")
+            

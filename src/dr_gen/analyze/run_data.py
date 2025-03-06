@@ -39,7 +39,7 @@ def get_logged_strings(jsonl_contents):
     return all_strings
 
 
-def get_logged_metrics_infer_epoch(config, jsonl_contents):
+def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
     metrics_by_split = {}
 
     epochs = defaultdict(int)
@@ -50,7 +50,7 @@ def get_logged_metrics_infer_epoch(config, jsonl_contents):
 
         split = jl["data_name"]
         if split not in metrics_by_split:
-            metrics_by_split[split] = SplitMetrics(config, split)
+            metrics_by_split[split] = SplitMetrics(hpm, split)
 
         metrics_dict = jl["agg_stats"]
         for metric_name, metric_val in metrics_dict.items():
@@ -67,15 +67,20 @@ def get_logged_metrics_infer_epoch(config, jsonl_contents):
 
 def validate_metrics(expected_epochs, metrics_by_split):
     if expected_epochs is None or len(metrics_by_split) == 0:
-        return False
-    for split, split_metrics in metrics_by_split:
-        for xs in split_metrics.get_all_xs().values():
-            if len(xs) != expected_epochs:
-                return False
-        for vs in split_metrics.get_all_vals().values():
-            if len(vs) != expected_epochs:
-                return False
-    return True
+        return [f"invalid input: {expected_epochs}, {len(metrics_split)}"]
+
+    errors = []
+    for split, split_metrics in metrics_by_split.items():
+        for metric_name, xs_dict in split_metrics.get_all_xs().items():
+            for x_name, xs in xs_dict.items():
+                if len(xs) != expected_epochs:
+                    errors.append(f"wrong_xs_len: {split} {metric_name} {x_name}")
+
+        for metric_name, vs_dict in split_metrics.get_all_vals().items():
+            for x_name, vs in vs_dict.items():
+                if len(vs) != expected_epochs:
+                    errors.append(f"wrong_vs_len: {split} {metric_name} {x_name}")
+    return errors
 
 
 # Hashable: can serve as key to a dictionary
@@ -89,7 +94,7 @@ class Hpm(MutableMapping):
         self.reset_important()
 
     def __getitem__(self, key):
-        return self._all_values(key)
+        return self._all_values[key]
 
     def __setitem__(self, key, value):
         self._all_values[key] = value
@@ -107,7 +112,7 @@ class Hpm(MutableMapping):
     def __eq__(self, other):
         if not isinstance(other, Hpm):
             return NotImplemented
-        self.important_values == other.important_values
+        return hash(self) == hash(other)
 
     def __hash__(self):
         return hash(self.as_tupledict())
@@ -124,11 +129,12 @@ class Hpm(MutableMapping):
         }
 
     def exclude_prefixes_from_important(self, exclude_prefixes):
-        self.important_values = {}
+        important_values = {}
         for k, v in self.important_values.items():
             if gu.check_prefix_exclude(k, exclude_prefixes):
                 continue
-            self.important_values[k] = v
+            important_values[k] = v
+        self.important_values = important_values
 
     def set_important(self, keys):
         self.important_values = {k: self._all_values[k] for k in keys}
@@ -143,9 +149,12 @@ class Hpm(MutableMapping):
         # Use as_tupledict to get consistent sort order
         return [f"{k}={v}" for k, v in self.as_tupledict()]
 
-    def as_valstrings(self):
-        # Use as_tupledict to get consistent sort order
-        return [str(v) for _, v in self.as_tupledict()]
+    def as_valstrings(self, remap_kvs={}):
+        vs = []
+        for k, v in self.as_tupledict():
+            vstr = str(v)
+            vs.append(remap_kvs.get(k, {}).get(vstr, vstr))
+        return vs
 
 
 class RunData:
@@ -154,25 +163,12 @@ class RunData:
         file_path,
     ):
         self.file_path = file_path
-        self.hpms = {}
+        self.hpms = None
         self.metadata = {}
         self.metrics_by_split = {}  # split: SplitMetrics
 
         self.parse_errors = []
         self.parse_log_file()
-
-    @property
-    def cfg(self):
-        self.config.cfg
-
-    @property
-    def flat_cfg(self):
-        if self.config is None:
-            return {}
-        return self.config.flat_cfg
-
-    def get_subset_cfg(self, subset_keys):
-        return self.config.get_subset_cfg(subset_keys)
 
     def parse_log_file(self):
         contents = fu.load_file(self.file_path)
@@ -196,10 +192,10 @@ class RunData:
         self.metadata["log_strs"] = get_logged_strings(contents)
 
         # Extract and validate metrics
-        self.metrics_by_split = get_logged_metrics_infer_epoch(self.config, contents)
+        self.metrics_by_split = get_logged_metrics_infer_epoch(self.hpms, contents)
         expected_epochs = self.hpms.get(EPOCHS_KEY, None)
-        if not validate_metrics(expected_epochs, self.metrics_by_split):
-            self.parse_errors.append(">> Metrics validation failed")
+        errors = validate_metrics(expected_epochs, self.metrics_by_split)
+        self.parse_errors.extend(errors)
 
     def get_split_metrics(self, split):
         assert split in self.metrics_by_split, f">> {split} not in metrics"

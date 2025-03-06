@@ -24,7 +24,7 @@ def flatten_dict_tuple_keys(d, parent_key=()):
 
 def flatten_dict(in_dict):
     flat_tuple_keys = flatten_dict_tuple_keys(in_dict)
-    return {".".join(k): v for k, v in flat_tuple_keys}
+    return {".".join(k): v for k, v in flat_tuple_keys.items()}
 
 
 def hash_string_to_length(s, length):
