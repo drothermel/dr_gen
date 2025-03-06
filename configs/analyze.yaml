@@ -1,0 +1,20 @@
+defaults:
+    - paths: mac
+    - _self_
+
+paths:
+    run_dir: ${paths.my_logs}/${now:%Y-%m-%d}/${now:%H-%M-%s}
+    proj_dir_name: dr_gen_analyze
+
+hydra:
+    run:
+        dir: ${paths.run_dir}
+    job_logging:
+        formatters:
+            simple:
+                format: "%(asctime)s - %(message)s"
+                datefmt: "%Y-%m-%d %H:%M:%S"
+
+log_file:
+
+

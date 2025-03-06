@@ -1,21 +1,4 @@
-import dr_gen.analyze.result_parsing as rp
-import dr_gen.analyze.plot_utils as pu
-import dr_gen.analyze.histogram_plotting as hp
-import dr_gen.analyze.ks_stats as ks
-
-
-def kvs_to_str(kvs):
-    kv_strs = []
-    for k, v in kvs:
-        kstr = k.split(".")[-1]
-        if k == "model.weights":
-            kstr = "init"
-            vstr = "random" if v == "None" else "pretrain"
-        else:
-            vstr = str(v)
-        kv_strs.append(f"{kstr}={vstr}")
-    return " ".join(kv_strs)
-
+"""
 
 def get_run_sweep_kvs(
     run_logs,
@@ -375,3 +358,4 @@ def ks_stat_plot_cdfs_histograms(
     )
 
     hp.plot_histogram_compare(plc, all_ind_stats)
+"""

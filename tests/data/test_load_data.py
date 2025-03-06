@@ -8,7 +8,7 @@ from torchvision.transforms import v2 as transforms_v2
 import pytest
 from unittest.mock import Mock
 
-import dr_gen.utils.data as du
+import dr_gen.data.load_data as du
 import dr_gen.schemas as vu
 
 # ---------------------------------------------------------
@@ -447,7 +447,7 @@ def test_get_dataloaders(monkeypatch):
     that dataloaders are provided for the correct splits.
     """
     # Import the module that contains get_dataloaders and its helpers.
-    import dr_gen.utils.data as utils
+    import dr_gen.data.load_data as utils
 
     # Patch helper functions with our dummy implementations.
     monkeypatch.setattr(utils, "get_dataset", dummy_get_dataset)

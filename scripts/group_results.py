@@ -1,17 +1,8 @@
 from pathlib import Path
 import json
-import hashlib
 import shutil
 
-
-def hash_string_to_length(s, length):
-    # Encode the string to bytes and compute the SHA-256 hash
-    hash_obj = hashlib.sha256(s.encode("utf-8"))
-    # Get the hexadecimal digest of the hash
-    hex_digest = hash_obj.hexdigest()
-    # Return the hash truncated to the specified length
-    return hex_digest[:length]
-
+from dr_gen.utils.utils import hash_string_to_length
 
 def file_path_to_name(fpath, init):
     # /scratch/ddr8143/logs/cifar10_scratch/bs500/lr0.25/wd0.0001/s18/2025-03-01/17-39-1740868772/json_out.jsonl
