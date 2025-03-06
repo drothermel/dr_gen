@@ -28,6 +28,7 @@ def get_plt_cfg(**kwargs):
             "linewidth": 1,
             "labels": None,
             "colors": None,
+            "subplot_shape": (1, None),
         }
     )
     plc = base_plt_cfg.copy()
@@ -54,6 +55,94 @@ def init_plc_lists(plc, list_len):
         plc[k] = plcv(plc, k, [None for _ in range(list_len)])
     return plc
 
+
+# -----------------------------------------------------------
+#               Grid Enabled Library Attempt
+# -----------------------------------------------------------
+
+def format_plot_element(plc, ax):
+    if plc.xlabel is not None:
+        ax.set_xlabel(plc.xlabel)
+    if plc.ylabel is not None:
+        ax.set_ylabel(plc.ylabel)
+    if plc.title is not None:
+        ax.set_title(plc.title)
+    if plc.legend:
+        ax.legend()
+    if plc.xlim is not None:
+        ax.set_xlim(plc.xlim)
+    if plc.ylim is not None:
+        ax.set_ylim(plc.ylim)
+    ax.grid(plc.grid)
+
+# ----------------- Add Elements ------------------------
+
+def add_lines_to_plot(plc, ax, data_list, xs=None):
+    data_list = make_list_of_lists(data_list)
+    plc = init_plc_lists(plc, len(data_list))
+
+    if xs is None:
+        xs = range(len(data_list[0]))
+    for i, data in enumerate(data_list):
+        ax.plot(
+            xs,
+            data,
+            linestyle=plc.linestyle,
+            linewidth=plc.linewidth,
+            label=plc.labels[i],
+        )
+
+# ----------------- Make Plots ------------------------
+
+
+def make_line_plot(data_lists, ax=None, **kwargs):
+    assert len(data_lists) > 0, ">> Empty data lists"
+    if 'plc' in kwargs:
+        plc = kwargs['plc']
+    else:
+        plc = get_plt_cfg(**kwargs)
+
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=plc.figsize)
+    add_lines_to_plot(plc, ax, data_lists)
+    format_plot_element(plc, ax)
+    if fig is not None:
+        plt.show()
+
+
+# ----------------- Make Grids ------------------------
+
+def grid_wrapper(plot_func, data_lists, **kwargs):
+    data_lists = make_list_of_lists(data_lists)
+    plc = get_plt_cfg(**kwargs)
+
+    # Get grid shape
+    n = len(data_lists)
+    sp_x, sp_y = plc.subplot_shape
+    if sp_x is None:
+        sp_x = n
+    elif sp_y is None:
+        sp_y = n
+    assert all([size is not None for size in [sp_x, sp_y]])
+
+    fs_x, fs_y = plc.figsize
+    fig, axes = plt.subplots(
+        sp_x, sp_y, 
+        figsize=(fs_x*sp_x, fs_y*sp_y),
+    )
+    if n == 1:
+        axes = [axes]  # Make it iterable
+    for ax, data_list in zip(axes, data_lists):
+        plot_func(data_list, ax=ax, plc=plc)
+
+    plt.tight_layout()
+    plt.show()
+ 
+
+# =============================================================
+#                         OLD
+# =============================================================
 
 # -----------------------------------------------------------
 #               Misc & Calc Plot Elements
@@ -111,7 +200,7 @@ def format_plot_grid(plc):
     plt.grid(plc.grid)
 
 
-def add_lines_to_plot(plc, data_list, xs=None):
+def add_lines_to_plot_old(plc, data_list, xs=None):
     data_list = make_list_of_lists(data_list)
     plc = init_plc_lists(plc, len(data_list))
 
