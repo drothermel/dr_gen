@@ -44,7 +44,6 @@ class HpmGroup:
         for hpm in self.hpm_to_rid:
             hpm.reset_important()
 
-        
     def update_important_keys_by_varying(self, exclude_prefixes=[]):
         # Start with a clean slate
         self.reset_all_hpms()
@@ -58,7 +57,6 @@ class HpmGroup:
         # Set those changing keys as the important ones in hpms
         #   so that the hashes are built based on those values
         self._set_all_hpms_important_to_varying_keys()
-        
 
     def _exclude_prefixes_all_hpms(self, exclude_prefixes):
         if len(exclude_prefixes) == 0:
@@ -69,16 +67,15 @@ class HpmGroup:
 
     def _calc_varying_kvs(self):
         all_kvs = defaultdict(set)
-        for k, v in hpm.as_dict().items():
-            all_kvs[k].append(str(v))
-        self.varying_kvs = {
-            k: vs for k, vs in all_kvs.items() if len(vs) > 1
-        }
+        for hpm in self.rid_to_hpm.values():
+            for k, v in hpm.as_dict().items():
+                all_kvs[k].add(str(v))
+        self.varying_kvs = {k: vs for k, vs in all_kvs.items() if len(vs) > 1}
 
     def _set_all_hpms_important_to_varying_keys(self):
         for hpm in self.rid_to_hpm.values():
             hpm.set_important(self.varying_kvs.keys())
-            
+
 
 class RunGroup:
     def __init__(
@@ -118,7 +115,7 @@ class RunGroup:
 
     @property
     def rids(self):
-       return set(self.rid_to_run_data.keys())
+        return set(self.rid_to_run_data.keys())
 
     @property
     def num_runs(self):
@@ -136,7 +133,6 @@ class RunGroup:
             return
         self.rid_to_run_data[rid] = run_data
         self.hpm_group.add_hpm(run_data.hpms, rid)
-        
 
     def load_runs_from_base_dir(self, base_dir):
         for fp in Path(base_dir).rglob("*.jsonl"):
@@ -144,10 +140,9 @@ class RunGroup:
                 continue
             rid = len(self.rid_to_file)
             self.rid_to_file.append(fp.resolve)
-            self.load_run(rid, file_path)
+            self.load_run(rid, fp)
         print(f">> Loaded {self.num_runs} Runs")
         print(f">> Num Parse Errors: {len(self.error_rids)}")
-
 
     def update_hpm_sweep_info(self):
         self.hpm_group.update_important_keys_by_varying(
@@ -160,9 +155,7 @@ class RunGroup:
         for k, vs in self.hpm_group.varying_kvs.items():
             rows = []
             for i, (v, inds) in enumerate(vs.items()):
-                rows.append([
-                    k if i == 0 else "", v, len(inds)
-                ])
+                rows.append([k if i == 0 else "", v, len(inds)])
             row_groups.append(rows)
         return field_names, rows
 

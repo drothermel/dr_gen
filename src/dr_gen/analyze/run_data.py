@@ -1,9 +1,10 @@
 from collections.abc import MutableMapping
 from datetime import datetime
 from collections import defaultdict
+
 import dr_util.file_utils as fu
 
-from dr_gen.utils.utils import flatten_dict, flatten_dict_tuple_keys
+import dr_gen.utils.utils as gu
 from dr_gen.analyze.metric_curves import SplitMetrics
 
 EPOCHS_KEY = "epochs"
@@ -21,7 +22,8 @@ def parse_cfg_log_line(cfg_json):
         errors.append(">> The config is empty")
     if len(errors) > 0:
         return {}, errors
-    return cfg_json['value'], errors
+    return cfg_json["value"], errors
+
 
 def get_train_time(train_time_json):
     if train_time_json.get("type", None) == "str" and "value" in train_time_json:
@@ -74,7 +76,7 @@ def validate_metrics(expected_epochs, metrics_by_split):
             if len(vs) != expected_epochs:
                 return False
     return True
-    
+
 
 # Hashable: can serve as key to a dictionary
 class Hpm(MutableMapping):
@@ -118,7 +120,7 @@ class Hpm(MutableMapping):
 
     def exclude_from_important(self, excludes):
         self.important_values = {
-            k: v in self.important_values.items() if k not in excludes
+            k: v for k, v in self.important_values.items() if k not in excludes
         }
 
     def exclude_prefixes_from_important(self, exclude_prefixes):
@@ -143,9 +145,7 @@ class Hpm(MutableMapping):
 
     def as_valstrings(self):
         # Use as_tupledict to get consistent sort order
-        return [str(v) for _, v in self.as_tupledict())]
-
-
+        return [str(v) for _, v in self.as_tupledict()]
 
 
 class RunData:
@@ -161,11 +161,9 @@ class RunData:
         self.parse_errors = []
         self.parse_log_file()
 
-
     @property
     def cfg(self):
         self.config.cfg
-
 
     @property
     def flat_cfg(self):
@@ -176,7 +174,6 @@ class RunData:
     def get_subset_cfg(self, subset_keys):
         return self.config.get_subset_cfg(subset_keys)
 
-
     def parse_log_file(self):
         contents = fu.load_file(self.file_path)
         if contents is None:
@@ -185,7 +182,7 @@ class RunData:
         elif len(contents) <= 2:
             self.parse_errors.append(">> File two lines or less, unable to parse")
             return
-        
+
         # Extract Run Hyperparameters
         cfg, errors = parse_cfg_log_line(contents[0])
         if len(errors) > 0:
@@ -196,14 +193,13 @@ class RunData:
         # Extract Run Metadata
         self.metadata["time_parsed"] = datetime.now()
         self.metadata["train_time"] = get_train_time(contents[-2])
-        self.metadata['log_strs'] = get_logged_strings(contents)
+        self.metadata["log_strs"] = get_logged_strings(contents)
 
         # Extract and validate metrics
         self.metrics_by_split = get_logged_metrics_infer_epoch(self.config, contents)
-        expected_epochs = self.hpms.get(EPOCH_KEY, None)
+        expected_epochs = self.hpms.get(EPOCHS_KEY, None)
         if not validate_metrics(expected_epochs, self.metrics_by_split):
             self.parse_errors.append(">> Metrics validation failed")
-
 
     def get_split_metrics(self, split):
         assert split in self.metrics_by_split, f">> {split} not in metrics"
