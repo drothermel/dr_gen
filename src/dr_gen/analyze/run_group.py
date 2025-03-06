@@ -156,7 +156,7 @@ class RunGroup:
             self.load_run(rid, fp)
         print(f">> {len(self.error_rids)} / {self.num_runs} files failed parsing")
         self.update_hpm_sweep_info()
-        print(f">> Updated hpm sweep info")
+        print(">> Updated hpm sweep info")
 
     def update_hpm_sweep_info(self):
         self.hpm_group.update_important_keys_by_varying(
@@ -165,14 +165,14 @@ class RunGroup:
 
     def get_display_hpm_key(self, k):
         return self.cfg_key_remap.get(k, k.split(".")[-1])
-        
+
     def get_swept_table_data(self):
         field_names = ["Key", "Values"]
         row_groups = []
         for k, vs in self.hpm_group.varying_kvs.items():
             rows = []
             for i, v in enumerate(vs):
-                kstr = self.get_display_hpm_key(k if i==0 else "")
+                kstr = self.get_display_hpm_key(k if i == 0 else "")
                 vstr = self.cfg_val_remap.get(k, {}).get(v, str(v))
                 rows.append([kstr, vstr])
             row_groups.append(rows)
@@ -180,9 +180,9 @@ class RunGroup:
 
     def get_hpms_sweep_table(self):
         raw_keys = self.hpm_group.ordered_varying_keys
-        remapped_names = [self.get_display_hpm_key(k) for k in raw_keys] 
+        remapped_names = [self.get_display_hpm_key(k) for k in raw_keys]
         field_names = [*remapped_names, "Count"]
-            
+
         rows = []
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
             rids = self.filter_rids(potential_rids)
@@ -195,10 +195,12 @@ class RunGroup:
     def select_run_data_by_hpms(self, **kwargs):
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
+
             def comp_hpm(k, vs):
                 new_vs = [str(v) for v in gu.make_list(vs)]
                 hpm_v = hpm.get(k, None)
                 return hpm_v is None or str(hpm_v) in new_vs
+
             if not all([comp_hpm(k, vs) for k, vs in kwargs.items()]):
                 continue
             rids = self.filter_rids(potential_rids)
@@ -213,5 +215,4 @@ class RunGroup:
                 self.ignore_rid(rid)
                 print(f">> Ignoring rid: {rid}")
         self.update_hpm_sweep_info()
-        print(f">> Updated hpm sweep info")
-            
+        print(">> Updated hpm sweep info")

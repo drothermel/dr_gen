@@ -67,7 +67,7 @@ def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
 
 def validate_metrics(expected_epochs, metrics_by_split):
     if expected_epochs is None or len(metrics_by_split) == 0:
-        return [f"invalid input: {expected_epochs}, {len(metrics_split)}"]
+        return [f"invalid input: {expected_epochs}, {len(metrics_by_split)}"]
 
     errors = []
     for split, split_metrics in metrics_by_split.items():
