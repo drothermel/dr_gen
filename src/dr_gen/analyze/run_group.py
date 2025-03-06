@@ -132,6 +132,15 @@ class RunGroup:
             return v
         return self.cfg_val_remap[k].get(v, v)
 
+    def get_display_hpm_str(self, hpm):
+        display = []
+        for k, v in hpm.as_tupledict():
+            kstr = self.get_display_hpm_key(k)
+            vstr = self.get_display_hpm_val(k, v)
+            display.append(f"{kstr}={vstr}")
+        return " ".join(display)
+            
+
     def display_hpm_key_to_real_key(self, hpm, kstr):
         def preproc(k):
             return str(k).lower().strip()
