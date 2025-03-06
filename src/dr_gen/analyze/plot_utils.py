@@ -29,6 +29,10 @@ def get_plt_cfg(**kwargs):
             "labels": None,
             "colors": None,
             "subplot_shape": (1, None),
+            "subplot_ylabel": None,
+            "subplot_xlabel": None,
+            "suptitle": None,
+            "suptitle_fs": 16,
         }
     )
     plc = base_plt_cfg.copy()
@@ -115,27 +119,48 @@ def make_line_plot(data_lists, ax=None, **kwargs):
 
 def grid_wrapper(plot_func, data_lists, **kwargs):
     data_lists = make_list_of_lists(data_lists)
-    plc = get_plt_cfg(**kwargs)
+    data_n = len(data_lists)
 
+    grid_plc = get_plt_cfg(**kwargs)
+    plc_list = []
+    for i in range(data_n):
+        kw_i = {}
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                kw_i[k] = v[i]
+            else:
+                kw_i[k] = v
+        plc_list.append(get_plt_cfg(**kw_i))
+        
     # Get grid shape
-    n = len(data_lists)
-    sp_x, sp_y = plc.subplot_shape
+    sp_x, sp_y = grid_plc.subplot_shape
     if sp_x is None:
-        sp_x = n
+        sp_x = data_n
     elif sp_y is None:
-        sp_y = n
+        sp_y = data_n
     assert all([size is not None for size in [sp_x, sp_y]])
 
-    fs_x, fs_y = plc.figsize
+    # Make figure and axes
+    fs_x, fs_y = grid_plc.figsize
     fig, axes = plt.subplots(
         sp_x, sp_y, 
-        figsize=(fs_x*sp_x, fs_y*sp_y),
+        figsize=(fs_y*sp_y, fs_x*sp_x),
     )
-    if n == 1:
-        axes = [axes]  # Make it iterable
-    for ax, data_list in zip(axes, data_lists):
-        plot_func(data_list, ax=ax, plc=plc)
+    axes = np.atleast_2d(axes) # Make indexing easy
 
+    # Plot data
+    for i, (ax, data_list) in enumerate(zip(axes.flatten(), data_lists)):
+        plot_func(data_list, ax=ax, plc=plc_list[i])
+
+    # Annotate Plot
+    if grid_plc.subplot_ylabel is not None:
+        for y in range(axes.shape[0]):
+            axes[y, 0].set_ylabel(grid_plc.subplot_ylabel)
+    if grid_plc.subplot_xlabel is not None:
+        for x in range(axes.shape[1]):
+            axes[axes.shape[1]-1, x].set_xlabel(grid_plc.subplot_xlabel)
+
+    fig.suptitle(grid_plc.suptitle, fontsize=grid_plc.suptitle_fs)
     plt.tight_layout()
     plt.show()
  
@@ -254,7 +279,7 @@ def add_histograms_to_plot(plc, vals_list, means=None):
 # -----------------------------------------------------------
 
 
-def make_line_plot(data_lists, **kwargs):
+def make_line_plot_OLD(data_lists, **kwargs):
     assert len(data_lists) > 0, ">> Empty data lists"
     plc = get_plt_cfg(**kwargs)
 
