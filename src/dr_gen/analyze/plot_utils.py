@@ -213,6 +213,27 @@ def add_sem_shade_to_plot(
         if sem_max_line:
             ax.plot(x, sem_high, color=colors[i], alpha=0.6)
 
+def add_histograms_to_plot(plc, ax, vals_list, means=None):
+    vals_list = make_list_of_lists(vals_list)
+    for i, vals in enumerate(vals_list):
+        n, bins, patches = ax.hist(
+            vals,
+            bins=plc.nbins,
+            histtype="stepfilled",
+            alpha=plc.alpha,
+            range=plc.hist_range,
+            density=plc.density,
+        )
+        if means is not None:
+            color = patches[0].get_facecolor()
+            ax.axvline(
+                means[i],
+                color=color,
+                linestyle="dashed",
+                linewidth=1.5,
+                label=plc.labels[i],
+            )
+
 
 # ----------------- Make Plots ------------------------
 
@@ -232,6 +253,21 @@ def make_line_plot(data_lists, ax=None, **kwargs):
     if fig is not None:
         plt.show()
 
+def make_histogram_plot(data_lists, ax=None, **kwargs):
+    assert len(data_lists) > 0, ">> Empty data lists"
+    if 'plc' in kwargs:
+        plc = kwargs['plc']
+    else:
+        plc = get_plt_cfg(**kwargs)
+
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=plc.figsize)
+    means = [get_multicurve_summary_stats(ds)['mean'] for ds in data_lists]
+    add_histograms_to_plot(plc, ax, data_lists, means)
+    format_plot_element(plc, ax)
+    if fig is not None:
+        plt.show()
 
 def make_summary_plot(data_lists, ax=None, **kwargs):
     assert len(data_lists) > 0, ">> Empty data lists"
@@ -295,8 +331,6 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
         plt.show()
 
 
-    
-
 # ----------------- Make Grids ------------------------
 
 def grid_wrapper(plot_func, data_lists, **kwargs):
@@ -329,6 +363,7 @@ def grid_wrapper(plot_func, data_lists, **kwargs):
         figsize=(fs_y*sp_y, fs_x*sp_x),
     )
     axes = np.atleast_2d(axes) # Make indexing easy
+    print(axes.shape)
 
     # Plot data
     for i, (ax, data_list) in enumerate(zip(axes.flatten(), data_lists)):
@@ -340,7 +375,7 @@ def grid_wrapper(plot_func, data_lists, **kwargs):
             axes[y, 0].set_ylabel(grid_plc.subplot_ylabel)
     if grid_plc.subplot_xlabel is not None:
         for x in range(axes.shape[1]):
-            axes[axes.shape[1]-1, x].set_xlabel(grid_plc.subplot_xlabel)
+            axes[axes.shape[0]-1, x].set_xlabel(grid_plc.subplot_xlabel)
 
     fig.suptitle(grid_plc.suptitle, fontsize=grid_plc.suptitle_fs)
     plt.tight_layout()
@@ -365,97 +400,9 @@ def add_cdfs_to_plot(plc, vals, cdfs):
         plt.fill_between(vals, cdf, color=color, alpha=plc.alpha)
 
 
-def add_histograms_to_plot(plc, vals_list, means=None):
-    vals_list = make_list_of_lists(vals_list)
-    colors = ["red", "blue", "green"]
-    for i, vals in enumerate(vals_list):
-        color = colors[i % len(colors)]
-        plt.hist(
-            vals,
-            bins=plc.nbins,
-            histtype="stepfilled",
-            alpha=plc.alpha,
-            edgecolor=color,
-            facecolor=color,
-            range=plc.hist_range,
-            density=plc.density,
-        )
-        if means is not None:
-            plt.axvline(
-                means[i],
-                color=color,
-                linestyle="dashed",
-                linewidth=1.5,
-                label=plc.labels[i],
-            )
-
-
 # -----------------------------------------------------------
 #                 Make Full Plots
 # -----------------------------------------------------------
-
-
-def make_line_plot_OLD(data_lists, **kwargs):
-    assert len(data_lists) > 0, ">> Empty data lists"
-    plc = get_plt_cfg(**kwargs)
-
-    # Make figure add lines
-    plt.figure(figsize=plc.figsize)
-    add_lines_to_plot(plc, data_lists)
-    format_plot_grid(plc)
-    plt.show()
-
-
-# Expected: [list_of_data = [metrics_per_epoch ...] ...]
-def make_summary_line_plot(
-    run_group_data_lists,
-    **kwargs,
-):
-    # Expected data_list shapes: Num Datasets x Num Runs x Num Epochs
-    #    but Num Runs can vary between datasets
-    run_group_stats = [get_multi_curve_summary_stats(dl) for dl in run_group_data_lists]
-
-    # Setup PLC
-    defaults = {
-        "xlabel": "Epoch",
-        "ylabel": "Loss",
-        "title": "Loss During Training",
-        "labels": ["train mean", "val mean", "eval mean"],
-    }
-    defaults.update(kwargs)
-    plc = get_plt_cfg(**defaults)
-
-    # Make plot figure
-    plt.figure(figsize=plc.figsize)
-    for i, rd_stats in enumerate(run_group_stats):
-        x = rd_stats["x_vals"]
-        (line_mean,) = plt.plot(x, rd_stats["mean"], linewidth=3, label=plc.labels[i])
-        color = line_mean.get_color()
-
-        plt.fill_between(x, rd_stats["min"], rd_stats["max"], color=color, alpha=0.1)
-        plt.fill_between(
-            x, rd_stats["std_lower"], rd_stats["std_upper"], color=color, alpha=0.3
-        )
-        plt.plot(
-            x,
-            rd_stats["sem_lower"],
-            linestyle="-",
-            linewidth=1,
-            color=color,
-            alpha=0.5,
-        )
-        plt.plot(
-            x,
-            rd_stats["sem_upper"],
-            linestyle="-",
-            linewidth=1,
-            color=color,
-            alpha=0.5,
-        )
-
-    format_plot_grid(plc)
-    plt.show()
-
 
 def make_cdfs_plot(vals, cdfs, **kwargs):
     cdfs = make_list_of_lists(cdfs)
@@ -483,3 +430,4 @@ def make_histogram_plot(vals_list, means=None, **kwargs):
     plt.figure(figsize=plc.figsize)
     add_histograms_to_plot(plc, vals_list, means=means)
     format_plot_grid(plc)
+
