@@ -114,6 +114,15 @@ def extract_color(ax, total=None, ind=None):
 
     return lines[-total:][ind].get_color()
 
+def extract_colors(ax, num):
+    return [extract_color(ax, total=num, ind=i) for i in range(num)]
+
+def default_split_labels(splits):
+    return [f'{first_upper_str(split)}' for split in splits]
+
+def first_upper_str(in_str):
+    return in_str[0].upper() + in_str[1:]
+
 # ----------------- Add Elements ------------------------
 
 def add_lines_to_plot(plc, ax, data_list, xs=None):
@@ -237,21 +246,25 @@ def add_histograms_to_plot(plc, ax, vals_list, means=None):
 
 # ----------------- Make Plots ------------------------
 
-
-def make_line_plot(data_lists, ax=None, **kwargs):
-    assert len(data_lists) > 0, ">> Empty data lists"
-    if 'plc' in kwargs:
-        plc = kwargs['plc']
-    else:
-        plc = get_plt_cfg(**kwargs)
-
-    fig = None
+def get_subplot_axis(ax=None):
+    plt_show = ax is None
     if ax is None:
-        fig, ax = plt.subplots(figsize=plc.figsize)
-    add_lines_to_plot(plc, ax, data_lists)
+       _, ax = plt.subplots(figsize=plc.figsize)
+    return plt_show, ax
+    
+
+def make_line_plot(curve_or_curves, ax=None, **kwargs):
+    # Must at least be [curve_data ...]
+    curve_or_curves = make_list(curve_or_curves)
+
+    # Make plot config
+    plc = kwargs.get('plc', get_plt_cfg(**kwargs))
+
+    # Make figure, add lines, format plot
+    plt_show, ax = get_subplot_axis(ax)
+    add_lines_to_plot(plc, ax, curve_or_curves)
     format_plot_element(plc, ax)
-    if fig is not None:
-        plt.show()
+    if plt_show: plt.show()
 
 def make_histogram_plot(data_lists, ax=None, **kwargs):
     assert len(data_lists) > 0, ">> Empty data lists"
@@ -331,56 +344,50 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
         plt.show()
 
 
-# ----------------- Make Grids ------------------------
+# ----------------- Grid Utils------------------------
 
-def grid_wrapper(plot_func, data_lists, **kwargs):
-    data_lists = make_list_of_lists(data_lists)
-    data_n = len(data_lists)
-
-    grid_plc = get_plt_cfg(**kwargs)
-    plc_list = []
-    for i in range(data_n):
+def get_kwargs_lists_for_grid(kwargs, n_grid):
+    kwargs_lists = []
+    for i in range(n_grid):
         kw_i = {}
         for k, v in kwargs.items():
             if isinstance(v, list):
                 kw_i[k] = v[i]
             else:
                 kw_i[k] = v
-        plc_list.append(get_plt_cfg(**kw_i))
-        
-    # Get grid shape
-    sp_x, sp_y = grid_plc.subplot_shape
-    if sp_x is None:
-        sp_x = data_n
-    elif sp_y is None:
-        sp_y = data_n
-    assert all([size is not None for size in [sp_x, sp_y]])
+        kwargs_lists.append(kw_i)
+    return kwargs_lists
 
-    # Make figure and axes
-    fs_x, fs_y = grid_plc.figsize
+def get_grid_shape(nominal_subplot_shape, data_len):
+    sp_x, sp_y = nominal_subplot_shape
+    if sp_x is None:
+        sp_x = data_len
+    elif sp_y is None:
+        sp_y = data_len
+    assert all([size is not None for size in [sp_x, sp_y]])
+    return sp_x, sp_y
+
+def make_grid_figure(nominal_subplot_shape, plot_size, data_len):
+    sp_x, sp_y = get_grid_shape(nominal_subplot_shape, data_len)
+    fs_x, fs_y = plot_size
     fig, axes = plt.subplots(
         sp_x, sp_y, 
         figsize=(fs_y*sp_y, fs_x*sp_x),
     )
     axes = np.atleast_2d(axes) # Make indexing easy
-    print(axes.shape)
-
-    # Plot data
-    for i, (ax, data_list) in enumerate(zip(axes.flatten(), data_lists)):
-        plot_func(data_list, ax=ax, plc=plc_list[i], **kwargs)
-
-    # Annotate Plot
-    if grid_plc.subplot_ylabel is not None:
+    return axes
+    
+def annotate_grid_figure(axes, plc):
+    if plc.subplot_ylabel is not None:
         for y in range(axes.shape[0]):
-            axes[y, 0].set_ylabel(grid_plc.subplot_ylabel)
-    if grid_plc.subplot_xlabel is not None:
+            axes[y, 0].set_ylabel(plc.subplot_ylabel)
+    if plc.subplot_xlabel is not None:
         for x in range(axes.shape[1]):
-            axes[axes.shape[0]-1, x].set_xlabel(grid_plc.subplot_xlabel)
+            axes[axes.shape[0]-1, x].set_xlabel(plc.subplot_xlabel)
 
-    fig.suptitle(grid_plc.suptitle, fontsize=grid_plc.suptitle_fs)
+    fig.suptitle(plc.suptitle, fontsize=plc.suptitle_fs)
     plt.tight_layout()
-    plt.show()
- 
+    
 
 # =============================================================
 #                         OLD
