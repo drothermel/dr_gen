@@ -1,3 +1,36 @@
+
+# Runs: the output of rg.select_run_data_by_hpms(...)
+def get_split_curves_from_runs(runs, metric_name, split):
+    split_curves = []
+    for hpm, rlist in runs.items():
+        split_curves.append([
+            rdata.get_split_metrics(split).get_vals(metric_name) for _, rdata in rlist
+        ])
+    return split_curves
+
+# Runs: the output of rg.select_run_data_by_hpms(...)
+def get_curves_from_runs(runs, metric_name, splits=['train', 'val', 'eval']):
+    hpm_split_curves = []
+    for hpm, rlist in runs.items():
+        split_curves = []
+        for split in splits:
+            split_curves.append([
+                rdata.get_split_metrics(split).get_vals(metric_name) for _, rdata in rlist
+            ])
+        hpm_split_curves.append(split_curves)
+    return hpm_split_curves
+
+
+                
+                
+    
+
+
+    
+    
+
+
+
 """
 
 def get_run_sweep_kvs(
