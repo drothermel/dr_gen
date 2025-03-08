@@ -169,7 +169,7 @@ class RunGroup:
         del self.hpm_group.rid_to_hpm[rid]
 
     def load_run(self, rid, file_path):
-        run_data = RunData(file_path)
+        run_data = RunData(file_path, rid=rid)
         if len(run_data.parse_errors) > 0:
             for pe in run_data.parse_errors:
                 print(pe)

@@ -164,8 +164,10 @@ class RunData:
     def __init__(
         self,
         file_path,
+        rid = None
     ):
         self.file_path = file_path
+        self.id = rid
         self.hpms = None
         self.metadata = {}
         self.metrics_by_split = {}  # split: SplitMetrics
