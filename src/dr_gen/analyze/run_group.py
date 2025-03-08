@@ -139,7 +139,6 @@ class RunGroup:
             vstr = self.get_display_hpm_val(k, v)
             display.append(f"{kstr}={vstr}")
         return " ".join(display)
-            
 
     def display_hpm_key_to_real_key(self, hpm, kstr):
         def preproc(k):

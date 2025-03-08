@@ -16,11 +16,13 @@ def make_list_of_lists(in_val, dim=0):
     else:
         return [[iv] for iv in in_val]
 
+
 def add_dim(inlist, dim=0):
     if dim == 0:
         return [inlist]
     else:
         return [[v] for v in inlist]
+
 
 def make_list_of_lols(in_val, dim=0):
     in_val = make_list(in_val)

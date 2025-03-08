@@ -161,11 +161,7 @@ class Hpm(MutableMapping):
 
 
 class RunData:
-    def __init__(
-        self,
-        file_path,
-        rid = None
-    ):
+    def __init__(self, file_path, rid=None):
         self.file_path = file_path
         self.id = rid
         self.hpms = None
