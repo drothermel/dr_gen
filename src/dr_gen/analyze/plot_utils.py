@@ -9,6 +9,7 @@ from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 # -----------------------------------------------------------
 
 DEFAULT_FIGSIZE = (5, 4)
+DEFAULT_SUBPLOT_SHAPE = (1, None)
 
 def get_plt_cfg(**kwargs):
     base_plt_cfg = OmegaConf.create(
@@ -29,7 +30,7 @@ def get_plt_cfg(**kwargs):
             "linewidth": 1,
             "labels": None,
             "colors": None,
-            "subplot_shape": (1, None),
+            "subplot_shape": DEFAULT_SUBPLOT_SHAPE,
             "subplot_ylabel": None,
             "subplot_xlabel": None,
             "suptitle": None,
@@ -80,7 +81,7 @@ def format_plot_element(plc, ax):
         ax.set_ylim(plc.ylim)
     ax.grid(plc.grid)
 
-def get_multi_curve_summary_stats(data_list):
+def get_multi_curve_summary_stats(data_list, axis=0):
     data_list = make_list_of_lists(data_list)
     curve_len = len(data_list[0])
     assert all([len(dl) == curve_len for dl in data_list]), (
@@ -89,8 +90,8 @@ def get_multi_curve_summary_stats(data_list):
 
     n = len(data_list)
     v_array = np.array(data_list)
-    v_mean = np.mean(data_list, axis=0)
-    v_std = np.std(v_array, axis=0)
+    v_mean = np.mean(data_list, axis=axis)
+    v_std = np.std(v_array, axis=axis)
     v_sem = v_std / np.sqrt(n)
     all_stats = {
         "n": n,
@@ -98,8 +99,8 @@ def get_multi_curve_summary_stats(data_list):
         "mean": v_mean,
         "std": v_std,
         "sem": v_sem,
-        "min": np.min(v_array, axis=0),
-        "max": np.max(v_array, axis=0),
+        "min": np.min(v_array, axis=axis),
+        "max": np.max(v_array, axis=axis),
     }
     return {
         k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in all_stats.items()
@@ -117,6 +118,9 @@ def extract_color(ax, total=None, ind=None):
 
 def extract_colors(ax, num):
     return [extract_color(ax, total=num, ind=i) for i in range(num)]
+
+def default_ind_labels(data):
+    return [f"{i}" for i in range(len(data))]
 
 def default_split_labels(splits):
     return [f'{first_upper_str(split)}' for split in splits]
@@ -136,6 +140,7 @@ def add_lines_to_plot(plc, ax, data_list, xs=None):
         ax.plot(
             xs,
             data,
+            color=plc.colors[i],
             linestyle=plc.linestyle,
             linewidth=plc.linewidth,
             label=plc.labels[i],
@@ -241,7 +246,7 @@ def add_histograms_to_plot(plc, ax, vals_list, means=None):
                 color=color,
                 linestyle="dashed",
                 linewidth=1.5,
-                label=plc.labels[i],
+                label=f"{plc.labels[i]} (Mean {means[i]:0.2f})",
             )
 
 
@@ -269,16 +274,18 @@ def make_line_plot(curve_or_curves, ax=None, **kwargs):
     format_plot_element(plc, ax)
     if plt_show: plt.show()
 
-def make_histogram_plot(data_lists, ax=None, **kwargs):
-    assert len(data_lists) > 0, ">> Empty data lists"
-    if 'plc' in kwargs:
-        plc = kwargs['plc']
-    else:
-        plc = get_plt_cfg(**kwargs)
+def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
+    # Must at least be [vals ...]
+    vals_or_vals_list = make_list(vals_or_vals_list)
 
+    # Make plot config
+    kwargs['labels'] = kwargs.get('labels', default_ind_labels(vals_or_vals_list))
+    plc = kwargs.get('plc', get_plt_cfg(**kwargs))
+
+    # Make figure, add lines, format plot
     plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
-    means = [get_multicurve_summary_stats(ds)['mean'] for ds in data_lists]
-    add_histograms_to_plot(plc, ax, data_lists, means)
+    means = get_multi_curve_summary_stats(vals_or_vals_list, axis=1)['mean']
+    add_histograms_to_plot(plc, ax, vals_or_vals_list, means)
     format_plot_element(plc, ax)
     if plt_show: plt.show()
 
@@ -363,7 +370,11 @@ def get_grid_shape(nominal_subplot_shape, data_len):
     assert all([size is not None for size in [sp_x, sp_y]])
     return sp_x, sp_y
 
-def make_grid_figure(nominal_subplot_shape, plot_size, data_len):
+def make_grid_figure(
+    data_len,
+    nominal_subplot_shape=DEFAULT_SUBPLOT_SHAPE,
+    plot_size=DEFAULT_FIGSIZE,
+):
     sp_x, sp_y = get_grid_shape(nominal_subplot_shape, data_len)
     fs_x, fs_y = plot_size
     fig, axes = plt.subplots(
@@ -381,7 +392,7 @@ def annotate_grid_figure(axes, plc):
         for x in range(axes.shape[1]):
             axes[axes.shape[0]-1, x].set_xlabel(plc.subplot_xlabel)
 
-    fig.suptitle(plc.suptitle, fontsize=plc.suptitle_fs)
+    axes[0, 0].get_figure().suptitle(plc.suptitle, fontsize=plc.suptitle_fs)
     plt.tight_layout()
     
 
@@ -424,13 +435,4 @@ def make_cdfs_plot(vals, cdfs, **kwargs):
     add_cdfs_to_plot(plc, vals, cdfs)
     format_plot_grid(plc)
 
-
-def make_histogram_plot(vals_list, means=None, **kwargs):
-    vals_list = make_list_of_lists(vals_list)
-    plc = get_plt_cfg(**kwargs)
-    plc = init_plc_lists(plc, len(vals_list))
-
-    plt.figure(figsize=plc.figsize)
-    add_histograms_to_plot(plc, vals_list, means=means)
-    format_plot_grid(plc)
 

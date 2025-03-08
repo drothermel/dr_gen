@@ -1,6 +1,7 @@
 
 # Runs: the output of rg.select_run_data_by_hpms(...)
 def get_split_curves_from_runs(runs, metric_name, split):
+    # [hpm [curves [curve_data ...]]]
     split_curves = []
     for hpm, rlist in runs.items():
         split_curves.append([
@@ -10,6 +11,7 @@ def get_split_curves_from_runs(runs, metric_name, split):
 
 # Runs: the output of rg.select_run_data_by_hpms(...)
 def get_curves_from_runs(runs, metric_name, splits=['train', 'val', 'eval']):
+    # [hpm [split [curves [curve_data ...]]]]
     hpm_split_curves = []
     for hpm, rlist in runs.items():
         split_curves = []
