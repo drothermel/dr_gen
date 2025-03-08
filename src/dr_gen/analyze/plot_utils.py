@@ -249,6 +249,16 @@ def add_histograms_to_plot(plc, ax, vals_list, means=None):
                 label=f"{plc.labels[i]} (Mean {means[i]:0.2f})",
             )
 
+def add_cdfs_to_plot(plc, ax, vals, cdfs):
+    for i, cdf in enumerate(cdfs):
+        (line,) = ax.plot(
+            vals, cdf,
+            color=plc.colors[i],
+            linestyle=plc.linestyle, label=plc.labels[i]
+        )
+        color = line.get_color()
+        ax.fill_between(vals, cdf, color=color, alpha=plc.alpha)
+
 
 # ----------------- Make Plots ------------------------
 
@@ -286,6 +296,16 @@ def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
     plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     means = get_multi_curve_summary_stats(vals_or_vals_list, axis=1)['mean']
     add_histograms_to_plot(plc, ax, vals_or_vals_list, means)
+    format_plot_element(plc, ax)
+    if plt_show: plt.show()
+
+def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
+    kwargs['colors'] = kwargs.get('colors', [None, None])
+    plc = kwargs.get('plc', get_plt_cfg(**kwargs))
+
+    # Make figure, add lines, format plot
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
+    add_cdfs_to_plot(plc, ax, vals, cdfs)
     format_plot_element(plc, ax)
     if plt_show: plt.show()
 
@@ -389,50 +409,10 @@ def annotate_grid_figure(axes, plc):
         for y in range(axes.shape[0]):
             axes[y, 0].set_ylabel(plc.subplot_ylabel)
     if plc.subplot_xlabel is not None:
+        kwargs['title'] = kwargs.get('title', "CDF" + "s" if len(cdfs) > 1 else "")
         for x in range(axes.shape[1]):
             axes[axes.shape[0]-1, x].set_xlabel(plc.subplot_xlabel)
 
     axes[0, 0].get_figure().suptitle(plc.suptitle, fontsize=plc.suptitle_fs)
     plt.tight_layout()
     
-
-# =============================================================
-#                         OLD
-# =============================================================
-
-# -----------------------------------------------------------
-#                  Add Elems to Plot
-# -----------------------------------------------------------
-
-
-
-def add_cdfs_to_plot(plc, vals, cdfs):
-    cdfs = make_list_of_lists(cdfs)
-    for i, cdf in enumerate(cdfs):
-        (line,) = plt.plot(vals, cdf, linestyle=plc.linestyle, label=plc.labels[i])
-        color = line.get_color()
-        plt.fill_between(vals, cdf, color=color, alpha=plc.alpha)
-
-
-# -----------------------------------------------------------
-#                 Make Full Plots
-# -----------------------------------------------------------
-
-def make_cdfs_plot(vals, cdfs, **kwargs):
-    cdfs = make_list_of_lists(cdfs)
-    defaults = {
-        "labels": [f"CDF {i}" for i in range(len(cdfs))],
-        "linestyle": "-",
-        "alpha": 0.3,
-        "xlabel": "accuracy",
-        "ylabel": "cdf",
-        "title": "CDF" + "s" if len(cdfs) > 1 else "",
-    }
-    defaults.update(kwargs)
-    plc = get_plt_cfg(**defaults)
-
-    plt.figure(figsize=plc.figsize)
-    add_cdfs_to_plot(plc, vals, cdfs)
-    format_plot_grid(plc)
-
-

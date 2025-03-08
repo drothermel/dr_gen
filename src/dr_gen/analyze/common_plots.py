@@ -2,6 +2,7 @@ import random
 import matplotlib.pyplot as plt
 
 from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
+import dr_gen.analyze.ks_stats as ks
 import dr_gen.analyze.plot_utils as pu
 
 
@@ -47,10 +48,50 @@ def histogram_plot(vals, ax=None, **kwargs):
     # [vals...] or [sets [vals ...]]
     vals = make_list(vals)
 
-    # Plot: len(curve) lines
+    # Plot
     plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     pu.make_histogram_plot(vals, ax=ax, **kwargs)
     if plt_show: plt.show()
+
+#def cdf_plot(vals, cdfs, ax=None, **kwargs):
+def cdf_plot(vals1, vals2, ax=None, **kwargs):
+    results = ks.calculate_ks_for_run_sets(vals1, vals2)
+    vals = results['all_vals']
+    cdfs = [results['cdf1'], results['cdf2']]
+
+    kwargs['linestyle'] = kwargs.get('linestyle', '-')
+    kwargs['alpha'] = kwargs.get('alpha', 0.3)
+    kwargs['xlabel'] = kwargs.get('xlabel', "accuracy")
+    kwargs['ylabel'] = kwargs.get('ylabel', "cdf")
+    kwargs['title'] = kwargs.get('title', "CDF" + "s" if len(cdfs) > 1 else "")
+    kwargs['labels'] = kwargs.get('labels', [f"CDF {i}" for i in range(len(cdfs))])
+
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
+    pu.make_cdfs_plot(vals, cdfs, ax=ax, **kwargs)
+    if plt_show: plt.show()
+
+def cdf_histogram_plot(vals1, vals2, ax=None, **kwargs):
+    results = ks.calculate_ks_for_run_sets(vals1, vals2)
+    vals = results['all_vals']
+    cdfs = [results['cdf1'], results['cdf2']]
+
+
+    axes = pu.make_grid_figure(
+        data_len=2,
+        nominal_subplot_shape=(2, 1),
+        plot_size=kwargs.get('figsize', pu.DEFAULT_FIGSIZE)
+    )
+
+    kwargs['linestyle'] = kwargs.get('linestyle', '-')
+    kwargs['alpha'] = kwargs.get('alpha', 0.3)
+    kwargs['suptitle'] = f"CDFs and Histograms | KS Stat: {results['ks_stat']:0.2f}"
+    pu.make_cdfs_plot(vals, cdfs, ax=axes[0,0], **kwargs)
+    pu.make_histogram_plot(
+        [vals1, vals2], ax=axes[0,1], **kwargs,
+    )
+    pu.annotate_grid_figure(axes, pu.get_plt_cfg(**kwargs))
+    plt.show()
+    
     
 
 # Handles one or many curves per split
@@ -273,7 +314,6 @@ def spilt_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwargs):
 
 def grid_seq_plot_wrapper(plot_func, curves, **kwargs):
     n_curves = len(curves)
-    print(n_curves, len(curves[0]))
 
     # Setup Grid and Args
     axes = pu.make_grid_figure(
@@ -295,4 +335,3 @@ def grid_seq_plot_wrapper(plot_func, curves, **kwargs):
 def histogram_plot_grid(vals, **kwargs):
     grid_seq_plot_wrapper(histogram_plot, vals, **kwargs)
 
-    
