@@ -1,6 +1,7 @@
 import random
+import matplotlib.pyplot as plt
 
-from dr_gen.utils.utils import make_list_of_lists
+from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 import dr_gen.analyze.plot_utils as pu
 
 
@@ -11,7 +12,7 @@ def data_to_inds(data):
     return len_to_inds(len(data))
 
 def default_ind_labels(data):
-    return [f["{i}" for i in range(len(data))]
+    return [f"{i}" for i in range(len(data))]
 
 def default_grid_ind_labels(data):
     data = make_list_of_lists(data)
@@ -32,15 +33,15 @@ def default_grid_sample_titles(title, orig_data, sampled):
 #    pattern clear.
 def line_plot(curve, ax=None, **kwargs):
     # [curve_data...] or [curves [curve_data ...]]
-    curves = make_list(curves)
+    curve = make_list(curve)
 
     # Set default chart annotations
-    if isinstance(curves[0], list):
-        kwargs['labels'] = kwargs.get('labels', default_ind_labels(curves))
+    if isinstance(curve[0], list):
+        kwargs['labels'] = kwargs.get('labels', default_ind_labels(curve))
 
-    # Plot: len(curves) lines
-    plt_show, ax = pu.get_subplot_axis(ax)
-    pu.make_line_plot(curves, ax=ax, **kwargs)
+    # Plot: len(curve) lines
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
+    pu.make_line_plot(curve, ax=ax, **kwargs)
     if plt_show: plt.show()
     
 
@@ -58,12 +59,12 @@ def split_plot(
 
     # Set default chart annotations
     orig_labels = kwargs.get('labels', default_ind_labels(split_curves[0]))
-    kwargs['title'] = kwargs.get('title', "{metric_name} by Split Per {x_name}")
+    kwargs['title'] = kwargs.get('title', f"{metric_name} by Split Per {x_name}")
     kwargs['xlabel'] = kwargs.get('xlabel', x_name)
     kwargs['ylabel'] = kwargs.get('ylabel', metric_name)
 
     # Plot by split
-    plt_show, ax = pu.get_subplot_axis(ax)
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     n_curves = len(split_curves[0])
     line_styles = {
         "train": "--",
@@ -77,26 +78,26 @@ def split_plot(
         # Set Per-Split Defaults
         kwargs['linestyle'] = line_styles[split] 
         kwargs['labels'] = [f'{il} {pu.first_upper_str(split)}' for il in orig_labels]
-        plc = get_plt_cfg(**kwargs)
+        plc = pu.get_plt_cfg(**kwargs)
 
         # Add the lines
         pu.add_lines_to_plot(plc, ax, split_data)
         # Make the line colors for future splits match
         if colors[0] == None:
-            colors = extract_colors(ax, n_curves)
+            colors = pu.extract_colors(ax, n_curves)
     pu.format_plot_element(plc, ax)
     if plt_show: plt.show()
 
 # ---------------- Individual Sampled Plots ------------------
 def sample_n(data, n_sample=None):
-    n_in = len(data)
+    n_curves = len(data)
     if n_sample is None or n_sample > n_curves:
         n_sample = n_curves
         sampled = data
         sample_str = ""
     else:
         sampled = random.sample(data, n_sample)
-        sample_str = " | Sample: {n_sample} / {n_curves}"
+        sample_str = f" | Sample: {n_sample} / {n_curves}"
     return sampled, sample_str
 
 def sample_from_dim_one(data, n_sample):
@@ -120,7 +121,7 @@ def multi_line_sample_plot(curves, ax=None, n_sample=None, **kwargs):
     # Sampled       : [sampled_curves [curve_data ...]]
     curves = make_list_of_lists(curves)
     sampled_curves, sample_str = sample_n(curves, n_sample=n_sample)
-    kwargs['title'] = kwargs.get("title", "Multi Line Plot{sample_str}")
+    kwargs['title'] = kwargs.get("title", f"Multi Line Plot") + sample_str
     line_plot(sampled_curves, ax=ax, **kwargs)
 
 
@@ -135,16 +136,16 @@ def split_sample_plot(
 ):
     # Initial Curves Goal: [split [curves [curve_data ...]]]
     #   -> assume missing dimension is "curves" not "split"
-    split_curves_lists = make_list_of_lists(split_curves, dim=1)
+    split_curves_lists = make_list_of_lists(split_curves_lists, dim=1)
     # Sampled            : [split [sampled_curves [curve_data ...]]]
     sampled_split_curves_lists, sample_str = sample_from_dim_one(
-        split_curves_lists, n_samples,
+        split_curves_lists, n_sample,
     )
 
     # Set default chart annotations
     kwargs['title'] = kwargs.get(
-        'title', "{metric_name} by Split Per {x_name}{sample_str}"
-    )
+        'title', f"{metric_name} by Split Per {x_name}"
+    ) + sample_str
     split_plot(
         sampled_split_curves_lists, 
         ax=ax,
@@ -161,10 +162,10 @@ def multi_line_sampled_summary_plot(
     curves_lists = make_list_of_lols(curves_lists, dim=0)
     # Sampled       : [summary_line [sampled_curves [curve_data ...]]
     sampled_curves_lists, sample_str = sample_from_dim_one(curves_lists, n_sample)
-    kwargs['title'] = kwargs.get("title", "Multi Line Summary Plot{sample_str}")
+    kwargs['title'] = kwargs.get("title", f"Multi Line Summary Plot{sample_str}")
 
     # n_data lines, summary over curves plotted
-    plt_show, ax = pu.get_subplot_axis(ax)
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     pu.make_summary_plot(sampled_curves_lists, ax, **kwargs)
     if plt_show: plt.show()
     
@@ -183,7 +184,7 @@ def split_sampled_summary_plot(
     split_curves_lists = make_list_of_lists(split_curves, dim=1)
     # Sampled           : [split [sampled_curves [curve_data ...]]]
     sampled_split_curves_lists, sample_str = sample_from_dim_one(
-        split_curves_lists, n_samples,
+        split_curves_lists, n_sample,
     )
 
     # Set default chart annotations
@@ -191,12 +192,12 @@ def split_sampled_summary_plot(
         'labels',
         [f"{lb} Mean{sample_str}" for lb in default_split_labels(splits)],
     )
-    kwargs['title'] = kwargs.get('title', "{metric_name} by Split Per {x_name}")
+    kwargs['title'] = kwargs.get('title', f"{metric_name} by Split Per {x_name}")
     kwargs['xlabel'] = kwargs.get('xlabel', x_name)
     kwargs['ylabel'] = kwargs.get('ylabel', metric_name)
 
     # n_splits lines, summary over curves plotted
-    plt_show, ax = pu.get_subplot_axis(ax)
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     pu.make_summary_plot(sampled_split_curves_lists, ax, **kwargs)
     if plt_show: plt.show()
 
@@ -219,7 +220,7 @@ def multi_line_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs):
         )
 
     # Annotate and Show
-    annotate_grid_figure(axes, get_plt_cfg(**kwargs))
+    annotate_grid_figure(axes, pu.get_plt_cfg(**kwargs))
     plt.show()
 
 

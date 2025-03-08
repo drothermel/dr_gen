@@ -2,17 +2,18 @@ from omegaconf import OmegaConf
 import matplotlib.pyplot as plt
 import numpy as np
 
-from dr_gen.utils.utils import make_list_of_lists
+from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 
 # -----------------------------------------------------------
 #                 Plot Configs
 # -----------------------------------------------------------
 
+DEFAULT_FIGSIZE = (5, 4)
 
 def get_plt_cfg(**kwargs):
     base_plt_cfg = OmegaConf.create(
         {
-            "figsize": (10, 6),
+            "figsize": DEFAULT_FIGSIZE,
             "legend": False,
             "grid": True,
             "nbins": 10,
@@ -246,10 +247,12 @@ def add_histograms_to_plot(plc, ax, vals_list, means=None):
 
 # ----------------- Make Plots ------------------------
 
-def get_subplot_axis(ax=None):
+def get_subplot_axis(ax=None, figsize=None):
     plt_show = ax is None
     if ax is None:
-       _, ax = plt.subplots(figsize=plc.figsize)
+        _, ax = plt.subplots(
+            figsize=DEFAULT_FIGSIZE if figsize is None else figsize,
+        )
     return plt_show, ax
     
 
@@ -261,7 +264,7 @@ def make_line_plot(curve_or_curves, ax=None, **kwargs):
     plc = kwargs.get('plc', get_plt_cfg(**kwargs))
 
     # Make figure, add lines, format plot
-    plt_show, ax = get_subplot_axis(ax)
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     add_lines_to_plot(plc, ax, curve_or_curves)
     format_plot_element(plc, ax)
     if plt_show: plt.show()
@@ -273,14 +276,11 @@ def make_histogram_plot(data_lists, ax=None, **kwargs):
     else:
         plc = get_plt_cfg(**kwargs)
 
-    fig = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=plc.figsize)
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     means = [get_multicurve_summary_stats(ds)['mean'] for ds in data_lists]
     add_histograms_to_plot(plc, ax, data_lists, means)
     format_plot_element(plc, ax)
-    if fig is not None:
-        plt.show()
+    if plt_show: plt.show()
 
 def make_summary_plot(data_lists, ax=None, **kwargs):
     assert len(data_lists) > 0, ">> Empty data lists"
@@ -290,10 +290,7 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
     else:
         plc = get_plt_cfg(**kwargs)
 
-    fig = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=plc.figsize)
-
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get('figsize', None))
     data_stats = [
         get_multi_curve_summary_stats(dl) for dl in data_lists
     ]
@@ -340,8 +337,7 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
         )
 
     format_plot_element(plc, ax)
-    if fig is not None:
-        plt.show()
+    if plt_show: plt.show()
 
 
 # ----------------- Grid Utils------------------------
