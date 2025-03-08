@@ -101,7 +101,6 @@ class RunGroup:
         }
         self.cfg_val_remap = {
             "model.weights": {
-                None: "random",
                 "None": "random",
                 "DEFAULT": "pretrained",
             },
@@ -125,6 +124,37 @@ class RunGroup:
     def num_runs(self):
         return len(self.rids)
 
+    def get_display_hpm_key(self, k):
+        return self.cfg_key_remap.get(k, k.split(".")[-1])
+
+    def get_display_hpm_val(self, k, v):
+        if k not in self.cfg_val_remap:
+            return v
+        return self.cfg_val_remap[k].get(v, v)
+
+    def get_display_hpm_str(self, hpm):
+        display = []
+        for k, v in hpm.as_tupledict():
+            kstr = self.get_display_hpm_key(k)
+            vstr = self.get_display_hpm_val(k, v)
+            display.append(f"{kstr}={vstr}")
+        return " ".join(display)
+
+    def display_hpm_key_to_real_key(self, hpm, kstr):
+        def preproc(k):
+            return str(k).lower().strip()
+
+        kstr_to_k = {preproc(self.get_display_hpm_key(k)): k for k in hpm.keys()}
+        kstr = preproc(kstr)
+        return kstr_to_k.get(kstr, kstr)
+
+    def display_hpm_key_val_to_real_val(self, hpm, kstr, vstr):
+        k = self.display_hpm_key_to_real_key(hpm, kstr)
+        if k in self.cfg_val_remap:
+            vstr_to_v = {vstr: v for v, vstr in self.cfg_val_remap[k].items()}
+            return vstr_to_v.get(vstr, vstr)
+        return vstr
+
     def filter_rids(self, potential_rids):
         if isinstance(potential_rids, list):
             potential_rids = set(potential_rids)
@@ -138,7 +168,7 @@ class RunGroup:
         del self.hpm_group.rid_to_hpm[rid]
 
     def load_run(self, rid, file_path):
-        run_data = RunData(file_path)
+        run_data = RunData(file_path, rid=rid)
         if len(run_data.parse_errors) > 0:
             for pe in run_data.parse_errors:
                 print(pe)
@@ -163,9 +193,6 @@ class RunGroup:
             exclude_prefixes=self.sweep_exclude_key_prefixes,
         )
 
-    def get_display_hpm_key(self, k):
-        return self.cfg_key_remap.get(k, k.split(".")[-1])
-
     def get_swept_table_data(self):
         field_names = ["Key", "Values"]
         row_groups = []
@@ -173,7 +200,7 @@ class RunGroup:
             rows = []
             for i, v in enumerate(vs):
                 kstr = self.get_display_hpm_key(k if i == 0 else "")
-                vstr = self.cfg_val_remap.get(k, {}).get(v, str(v))
+                vstr = self.get_dipslay_hpm_val(k, v)
                 rows.append([kstr, vstr])
             row_groups.append(rows)
         return field_names, row_groups
@@ -195,14 +222,24 @@ class RunGroup:
     def select_run_data_by_hpms(self, **kwargs):
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
-
-            def comp_hpm(k, vs):
+            # Made complicated by remapping display text from true
+            # values
+            def comp_hpm(kstr, vs):
                 new_vs = [str(v) for v in gu.make_list(vs)]
-                hpm_v = hpm.get(k, None)
-                return hpm_v is None or str(hpm_v) in new_vs
+                k = self.display_hpm_key_to_real_key(hpm, kstr)
+                k_not_found = False
+                if k in hpm:
+                    hpm_v = str(hpm[k])
+                elif kstr in hpm:
+                    hpm_v = str(hpm[kstr])
+                else:
+                    k_not_found = True
+                hpm_v = self.get_display_hpm_val(k, hpm_v)
+                return k_not_found or hpm_v in new_vs
 
-            if not all([comp_hpm(k, vs) for k, vs in kwargs.items()]):
+            if not all([comp_hpm(kstr, vs) for kstr, vs in kwargs.items()]):
                 continue
+
             rids = self.filter_rids(potential_rids)
             if len(rids) > 0:
                 selected[hpm] = [(rid, self.rid_to_run_data[rid]) for rid in rids]

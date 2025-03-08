@@ -120,6 +120,9 @@ class Hpm(MutableMapping):
     def __str__(self):
         return " ".join(self.as_strings())
 
+    def get_from_all(self, key):
+        return self._all_values.get(key, None)
+
     def reset_important(self):
         self.important_values = {k: v for k, v in self._all_values.items()}
 
@@ -158,11 +161,9 @@ class Hpm(MutableMapping):
 
 
 class RunData:
-    def __init__(
-        self,
-        file_path,
-    ):
+    def __init__(self, file_path, rid=None):
         self.file_path = file_path
+        self.id = rid
         self.hpms = None
         self.metadata = {}
         self.metrics_by_split = {}  # split: SplitMetrics
