@@ -301,6 +301,7 @@ def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
 
 def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
     kwargs['colors'] = kwargs.get('colors', [None, None])
+    kwargs['labels'] = kwargs.get('labels', ['cdf 1', 'cdf 2'])
     plc = kwargs.get('plc', get_plt_cfg(**kwargs))
 
     # Make figure, add lines, format plot

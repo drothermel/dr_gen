@@ -53,7 +53,6 @@ def histogram_plot(vals, ax=None, **kwargs):
     pu.make_histogram_plot(vals, ax=ax, **kwargs)
     if plt_show: plt.show()
 
-#def cdf_plot(vals, cdfs, ax=None, **kwargs):
 def cdf_plot(vals1, vals2, ax=None, **kwargs):
     results = ks.calculate_ks_for_run_sets(vals1, vals2)
     vals = results['all_vals']
