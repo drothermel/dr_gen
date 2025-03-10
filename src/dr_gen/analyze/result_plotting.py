@@ -1,389 +1,274 @@
-# Runs: the output of rg.select_run_data_by_hpms(...)
-def get_split_curves_from_runs(runs, metric_name, split):
-    # [hpm [curves [curve_data ...]]]
-    split_curves = []
-    for hpm, rlist in runs.items():
-        split_curves.append(
-            [rdata.get_split_metrics(split).get_vals(metric_name) for _, rdata in rlist]
+import random
+import dr_gen.analyze.ks_stat as ks
+
+def get_bootstrap_sample_inds(Nmax, n, k):
+    all_inds = list(range(len(Nmax)))
+    sample_inds = []
+    for i in range(k):
+        sample_inds.append(random.select(all_inds, n))
+    return sample_inds
+
+# TODO: figure this out
+def bootstrap_k(Nmax, n):
+    print(">> WARNING: this isn't correctly impld")
+    diff = Nmax - n
+    if diff < 2:
+        return 1
+    return 1 if diff <= 2 else diff - 2
+
+# Returns: [k_samples [n_run_inds ...]]
+def sweep_n_sample_inds(Nmax):
+    all_n_sample_inds = {}
+    for n in range(1, Nmax):
+        k = bootstrap_k(Nmax, n)
+        all_n_smaple_inds[n] = get_bootstrap_sample_inds(Nmax, n, k)
+    return all_n_sample_inds
+
+
+# runs_metrics:     [runs [metric_data ...]]
+# sampled_run_inds: [sampled_sets [run_inds ...]]
+# Returns:          [sampled_sets [runs [metric_data ...]]
+def select_sample_runs_metrics(runs_metrics, sampled_run_inds):
+    runs_metrics_samples = []
+    for run_inds_list in sampled_run_inds:
+        runs_metrics_samples.append(
+            [runs_metrics[ri] for ri in run_inds_set]
         )
-    return split_curves
+    return runs_metrics_samples
 
 
-# Runs: the output of rg.select_run_data_by_hpms(...)
-def get_curves_from_runs(runs, metric_name, splits=["train", "val", "eval"]):
-    # [hpm [split [curves [curve_data ...]]]]
-    hpm_split_curves = []
-    for hpm, rlist in runs.items():
-        split_curves = []
-        for split in splits:
-            split_curves.append(
-                [
-                    rdata.get_split_metrics(split).get_vals(metric_name)
-                    for _, rdata in rlist
-                ]
-            )
-        hpm_split_curves.append(split_curves)
-    return hpm_split_curves
-
-
-"""
-
-def get_run_sweep_kvs(
-    run_logs,
-    combo_key_order,
-    ind,
-    seed=False,
-    ignore_keys=[],
-):
-    keys = [*combo_key_order, "seed" if seed else ""]
-    keys = [k for k in keys if k != "" and k not in ignore_keys]
-
-    run_cfg, _, _ = run_logs[ind]
-    kvs = [(k, run_cfg[k]) for k in keys]
-    kv_str = kvs_to_str(kvs)
-    return kvs, kv_str
-
-
-def plot_run_splits(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    run_ind,
-    splits=["train", "val", "eval"],
-    metric="acc1",
-    ignore_keys=[],
-    **kwargs,
-):
-    _, kvstr = get_run_sweep_kvs(
-        runs,
-        sweep_info["combo_key_order"],
-        run_ind,
-        seed=True,
-        ignore_keys=ignore_keys,
-    )
-    plc_args = {
-        "ylim": (70, 100),
-        "labels": splits,
-        "title": f"{metric} | {kvstr}",
-        "ylabel": metric,
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_lines(
-        plc,
-        [
-            rp.get_run_metrics(
-                remapped_metrics,
-                split,
-                metric,
-                run_ind,
-            )
-            for split in splits
-        ],
-    )
-
-
-def plot_split_summaries(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    splits=["train", "val", "eval"],
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    **kwargs,
-):
-    all_kvs, split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits,
-        metric,
-        ignore_keys,
-        num_seeds,
-    )
-    assert len(all_kvs) == 1, ">> Only supports one combo for now"
-
-    # Get the title from the kvs and num runs
-    kv_str = kvs_to_str(all_kvs[0])
-    num_seeds = len(split_vals[splits[0]][0])
-    kv_str = f"{kv_str} | #Seeds: {num_seeds:,}"
-
-    # Prepare plot
-    plc_args = {
-        "ylim": (70, 100),
-        "labels": [f"{spl} mean {metric}" for spl in splits],
-        "title": kv_str,
-        "ylabel": metric,
-    }
-    plc_args.update(kwargs)
-    pu.plot_summary_lines(
-        pu.get_plt_cfg(**plc_args),
-        [split_vals[split][0] for split in splits],
-    )
-    return
-
-
-def plot_combo_histogram(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    **kwargs,
-):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
-    )
-
-    all_ind_stats = []
-    for split_vals in all_split_vals[split]:
-        all_ind_stats.append(
-            pu.get_runs_data_stats_ind(
-                split_vals,
-                ind=epoch,
-            )
+# runs_metrics_samples: [sampled_sets [runs [metric_data ...]]
+# Returns:              [sampled_sets [run_metric_at_t ...]]
+def select_epoch_from_sampled_metrics(runs_metrics_samples, t):
+    epoch_sampled_metrics = []
+    for runs_metrics in runs_metrics_samples:
+        epoch_sampled_metrics.append(
+            [rm[t] for rm in runs_metrics]
         )
+    return epoch_sampled_metrics
 
-    if len(all_ind_stats) > 1:
-        print(f">> Just using first of {len(all_ind_stats)} combos")
-
-    n = all_ind_stats[0]["n"]
-    plc_args = {
-        "nbins": n // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution, {n} Seeds",
-        "ylabel": "Num Runs",
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-
-    hp.plot_histogram(
-        plc,
-        all_ind_stats[0]["vals"],
-    )
-
-
-def plot_combo_histogram_compare(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    **kwargs,
+# runs_metrics_by_hpm:  { hpm: [runs [metric_data ...]] }
+# sample_inds_by_n:  { n: [sampled_sets [run_inds ...]] }
+# Returns:              [sampled_sets [run_metric_at_t ...]]
+def get_hpm_t_n_sampled_final_val(
+    runs_metrics_by_hpm,
+    sample_inds_by_n,
+    hpm,
+    t_eval,
+    n,
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
+    hpm_sampled_runs = select_sample_runs_metrics(
+        runs_metrics_by_hpm[hpm], sample_inds_by_n[n],
     )
+    return select_epoch_from_sampled_metrics(hpm_sampled_runs, t_eval)
 
-    all_ind_stats = []
-    for split_vals in all_split_vals[split]:
-        all_ind_stats.append(
-            pu.get_runs_data_stats_ind(
-                split_vals,
-                ind=epoch,
-            )
-        )
 
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in all_kvs
+# TODO: figure this out
+# Takes:    [sampled_sets [runs_metric_at_t ...]]
+# Returns:  value_estim, [vals_used_for_estim ....]
+def sampled_mean(runs_final_metrics):
+    print(">> WARN: unimpld")
+    return 0, [0 for _ in range(len(runs_final_metrics))]
+
+# TODO: figure this out
+# Takes:    [sampled_sets [runs_metric_at_t ...]]
+# Returns:  value_estim, [vals_used_for_estim ....]
+def sampled_std(runs_final_metrics):
+    print(">> WARN: unimpld")
+    return 0, [0 for _ in range(len(runs_final_metrics))]
+
+# TODO: figure this out
+# Takes:    [sampled_sets [runs_metric_at_t ...]]
+# Returns:  value_estim, [vals_used_for_estim ....]
+def sampled_gaussian_error(runs_final_metrics):
+    print(">> WARN: unimpld")
+    return 0, [0 for _ in range(len(runs_final_metrics))]
+
+# TODO: figure this out
+# Takes:    [sampled_sets [runs_metric_at_t ...]] for 2 run types
+# Returns:  value_estim, [vals_used_for_estim ....]
+def sampled_ks_stats(runs_A_final_metrics, runs_B_final_metrics):
+    print(">> WARN: unimpld")
+    return 0, [0 for _ in range(len(runs_A_final_metrics))]
+
+# Max sample size to consider is minimum of hpm provided sample sizes
+def get_max_n_from_hpm_runs(hpm_runs):
+    hpm_avail_num_runs = [
+        len(runs) for runs in hpm_runs.values()
     ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in all_kvs[0] if k != vary_key])
-    ns = [sts["n"] for sts in all_ind_stats]
-    plc_args = {
-        "nbins": max(ns) // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution | {title_kvstr}",
-        "ylabel": "Num Runs",
-        "labels": labels_kvstrs,
+    Nmax = min(hpm_avail_num_runs)
+    return Nmax
+
+# Takes:    { hpms: [sampled_sets [runs [metric_data ...]]] }, Tmax
+def hpm_select(sampled_runs_metrics_by_hpm, Tmax):
+    hpm_t_to_metric = {}
+    best_hpm_t = None
+    for hpm, sampled_runs in sampled_runs_metrics_by_hpm.items():
+        for t in range(1, Tmax):
+            hpm_t_final_vals = select_epoch_from_sampled_metrics(sampled_runs, t)
+            acc_hpm_t, _ = sample_mean(hpm_t_final_vals)
+            hpm_t_to_metric[(hpm, t)] = acc_hpm_t
+            if best_hpm_t is None or best_hpm_t[1] < acc_hpm_t:
+                best_hpm_t = ((hpm, t), acc_hpm_t)
+    return best_hpm_t, hpm_t_to_metric
+
+    
+
+# Takes:    [sampled_sets [runs_metric_at_t ...]]
+def calc_run_metrics(runs_final_metrics):
+    mean_estim, means = sample_mean(runs_final_metrics)
+    std_estim, stds = sample_std(runs_final_metrics)
+    gerror_estim, gaussian_errors = sample_gaussian_errors(runs_final_metrics)
+    return {
+        'mean_estimate': mean_estim,
+        'means': means,
+        'std_estimate': std,
+        'stds': stds,
+        'gaussian_error_estimate': gerror_estim,
+        'guassian_errors': gaussian_errors,
     }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
 
-    hp.plot_histogram_compare(plc, all_ind_stats)
+def calc_compare_metrics(final_metrics_and_results_A, final_metrics_and_results_B):
+    final_metrics_A, results_A = final_metrics_and_results_A
+    final_metrics_B, results_B = final_metrcis_and_results_B
 
-
-def ks_stats_plot_cdfs(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    vary_vals=None,
-    **kwargs,
+    compare_metrics = {}
+    compare_metrics['ks_stats_diff'] = sampled_ks_stats(final_metrics_A, final_metrics_B)
+    compare_metrics['mean_diff'] = results_A['mean'] - results_B['mean']
+    return compare_metrics
+    
+# *_runs_metrics_by_hpm:    { hpm: [runs [metric_data ...]] }
+# Returns:                  { t: { n: results } }
+def sweep_t_n_compare_metrics(
+    hpm_select_runs_metrics_by_hpm,
+    metric_caclulation_runs_metric_by_hpm,
+    sample_inds_by_n,
+    hpms_A,
+    hpms_B,
+    Tmax,
+    Nmax,
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
-    )
+    all_results = {t: {} for t in range(1, Tmax)}
 
-    selected_kvs = []
-    all_ind_vals = []
-    for i, split_vals in enumerate(all_split_vals[split]):
-        kv = all_kvs[i]
-        v = [v for k, v in kv if k == vary_key]
-        assert len(v) == 1
-        v = v[0]
-        if vary_vals is None or v in vary_vals:
-            all_ind_vals.append(
-                pu.get_runs_data_stats_ind(
-                    split_vals,
-                    ind=epoch,
-                )["vals"]
-            )
-            selected_kvs.append(kv)
+    hpms = [hpms_A, hpms_B]
+    for t in range(1, Tmax):
+        for n in range(1, Nmax):
+            htn_vals_and_metrics = []
+            best_hpms_and_t_evals = []
+            for hpms in [hpms_A, hpms_B]:
+                # Select HPM and Evaluation Epoch (hpm selection if dataset provided)
+                if hpm_select_runs_metrics_by_hpm is None:
+                    best_hpm = hpms[0]
+                    best_t_eval = Tmax
+                    best_hpms_and_t_evals.append((best_hpm, best_t_eval))
+                else:
+                    hpm_select_tn_sampled_metrics = {
+                        hpm: select_sample_run_metrics(
+                            hpm_select_runs_metrics_by_hpm[hpm],
+                            sample_inds_by_n[n],
+                        ) for hpm in hpms
+                    }
+                    (best_hpm_t, ),, _ = hpm_select(
+                        hpm_select_tn_sampled_metrics, Tmax,
+                    )
+                    best_hpm, best_t_eval = best_hpm_t
+                    best_hpms_and_t_evals.append(best_hpm_t)
 
-    assert len(all_ind_vals) == 2
-    results = ks.calculate_ks_for_run_sets(
-        all_ind_vals[0],
-        all_ind_vals[1],
-    )
-
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
-    ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
-    ns = [len(vs) for vs in all_ind_vals]
-
-    plc_args = {
-        "labels": [
-            f"{label} | #seed: {ns[i]}" for i, label in enumerate(labels_kvstrs)
-        ],
-        "title": f"CDF | {title_kvstr}",
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_cdfs(
-        plc,
-        results["all_vals"],
-        [results["cdf1"], results["cdf2"]],
-    )
-
-
-def ks_stat_plot_cdfs_histograms(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    vary_vals=None,
-    **kwargs,
-):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
-    )
-
-    selected_kvs = []
-    all_ind_stats = []
-    for i, split_vals in enumerate(all_split_vals[split]):
-        kv = all_kvs[i]
-        v = [v for k, v in kv if k == vary_key]
-        assert len(v) == 1
-        v = v[0]
-        if vary_vals is None or v in vary_vals:
-            all_ind_stats.append(
-                pu.get_runs_data_stats_ind(
-                    split_vals,
-                    ind=epoch,
+                # Use best_hpm and best_t_eval to cacluate metrics
+                htn_final_vals = get_hpm_t_n_final_val_samples(
+                    metric_calculation_runs_metrics_by_hpm,
+                    sample_inds_by_n,
+                    best_hpm,
+                    n,
+                    best_t_eval,
                 )
-            )
-            selected_kvs.append(kv)
+                htn_metrics = calc_run_metrics(htn_final_vals)
+                htn_vals_and_metrics.append((htn_final_vals, htn_metrics))
 
-    assert len(all_ind_stats) == 2
-    results = ks.calculate_ks_for_run_sets(
-        all_ind_stats[0]["vals"],
-        all_ind_stats[1]["vals"],
-    )
+            # Calculate compare metrics
+            htn_compare_metrics = calc_compare_metrics(*htn_vals_and_metrics)
+            all_results[t][n] = {
+                'n': n,
+                't': t,
+                'best_hpms_and_t_evals': best_hpms_and_t_evals,
+                'htn_vals_and_metrics': htn_vals_and_metrics,
+                'htn_compare_metrics': htn_compare_metrics,
+            }
+    return all_results, hpms
 
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
-    ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
-    ns = [len(vs) for vs in all_ind_stats]
-
-    # Plot the CDFs
-    plc_args = {
-        "labels": labels_kvstrs,
+# Default Tmax and Nmax set to magic vals
+def sweep_t_n_compare_acc_by_init_default_hpms(
+    rg, Tmax=270, Nmax=99, lr=0.1, wd=1e-4,
+):
+    hpm_select_dict = {
+        "optim.lr": lr,
+        "optim.weight_decay": wd,
+        'epochs': Tmax,
     }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
+
+    # No hpm selection via sweep
+    # So use val split for metric calculation
+    #   { hpm: [runs [metric_data ...]]}
+    hpm_select_runs_metrics_by_hpm = None
+    metric_calculation_runs_metric_by_hpm = rg.select_run_split_metrics_by_hpms(
+        "acc1",
+        "val",
+        **hpm_select_dict,
     )
-    pu.plot_cdfs(
-        plc,
-        results["all_vals"],
-        [results["cdf1"], results["cdf2"]],
+    assert len(metric_calculation_runs_metric_by_hpm) == 2
+    hpmA, hpmB = list(metric_calculation_runs_metric_by_hpm.keys())
+
+    sample_inds_by_n = sweep_n_sample_inds(Nmax)
+    hpms_A = [hpmA]
+    hpms_B = [hpmB]
+
+    return sweep_t_n_compare_metrics(
+        hpm_select_runs_metrics_by_hpm,
+        metric_calculation_runs_metric_by_hpm,
+        hpms_A,
+        hpms_B,
+        Tmax,
+        Nmax,
     )
 
-    # Plot the histograms
-    plc_args = {
-        "nbins": max(ns) // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution | {title_kvstr}",
-        "ylabel": "Num Runs",
-        "labels": labels_kvstrs,
-        "density": True,
+
+def sweep_t_n_compare_acc_by_init_hpm_select(
+    rg, Tmax=270, Nmax=99,
+    LRs=[0.04, 0.06, 0.1, 0.16, 0.25],
+    WDs=[0.00016, 4e-05, 0.00025, 6.3e-0.5, 1e-05, 0.0001],
+):
+    hpm_select_dict = {
+        "optim.lr": LRs,
+        "optim.weight_decay": WDs,
+        'epochs': Tmax,
     }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
+
+    # Val split for hpm selection
+    #   { hpm: [runs [metric_data ...]]}
+    hpm_select_runs_metrics_by_hpm = rg.select_run_split_metrics_by_hpms(
+        "acc1",
+        "val",
+        **hpm_select_dict,
     )
 
-    hp.plot_histogram_compare(plc, all_ind_stats)
-"""
+    # Eval split for metric calculation
+    #   { hpm: [runs [metric_data ...]]}
+    metric_calculation_runs_metric_by_hpm = rg.select_run_split_metrics_by_hpms(
+        "acc1",
+        "eval",
+        **hpm_select_dict,
+    )
+
+    all_hpms = [hpm_select_runs_metrics_by_hpm.keys()]
+    hpms_A = [hpm for hpm in all_hpms if hpm['model.weights'] == 'DEFAULT']
+    hpms_B = [hpm for hpm in all_hpms if hpm['model.weights'] != 'DEFAULT']
+
+    return sweep_t_n_compare_metrics(
+        hpm_select_runs_metrics_by_hpm,
+        metric_calculation_runs_metric_by_hpm,
+        hpms_A,
+        hpms_B,
+        Tmax,
+        Nmax,
+    )
+    
