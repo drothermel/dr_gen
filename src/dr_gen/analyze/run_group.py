@@ -219,6 +219,7 @@ class RunGroup:
             rows.append([*val_strs, len(rids)])
         return field_names, rows
 
+    # Returns: { hpm: [rdata ...] }
     def select_run_data_by_hpms(self, **kwargs):
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
@@ -242,8 +243,34 @@ class RunGroup:
 
             rids = self.filter_rids(potential_rids)
             if len(rids) > 0:
-                selected[hpm] = [(rid, self.rid_to_run_data[rid]) for rid in rids]
+                selected[hpm] = [self.rid_to_run_data[rid] for rid in rids]
         return selected
+
+    # Returns: { hpm: [runs [metric_data ...]]}
+    def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs):
+        runs = self.select_run_data_by_hpms(**kwargs)
+        hpm_metrics = {}
+        for hpm, rdata_list in runs.items():
+            hpm_metrics[hpm] = [
+                rdata.get_split_metrics(split).get_vals(metric_name)
+                for rdata in rdata_list
+            ]
+        return hpm_metrics
+            
+
+    # returns: { hpm: { split : [runs [metric_data ...]]}}
+    def select_run_metrics_by_hpms(self, metric_name, splits=['train', 'val', 'eval'], **kwargs):
+        
+        hpm_split_metrics = defaultdict(dict)
+        for split in splits:
+            hpm_metrics = self.select_run_split_metrics_by_hpms(
+                metric_name, split, **kwargs,
+            )
+            for hpm, runs_metrics in hpm_metrics.items():
+                hpm_spilt_metrics[hpm][split] = runs_metrics
+        return hpm_split_metrics
+
+        
 
     def ignore_runs_by_hpms(self, **kwargs):
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)
