@@ -256,21 +256,21 @@ class RunGroup:
                 for rdata in rdata_list
             ]
         return hpm_metrics
-            
 
     # returns: { hpm: { split : [runs [metric_data ...]]}}
-    def select_run_metrics_by_hpms(self, metric_name, splits=['train', 'val', 'eval'], **kwargs):
-        
+    def select_run_metrics_by_hpms(
+        self, metric_name, splits=["train", "val", "eval"], **kwargs
+    ):
         hpm_split_metrics = defaultdict(dict)
         for split in splits:
             hpm_metrics = self.select_run_split_metrics_by_hpms(
-                metric_name, split, **kwargs,
+                metric_name,
+                split,
+                **kwargs,
             )
             for hpm, runs_metrics in hpm_metrics.items():
-                hpm_spilt_metrics[hpm][split] = runs_metrics
+                hpm_split_metrics[hpm][split] = runs_metrics
         return hpm_split_metrics
-
-        
 
     def ignore_runs_by_hpms(self, **kwargs):
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)

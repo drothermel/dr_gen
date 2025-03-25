@@ -1,6 +1,4 @@
 import numpy as np
-import random
-import dr_gen.analyze.ks_stat as ks
 
 
 def runs_metrics_to_ndarray(runs_metrics):
@@ -8,7 +6,7 @@ def runs_metrics_to_ndarray(runs_metrics):
         return runs_metrics
     min_run_len = min([len(rm) for rm in runs_metrics])
     metric_array = np.array([rm[:min_run_len] for rm in runs_metrics])
-    return metric_array # num_runs x T_min
+    return metric_array  # num_runs x T_min
 
 
 # TODO
@@ -19,9 +17,11 @@ def summary_stats(data, stat=None):
     # float only if squeeze produces a single elem
     return {}
 
+
 # TODO
 def comparative_stats(estims_a, estims_b):
     return {}
+
 
 # ============ Bootstrapping ==============
 
@@ -29,9 +29,11 @@ def comparative_stats(estims_a, estims_b):
 # n - sample size
 # b - num bootstrap samples
 
+
 # accepts ndarray or list of lists
 def bootstrap_samples(dataset, n, b):
     return np.random.choice(dataset, size=(b, n), replace=True)
+
 
 # accepts ndarray or list of lists
 def bootstrap_summary_stats(dataset, n=None, b=None, stat=None):
@@ -50,14 +52,15 @@ def bootstrap_summary_stats(dataset, n=None, b=None, stat=None):
         "ci_95": {},
     }
     for stat, dist in stats_dists.items():
-        if dist.dim  != 1:
+        if dist.dim != 1:
             continue
 
-        b_estims['point'][stat] = np.mean(dist)
-        b_estims['std'][stat] = np.stddev(dist)
-        b_estims['sem'][stat] = b_estims['std'][std] / dist.shape[0]
-        b_estims['ci_95'][stat] = (np.percentile(2.5, dist), np.percentile(97.5, dist))
+        b_estims["point"][stat] = np.mean(dist)
+        b_estims["std"][stat] = np.stddev(dist)
+        b_estims["sem"][stat] = b_estims["std"][stat] / dist.shape[0]
+        b_estims["ci_95"][stat] = (np.percentile(2.5, dist), np.percentile(97.5, dist))
     return b_estims
+
 
 # runs metrics: [runs [metric_data ...]]
 def bootstrap_early_stopping(runs_metrics, n=None, b=None):
@@ -67,10 +70,11 @@ def bootstrap_early_stopping(runs_metrics, n=None, b=None):
     for t in range(metric_array.shape[-1]):
         t_vals = metric_array[:, t]
         b_estims = bootstrap_summary_stats(t_vals, n, b, stat="mean")
-        t_metrics.append(b_estims['point']['mean'])
+        t_metrics.append(b_estims["point"]["mean"])
     best_t = np.argmax(t_metrics)
     best_vals_mean = t_metrics[best_t]
     return best_t, best_vals_mean
+
 
 def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, n=None, b=None):
     hpm_metrics = []
@@ -80,11 +84,14 @@ def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, n=None, b=N
             best_t, best_t_mean = bootstrap_early_stopping(metric_array, n, b)
         else:
             best_t = metric_array.shape[-1]
-            best_t_vals = metric_array[:, best_t] if n is None else metric_array[:n, best_t]
+            best_t_vals = (
+                metric_array[:, best_t] if n is None else metric_array[:n, best_t]
+            )
             best_t_mean = best_t_vals.mean()
         hpm_metrics.append((hpm, best_t, best_t_mean))
     hpm, best_t, _ = max(hpm_metrics, key=lambda t: t[-1])
     return hpm, best_t
+
 
 def bootstrap_best_hpms_stats(
     runs_metrics_for_eval,
@@ -98,7 +105,10 @@ def bootstrap_best_hpms_stats(
         # No actual hpm selection if no hpm select data provided
         assert len(runs_metrics_for_eval) == 1
         hpm, best_t = bootstrap_select_hpms(
-            runs_metrics_for_eval, early_stopping=False, n=None, b=None,
+            runs_metrics_for_eval,
+            early_stopping=False,
+            n=None,
+            b=None,
         )
     else:
         hpm, best_t = bootstrap_select_hpms(
@@ -111,32 +121,36 @@ def bootstrap_best_hpms_stats(
     # Make sure selected hpm is available for evaluation
     assert hpm in runs_metrics_for_eval
 
-    t_vals = metric_array[:, best_t]
+    t_vals = runs_metrics_for_eval[hpm][:, best_t]
     b_estims = bootstrap_summary_stats(t_vals, n, b)
-    b_estims['vals'] = t_vals
-    b_estims['n'] = n
-    b_estims['b'] = b
+    b_estims["vals"] = t_vals
+    b_estims["n"] = n
+    b_estims["b"] = b
     return (hpm, best_t), b_estims
 
 
 # =======================
+
 
 def select_runs_by_hpms(run_data, hpms):
     if run_data is None:
         return None
     return {h: rm for h, rm in run_data.items() if h in hpms}
 
+
 def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
     if runs_metrics_dict is None:
         return None
-    return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in run_metrics_dict.items()}
+    return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
+
 
 ## Next: Use bootstrap_best_hpmps_stats to get ((hpm, best_t), summary_stats)
 #           for all the values of (n, t) in the sweep
 #        Take the estimated values to calculate individual hpm set stats and
 #           then calculate comparative hpm set stats
 
-def boostrap_compare_stats(
+
+def bootstrap_compare_stats(
     runs_metrics_for_eval,
     hpms_A,
     hpms_B,
@@ -148,26 +162,31 @@ def boostrap_compare_stats(
     (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
         select_runs_by_hpms(runs_metrics_for_eval, hpms_A),
         select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_A),
-        early_stopping=early_stopping, n=n, b=b,
+        early_stopping=early_stopping,
+        n=n,
+        b=b,
     )
     (best_hpm_b, best_t_b), estims_b = bootstrap_best_hpms_stats(
         select_runs_by_hpms(runs_metrics_for_eval, hpms_B),
         select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_B),
-        early_stopping=early_stopping, n=n, b=b,
+        early_stopping=early_stopping,
+        n=n,
+        b=b,
     )
     comp_estims = comparative_stats(estims_a, estims_b)
     return {
-        'best_hpm_a': best_hpm_a,
-        'best_t_a': best_t_a,
-        'best_hpm_b': best_hpm_b,
-        'best_t_b': best_t_b,
-        'summary_stats_a': estims_a,
-        'summary_stats_b': estims_b,
-        'comparative_stats': comp_estims,
+        "best_hpm_a": best_hpm_a,
+        "best_t_a": best_t_a,
+        "best_hpm_b": best_hpm_b,
+        "best_t_b": best_t_b,
+        "summary_stats_a": estims_a,
+        "summary_stats_b": estims_b,
+        "comparative_stats": comp_estims,
     }
 
 
 # =======================
+
 
 def sweep_t_n_compare(
     runs_metrics_for_eval,
@@ -188,18 +207,26 @@ def sweep_t_n_compare(
                 trim_runs_metrics_dict(runs_metrics_for_hpm_select, nmax, tmax),
                 hpms_A,
                 hpms_B,
-                early_stopping=early_stopping, n=n, b=b,
+                early_stopping=early_stopping,
+                n=n,
+                b=b,
             )
     return all_stats
 
+
 # Default Tmax and Nmax set to magic vals
 def sweep_t_n_compare_acc_by_init_default_hpms(
-    rg, Tmax=270, Nmax=99, lr=0.1, wd=1e-4, b=None,
+    rg,
+    Tmax=270,
+    Nmax=99,
+    lr=0.1,
+    wd=1e-4,
+    b=None,
 ):
     hpm_select_dict = {
         "optim.lr": lr,
         "optim.weight_decay": wd,
-        'epochs': Tmax,
+        "epochs": Tmax,
     }
 
     # No hpm selection via sweep
@@ -213,12 +240,10 @@ def sweep_t_n_compare_acc_by_init_default_hpms(
     )
     assert len(metric_calculation_runs_metric_by_hpm) == 2
     hpmA, hpmB = list(metric_calculation_runs_metric_by_hpm.keys())
-
-    sample_inds_by_n = sweep_n_sample_inds(Nmax)
     hpms_A = [hpmA]
     hpms_B = [hpmB]
 
-    return sweep_t_n_compare_metrics(
+    return sweep_t_n_compare(
         hpm_select_runs_metrics_by_hpm,
         metric_calculation_runs_metric_by_hpm,
         hpms_A,
@@ -231,15 +256,17 @@ def sweep_t_n_compare_acc_by_init_default_hpms(
 
 
 def sweep_t_n_compare_acc_by_init_hpm_select(
-    rg, Tmax=270, Nmax=99,
+    rg,
+    Tmax=270,
+    Nmax=99,
     LRs=[0.04, 0.06, 0.1, 0.16, 0.25],
-    WDs=[0.00016, 4e-05, 0.00025, 6.3e-0.5, 1e-05, 0.0001],
+    WDs=[0.00016, 4e-05, 0.00025, 6.3e-05, 1e-05, 0.0001],
     b=None,
 ):
     hpm_select_dict = {
         "optim.lr": LRs,
         "optim.weight_decay": WDs,
-        'epochs': Tmax,
+        "epochs": Tmax,
     }
 
     # Val split for hpm selection
@@ -259,10 +286,10 @@ def sweep_t_n_compare_acc_by_init_hpm_select(
     )
 
     all_hpms = [hpm_select_runs_metrics_by_hpm.keys()]
-    hpms_A = [hpm for hpm in all_hpms if hpm['model.weights'] == 'DEFAULT']
-    hpms_B = [hpm for hpm in all_hpms if hpm['model.weights'] != 'DEFAULT']
+    hpms_A = [hpm for hpm in all_hpms if hpm["model.weights"] == "DEFAULT"]
+    hpms_B = [hpm for hpm in all_hpms if hpm["model.weights"] != "DEFAULT"]
 
-    return sweep_t_n_compare_metrics(
+    return sweep_t_n_compare(
         hpm_select_runs_metrics_by_hpm,
         metric_calculation_runs_metric_by_hpm,
         hpms_A,
@@ -272,4 +299,3 @@ def sweep_t_n_compare_acc_by_init_hpm_select(
         early_stopping=True,
         b=b,
     )
-    
