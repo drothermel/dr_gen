@@ -1,204 +1,200 @@
+import numpy as np
 import random
 import dr_gen.analyze.ks_stat as ks
 
-def get_bootstrap_sample_inds(Nmax, n, k):
-    all_inds = list(range(len(Nmax)))
-    sample_inds = []
-    for i in range(k):
-        sample_inds.append(random.select(all_inds, n))
-    return sample_inds
 
-# TODO: figure this out
-def bootstrap_k(Nmax, n):
-    print(">> WARNING: this isn't correctly impld")
-    diff = Nmax - n
-    if diff < 2:
-        return 1
-    return 1 if diff <= 2 else diff - 2
-
-# Returns: [k_samples [n_run_inds ...]]
-def sweep_n_sample_inds(Nmax):
-    all_n_sample_inds = {}
-    for n in range(1, Nmax):
-        k = bootstrap_k(Nmax, n)
-        all_n_smaple_inds[n] = get_bootstrap_sample_inds(Nmax, n, k)
-    return all_n_sample_inds
+def runs_metrics_to_ndarray(runs_metrics):
+    if isinstance(runs_metrics, np.ndarray):
+        return runs_metrics
+    min_run_len = min([len(rm) for rm in runs_metrics])
+    metric_array = np.array([rm[:min_run_len] for rm in runs_metrics])
+    return metric_array # num_runs x T_min
 
 
-# runs_metrics:     [runs [metric_data ...]]
-# sampled_run_inds: [sampled_sets [run_inds ...]]
-# Returns:          [sampled_sets [runs [metric_data ...]]
-def select_sample_runs_metrics(runs_metrics, sampled_run_inds):
-    runs_metrics_samples = []
-    for run_inds_list in sampled_run_inds:
-        runs_metrics_samples.append(
-            [runs_metrics[ri] for ri in run_inds_set]
-        )
-    return runs_metrics_samples
+# TODO
+def summary_stats(data, stat=None):
+    # [D] => [[D]] if needed
+    # TODO: grab from old fxn, add new, only stat if not none, return {name: float or nd.array}
+    # n, mean, median, min, max, variance, std, sem, 2.5th, 25th, 75th, 97.5th, IQR, CDF
+    # float only if squeeze produces a single elem
+    return {}
 
+# TODO
+def comparative_stats(estims_a, estims_b):
+    return {}
 
-# runs_metrics_samples: [sampled_sets [runs [metric_data ...]]
-# Returns:              [sampled_sets [run_metric_at_t ...]]
-def select_epoch_from_sampled_metrics(runs_metrics_samples, t):
-    epoch_sampled_metrics = []
-    for runs_metrics in runs_metrics_samples:
-        epoch_sampled_metrics.append(
-            [rm[t] for rm in runs_metrics]
-        )
-    return epoch_sampled_metrics
+# ============ Bootstrapping ==============
 
-# runs_metrics_by_hpm:  { hpm: [runs [metric_data ...]] }
-# sample_inds_by_n:  { n: [sampled_sets [run_inds ...]] }
-# Returns:              [sampled_sets [run_metric_at_t ...]]
-def get_hpm_t_n_sampled_final_val(
-    runs_metrics_by_hpm,
-    sample_inds_by_n,
-    hpm,
-    t_eval,
-    n,
-):
-    hpm_sampled_runs = select_sample_runs_metrics(
-        runs_metrics_by_hpm[hpm], sample_inds_by_n[n],
-    )
-    return select_epoch_from_sampled_metrics(hpm_sampled_runs, t_eval)
+# For all functions
+# n - sample size
+# b - num bootstrap samples
 
+# accepts ndarray or list of lists
+def bootstrap_samples(dataset, n, b):
+    return np.random.choice(dataset, size=(b, n), replace=True)
 
-# TODO: figure this out
-# Takes:    [sampled_sets [runs_metric_at_t ...]]
-# Returns:  value_estim, [vals_used_for_estim ....]
-def sampled_mean(runs_final_metrics):
-    print(">> WARN: unimpld")
-    return 0, [0 for _ in range(len(runs_final_metrics))]
-
-# TODO: figure this out
-# Takes:    [sampled_sets [runs_metric_at_t ...]]
-# Returns:  value_estim, [vals_used_for_estim ....]
-def sampled_std(runs_final_metrics):
-    print(">> WARN: unimpld")
-    return 0, [0 for _ in range(len(runs_final_metrics))]
-
-# TODO: figure this out
-# Takes:    [sampled_sets [runs_metric_at_t ...]]
-# Returns:  value_estim, [vals_used_for_estim ....]
-def sampled_gaussian_error(runs_final_metrics):
-    print(">> WARN: unimpld")
-    return 0, [0 for _ in range(len(runs_final_metrics))]
-
-# TODO: figure this out
-# Takes:    [sampled_sets [runs_metric_at_t ...]] for 2 run types
-# Returns:  value_estim, [vals_used_for_estim ....]
-def sampled_ks_stats(runs_A_final_metrics, runs_B_final_metrics):
-    print(">> WARN: unimpld")
-    return 0, [0 for _ in range(len(runs_A_final_metrics))]
-
-# Max sample size to consider is minimum of hpm provided sample sizes
-def get_max_n_from_hpm_runs(hpm_runs):
-    hpm_avail_num_runs = [
-        len(runs) for runs in hpm_runs.values()
-    ]
-    Nmax = min(hpm_avail_num_runs)
-    return Nmax
-
-# Takes:    { hpms: [sampled_sets [runs [metric_data ...]]] }, Tmax
-def hpm_select(sampled_runs_metrics_by_hpm, Tmax):
-    hpm_t_to_metric = {}
-    best_hpm_t = None
-    for hpm, sampled_runs in sampled_runs_metrics_by_hpm.items():
-        for t in range(1, Tmax):
-            hpm_t_final_vals = select_epoch_from_sampled_metrics(sampled_runs, t)
-            acc_hpm_t, _ = sample_mean(hpm_t_final_vals)
-            hpm_t_to_metric[(hpm, t)] = acc_hpm_t
-            if best_hpm_t is None or best_hpm_t[1] < acc_hpm_t:
-                best_hpm_t = ((hpm, t), acc_hpm_t)
-    return best_hpm_t, hpm_t_to_metric
-
-    
-
-# Takes:    [sampled_sets [runs_metric_at_t ...]]
-def calc_run_metrics(runs_final_metrics):
-    mean_estim, means = sample_mean(runs_final_metrics)
-    std_estim, stds = sample_std(runs_final_metrics)
-    gerror_estim, gaussian_errors = sample_gaussian_errors(runs_final_metrics)
-    return {
-        'mean_estimate': mean_estim,
-        'means': means,
-        'std_estimate': std,
-        'stds': stds,
-        'gaussian_error_estimate': gerror_estim,
-        'guassian_errors': gaussian_errors,
+# accepts ndarray or list of lists
+def bootstrap_summary_stats(dataset, n=None, b=None, stat=None):
+    if b is None and n is None:
+        samples = dataset
+    elif b is None:
+        samples = dataset[:n]
+    else:
+        samples = bootstrap_samples(dataset, n, b)
+    stats_dists = summary_stats(samples, stat=stat)
+    b_estims = {
+        "dist": stats_dists,
+        "point": {},
+        "std": {},
+        "sem": {},
+        "ci_95": {},
     }
+    for stat, dist in stats_dists.items():
+        if dist.dim  != 1:
+            continue
 
-def calc_compare_metrics(final_metrics_and_results_A, final_metrics_and_results_B):
-    final_metrics_A, results_A = final_metrics_and_results_A
-    final_metrics_B, results_B = final_metrcis_and_results_B
+        b_estims['point'][stat] = np.mean(dist)
+        b_estims['std'][stat] = np.stddev(dist)
+        b_estims['sem'][stat] = b_estims['std'][std] / dist.shape[0]
+        b_estims['ci_95'][stat] = (np.percentile(2.5, dist), np.percentile(97.5, dist))
+    return b_estims
 
-    compare_metrics = {}
-    compare_metrics['ks_stats_diff'] = sampled_ks_stats(final_metrics_A, final_metrics_B)
-    compare_metrics['mean_diff'] = results_A['mean'] - results_B['mean']
-    return compare_metrics
-    
-# *_runs_metrics_by_hpm:    { hpm: [runs [metric_data ...]] }
-# Returns:                  { t: { n: results } }
-def sweep_t_n_compare_metrics(
-    hpm_select_runs_metrics_by_hpm,
-    metric_caclulation_runs_metric_by_hpm,
-    sample_inds_by_n,
+# runs metrics: [runs [metric_data ...]]
+def bootstrap_early_stopping(runs_metrics, n=None, b=None):
+    metric_array = runs_metrics_to_ndarray(runs_metrics)
+
+    t_metrics = []
+    for t in range(metric_array.shape[-1]):
+        t_vals = metric_array[:, t]
+        b_estims = bootstrap_summary_stats(t_vals, n, b, stat="mean")
+        t_metrics.append(b_estims['point']['mean'])
+    best_t = np.argmax(t_metrics)
+    best_vals_mean = t_metrics[best_t]
+    return best_t, best_vals_mean
+
+def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, n=None, b=None):
+    hpm_metrics = []
+    for hpm, runs_metrics in runs_metrics_by_hpm.items():
+        metric_array = runs_metrics_to_ndarray(runs_metrics)
+        if early_stopping:
+            best_t, best_t_mean = bootstrap_early_stopping(metric_array, n, b)
+        else:
+            best_t = metric_array.shape[-1]
+            best_t_vals = metric_array[:, best_t] if n is None else metric_array[:n, best_t]
+            best_t_mean = best_t_vals.mean()
+        hpm_metrics.append((hpm, best_t, best_t_mean))
+    hpm, best_t, _ = max(hpm_metrics, key=lambda t: t[-1])
+    return hpm, best_t
+
+def bootstrap_best_hpms_stats(
+    runs_metrics_for_eval,
+    runs_metrics_for_hpm_select=None,
+    early_stopping=False,
+    n=None,
+    b=None,
+):
+    # Hpm Selection
+    if runs_metrics_for_hpm_select is None:
+        # No actual hpm selection if no hpm select data provided
+        assert len(runs_metrics_for_eval) == 1
+        hpm, best_t = bootstrap_select_hpms(
+            runs_metrics_for_eval, early_stopping=False, n=None, b=None,
+        )
+    else:
+        hpm, best_t = bootstrap_select_hpms(
+            runs_metrics_for_hpm_select,
+            early_stopping=early_stopping,
+            n=n,
+            b=b,
+        )
+
+    # Make sure selected hpm is available for evaluation
+    assert hpm in runs_metrics_for_eval
+
+    t_vals = metric_array[:, best_t]
+    b_estims = bootstrap_summary_stats(t_vals, n, b)
+    b_estims['vals'] = t_vals
+    b_estims['n'] = n
+    b_estims['b'] = b
+    return (hpm, best_t), b_estims
+
+
+# =======================
+
+def select_runs_by_hpms(run_data, hpms):
+    if run_data is None:
+        return None
+    return {h: rm for h, rm in run_data.items() if h in hpms}
+
+def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
+    if runs_metrics_dict is None:
+        return None
+    return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in run_metrics_dict.items()}
+
+## Next: Use bootstrap_best_hpmps_stats to get ((hpm, best_t), summary_stats)
+#           for all the values of (n, t) in the sweep
+#        Take the estimated values to calculate individual hpm set stats and
+#           then calculate comparative hpm set stats
+
+def boostrap_compare_stats(
+    runs_metrics_for_eval,
     hpms_A,
     hpms_B,
-    Tmax,
-    Nmax,
+    runs_metrics_for_hpm_select=None,
+    early_stopping=False,
+    n=None,
+    b=None,
 ):
-    all_results = {t: {} for t in range(1, Tmax)}
+    (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
+        select_runs_by_hpms(runs_metrics_for_eval, hpms_A),
+        select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_A),
+        early_stopping=early_stopping, n=n, b=b,
+    )
+    (best_hpm_b, best_t_b), estims_b = bootstrap_best_hpms_stats(
+        select_runs_by_hpms(runs_metrics_for_eval, hpms_B),
+        select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_B),
+        early_stopping=early_stopping, n=n, b=b,
+    )
+    comp_estims = comparative_stats(estims_a, estims_b)
+    return {
+        'best_hpm_a': best_hpm_a,
+        'best_t_a': best_t_a,
+        'best_hpm_b': best_hpm_b,
+        'best_t_b': best_t_b,
+        'summary_stats_a': estims_a,
+        'summary_stats_b': estims_b,
+        'comparative_stats': comp_estims,
+    }
 
-    hpms = [hpms_A, hpms_B]
-    for t in range(1, Tmax):
-        for n in range(1, Nmax):
-            htn_vals_and_metrics = []
-            best_hpms_and_t_evals = []
-            for hpms in [hpms_A, hpms_B]:
-                # Select HPM and Evaluation Epoch (hpm selection if dataset provided)
-                if hpm_select_runs_metrics_by_hpm is None:
-                    best_hpm = hpms[0]
-                    best_t_eval = Tmax
-                    best_hpms_and_t_evals.append((best_hpm, best_t_eval))
-                else:
-                    hpm_select_tn_sampled_metrics = {
-                        hpm: select_sample_run_metrics(
-                            hpm_select_runs_metrics_by_hpm[hpm],
-                            sample_inds_by_n[n],
-                        ) for hpm in hpms
-                    }
-                    (best_hpm_t, ),, _ = hpm_select(
-                        hpm_select_tn_sampled_metrics, Tmax,
-                    )
-                    best_hpm, best_t_eval = best_hpm_t
-                    best_hpms_and_t_evals.append(best_hpm_t)
 
-                # Use best_hpm and best_t_eval to cacluate metrics
-                htn_final_vals = get_hpm_t_n_final_val_samples(
-                    metric_calculation_runs_metrics_by_hpm,
-                    sample_inds_by_n,
-                    best_hpm,
-                    n,
-                    best_t_eval,
-                )
-                htn_metrics = calc_run_metrics(htn_final_vals)
-                htn_vals_and_metrics.append((htn_final_vals, htn_metrics))
+# =======================
 
-            # Calculate compare metrics
-            htn_compare_metrics = calc_compare_metrics(*htn_vals_and_metrics)
-            all_results[t][n] = {
-                'n': n,
-                't': t,
-                'best_hpms_and_t_evals': best_hpms_and_t_evals,
-                'htn_vals_and_metrics': htn_vals_and_metrics,
-                'htn_compare_metrics': htn_compare_metrics,
-            }
-    return all_results, hpms
+def sweep_t_n_compare(
+    runs_metrics_for_eval,
+    runs_metrics_for_hpm_select,
+    hpms_A,
+    hpms_B,
+    nmax,
+    tmax,
+    early_stopping=False,
+    b=None,
+):
+    all_stats = {}
+    for n in range(nmax):
+        for t in range(tmax):
+            nt = (n, t)
+            all_stats[nt] = bootstrap_compare_stats(
+                trim_runs_metrics_dict(runs_metrics_for_eval, nmax, tmax),
+                trim_runs_metrics_dict(runs_metrics_for_hpm_select, nmax, tmax),
+                hpms_A,
+                hpms_B,
+                early_stopping=early_stopping, n=n, b=b,
+            )
+    return all_stats
 
 # Default Tmax and Nmax set to magic vals
 def sweep_t_n_compare_acc_by_init_default_hpms(
-    rg, Tmax=270, Nmax=99, lr=0.1, wd=1e-4,
+    rg, Tmax=270, Nmax=99, lr=0.1, wd=1e-4, b=None,
 ):
     hpm_select_dict = {
         "optim.lr": lr,
@@ -229,6 +225,8 @@ def sweep_t_n_compare_acc_by_init_default_hpms(
         hpms_B,
         Tmax,
         Nmax,
+        early_stopping=False,
+        b=b,
     )
 
 
@@ -236,6 +234,7 @@ def sweep_t_n_compare_acc_by_init_hpm_select(
     rg, Tmax=270, Nmax=99,
     LRs=[0.04, 0.06, 0.1, 0.16, 0.25],
     WDs=[0.00016, 4e-05, 0.00025, 6.3e-0.5, 1e-05, 0.0001],
+    b=None,
 ):
     hpm_select_dict = {
         "optim.lr": LRs,
@@ -270,5 +269,7 @@ def sweep_t_n_compare_acc_by_init_hpm_select(
         hpms_B,
         Tmax,
         Nmax,
+        early_stopping=True,
+        b=b,
     )
     
