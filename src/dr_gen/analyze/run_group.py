@@ -200,7 +200,7 @@ class RunGroup:
             rows = []
             for i, v in enumerate(vs):
                 kstr = self.get_display_hpm_key(k if i == 0 else "")
-                vstr = self.get_dipslay_hpm_val(k, v)
+                vstr = self.get_display_hpm_val(k, v)
                 rows.append([kstr, vstr])
             row_groups.append(rows)
         return field_names, row_groups
@@ -275,8 +275,8 @@ class RunGroup:
     def ignore_runs_by_hpms(self, **kwargs):
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)
         for runs_list in runs_to_ignore.values():
-            for rid, _ in runs_list:
-                self.ignore_rid(rid)
-                print(f">> Ignoring rid: {rid}")
+            for run in runs_list:
+                self.ignore_rid(run.id)
+                print(f">> Ignoring rid: {run.id}")
         self.update_hpm_sweep_info()
         print(">> Updated hpm sweep info")
