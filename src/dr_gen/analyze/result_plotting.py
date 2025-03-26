@@ -31,18 +31,23 @@ def comparative_stats(estims_a, estims_b):
 
 
 # accepts ndarray or list of lists
-def bootstrap_samples(dataset, n, b):
+def bootstrap_samples(dataset, b=None):
+    if b is None:
+        # b = 1, 1 
+        return np.array([dataset])
+    n = len(dataset)
     return np.random.choice(dataset, size=(b, n), replace=True)
 
 
 # accepts ndarray or list of lists
-def bootstrap_summary_stats(dataset, n=None, b=None, stat=None):
+def bootstrap_summary_stats(dataset, b=None, stat=None):
+    samples = dataset if b is None else bootstrap_samples(dataset, b)
     if b is None and n is None:
         samples = dataset
     elif b is None:
         samples = dataset[:n]
     else:
-        samples = bootstrap_samples(dataset, n, b)
+        samples = bootstrap_samples(dataset, b)
     stats_dists = summary_stats(samples, stat=stat)
     b_estims = {
         "dist": stats_dists,
