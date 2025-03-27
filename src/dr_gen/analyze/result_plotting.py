@@ -8,6 +8,16 @@ def runs_metrics_to_ndarray(runs_metrics):
     metric_array = np.array([rm[:min_run_len] for rm in runs_metrics])
     return metric_array  # num_runs x T_min
 
+def select_runs_by_hpms(run_data, hpms):
+    if run_data is None:
+        return None
+    return {h: rm for h, rm in run_data.items() if h in hpms}
+
+
+def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
+    if runs_metrics_dict is None:
+        return None
+    return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
 # TODO
 def summary_stats(data, stat=None):
@@ -26,14 +36,13 @@ def comparative_stats(estims_a, estims_b):
 # ============ Bootstrapping ==============
 
 # For all functions
-# n - sample size
-# b - num bootstrap samples
-
+# - Assume n = len(dataset)
+# - b = num bootstrap samples
 
 # accepts ndarray or list of lists
 def bootstrap_samples(dataset, b=None):
+    # No bootstrap: one sample, the original dataset
     if b is None:
-        # b = 1, 1 
         return np.array([dataset])
     n = len(dataset)
     return np.random.choice(dataset, size=(b, n), replace=True)
@@ -41,13 +50,7 @@ def bootstrap_samples(dataset, b=None):
 
 # accepts ndarray or list of lists
 def bootstrap_summary_stats(dataset, b=None, stat=None):
-    samples = dataset if b is None else bootstrap_samples(dataset, b)
-    if b is None and n is None:
-        samples = dataset
-    elif b is None:
-        samples = dataset[:n]
-    else:
-        samples = bootstrap_samples(dataset, b)
+    samples = bootstrap_samples(dataset, b)
     stats_dists = summary_stats(samples, stat=stat)
     b_estims = {
         "dist": stats_dists,
@@ -68,31 +71,28 @@ def bootstrap_summary_stats(dataset, b=None, stat=None):
 
 
 # runs metrics: [runs [metric_data ...]]
-def bootstrap_early_stopping(runs_metrics, n=None, b=None):
+def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
     metric_array = runs_metrics_to_ndarray(runs_metrics)
 
     t_metrics = []
     for t in range(metric_array.shape[-1]):
         t_vals = metric_array[:, t]
-        b_estims = bootstrap_summary_stats(t_vals, n, b, stat="mean")
+        b_estims = bootstrap_summary_stats(t_vals, num_bootstraps, stat="mean")
         t_metrics.append(b_estims["point"]["mean"])
     best_t = np.argmax(t_metrics)
     best_vals_mean = t_metrics[best_t]
     return best_t, best_vals_mean
 
 
-def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, n=None, b=None):
+def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, num_bootstraps=None):
     hpm_metrics = []
     for hpm, runs_metrics in runs_metrics_by_hpm.items():
         metric_array = runs_metrics_to_ndarray(runs_metrics)
         if early_stopping:
-            best_t, best_t_mean = bootstrap_early_stopping(metric_array, n, b)
+            best_t, best_t_mean = bootstrap_early_stopping(metric_array, num_bootstraps)
         else:
             best_t = metric_array.shape[-1]
-            best_t_vals = (
-                metric_array[:, best_t] if n is None else metric_array[:n, best_t]
-            )
-            best_t_mean = best_t_vals.mean()
+            best_t_mean = metric_array[:, best_t].mean()
         hpm_metrics.append((hpm, best_t, best_t_mean))
     hpm, best_t, _ = max(hpm_metrics, key=lambda t: t[-1])
     return hpm, best_t
@@ -102,57 +102,34 @@ def bootstrap_best_hpms_stats(
     runs_metrics_for_eval,
     runs_metrics_for_hpm_select=None,
     early_stopping=False,
-    n=None,
-    b=None,
+    num_bootstraps=None,
 ):
-    # Hpm Selection
-    if runs_metrics_for_hpm_select is None:
+    # -- Hpm Selection -- #
+    hpm_select_runs = runs_metrics_for_hpm_select
+    # No Hpm Selection: verify only one hpm, turn off early stopping
+    if hpm_sel_runs is None:
         # No actual hpm selection if no hpm select data provided
         assert len(runs_metrics_for_eval) == 1
-        hpm, best_t = bootstrap_select_hpms(
-            runs_metrics_for_eval,
-            early_stopping=False,
-            n=None,
-            b=None,
-        )
-    else:
-        hpm, best_t = bootstrap_select_hpms(
-            runs_metrics_for_hpm_select,
-            early_stopping=early_stopping,
-            n=n,
-            b=b,
-        )
+        hpm_select_runs = runs_metrics_for_eval
+        early_stopping=False
+    hpm, best_t = bootstrap_select_hpms(
+        hpm_select_runs,
+        early_stopping=early_stopping,
+        num_bootstraps=num_bootstraps,
+    )
 
     # Make sure selected hpm is available for evaluation
     assert hpm in runs_metrics_for_eval
 
+    # Metric Calculation
     t_vals = runs_metrics_for_eval[hpm][:, best_t]
-    b_estims = bootstrap_summary_stats(t_vals, n, b)
+    b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
     b_estims["vals"] = t_vals
-    b_estims["n"] = n
-    b_estims["b"] = b
+    b_estims["num_bootstraps"] = num_bootstraps
     return (hpm, best_t), b_estims
 
 
 # =======================
-
-
-def select_runs_by_hpms(run_data, hpms):
-    if run_data is None:
-        return None
-    return {h: rm for h, rm in run_data.items() if h in hpms}
-
-
-def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
-    if runs_metrics_dict is None:
-        return None
-    return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
-
-
-## Next: Use bootstrap_best_hpmps_stats to get ((hpm, best_t), summary_stats)
-#           for all the values of (n, t) in the sweep
-#        Take the estimated values to calculate individual hpm set stats and
-#           then calculate comparative hpm set stats
 
 
 def bootstrap_compare_stats(
@@ -161,22 +138,19 @@ def bootstrap_compare_stats(
     hpms_B,
     runs_metrics_for_hpm_select=None,
     early_stopping=False,
-    n=None,
-    b=None,
+    num_bootstraps=None,
 ):
     (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
         select_runs_by_hpms(runs_metrics_for_eval, hpms_A),
         select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_A),
         early_stopping=early_stopping,
-        n=n,
-        b=b,
+        num_bootstraps=num_bootstraps,
     )
     (best_hpm_b, best_t_b), estims_b = bootstrap_best_hpms_stats(
         select_runs_by_hpms(runs_metrics_for_eval, hpms_B),
         select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_B),
         early_stopping=early_stopping,
-        n=n,
-        b=b,
+        num_bootstraps=num_bootstraps,
     )
     comp_estims = comparative_stats(estims_a, estims_b)
     return {
@@ -190,7 +164,7 @@ def bootstrap_compare_stats(
     }
 
 
-# =======================
+# ============== Eval Sweep General Helper ==============
 
 
 def sweep_t_n_compare(
@@ -201,7 +175,7 @@ def sweep_t_n_compare(
     nmax,
     tmax,
     early_stopping=False,
-    b=None,
+    num_bootstraps=None,
 ):
     all_stats = {}
     for n in range(nmax):
@@ -213,94 +187,96 @@ def sweep_t_n_compare(
                 hpms_A,
                 hpms_B,
                 early_stopping=early_stopping,
-                n=n,
-                b=b,
+                num_bootstraps=num_bootstraps,
             )
     return all_stats
 
+# ================  Specific Eval Setups & Helpers  ===================
 
-# Default Tmax and Nmax set to magic vals
-def sweep_t_n_compare_acc_by_init_default_hpms(
-    rg,
-    Tmax=270,
-    Nmax=99,
+def make_hpm_specs(
     lr=0.1,
     wd=1e-4,
-    b=None,
+    epochs=270,
 ):
-    hpm_select_dict = {
+    return {
         "optim.lr": lr,
         "optim.weight_decay": wd,
-        "epochs": Tmax,
+        "epochs": epochs,
     }
 
-    # No hpm selection via sweep
-    # So use val split for metric calculation
-    #   { hpm: [runs [metric_data ...]]}
-    hpm_select_runs_metrics_by_hpm = None
-    metric_calculation_runs_metric_by_hpm = rg.select_run_split_metrics_by_hpms(
-        "acc1",
-        "val",
-        **hpm_select_dict,
-    )
-    assert len(metric_calculation_runs_metric_by_hpm) == 2
-    hpmA, hpmB = list(metric_calculation_runs_metric_by_hpm.keys())
-    hpms_A = [hpmA]
-    hpms_B = [hpmB]
-
-    return sweep_t_n_compare(
-        hpm_select_runs_metrics_by_hpm,
-        metric_calculation_runs_metric_by_hpm,
-        hpms_A,
-        hpms_B,
-        Tmax,
-        Nmax,
-        early_stopping=False,
-        b=b,
-    )
-
-
-def sweep_t_n_compare_acc_by_init_hpm_select(
+def get_pretrained_vs_random_init_runs(
     rg,
-    Tmax=270,
-    Nmax=99,
-    LRs=[0.04, 0.06, 0.1, 0.16, 0.25],
-    WDs=[0.00016, 4e-05, 0.00025, 6.3e-05, 1e-05, 0.0001],
-    b=None,
+    hpm_specs,
+    split,
+    metric="acc1",
+    one_per=True,
 ):
-    hpm_select_dict = {
-        "optim.lr": LRs,
-        "optim.weight_decay": WDs,
-        "epochs": Tmax,
-    }
-
-    # Val split for hpm selection
-    #   { hpm: [runs [metric_data ...]]}
-    hpm_select_runs_metrics_by_hpm = rg.select_run_split_metrics_by_hpms(
-        "acc1",
-        "val",
+    # {hpm: runs_metrics}
+    all_hpms = rg.select_run_split_metrics_by_hpms(
+        metric,
+        split,
         **hpm_select_dict,
     )
+    hpms_pre = {hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] == "DEFAULT"}
+    hpms_rand = {hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] != "DEFAULT"}
+    if one_per:
+        assert len(hpms_pre) == len(hpms_rand) == 1
+    return hpms_pre, hpms_rand
 
-    # Eval split for metric calculation
-    #   { hpm: [runs [metric_data ...]]}
-    metric_calculation_runs_metric_by_hpm = rg.select_run_split_metrics_by_hpms(
-        "acc1",
-        "eval",
-        **hpm_select_dict,
+# Compare a single set of hpms across inits.
+#  - metric: "acc1"
+# 
+# Defaults Explanation
+#  - use val split if no hpm select
+#  - arbitrary num bootstraps
+#  - tmax = num epochs for main run sets
+#  - nmax = minimum num runs from largest hpm set
+def sweep_tn_no_hpm_select_compare_weight_init(
+    rg, hpm_select_dict, Tmax=270, Nmax=99, num_bootstrap=1000, split='val',
+):
+    hpms_pre, hpms_rand = get_pretrained_vs_random_init_runs(
+        rg, hpm_select_dict, split, one_per=True,
     )
-
-    all_hpms = [hpm_select_runs_metrics_by_hpm.keys()]
-    hpms_A = [hpm for hpm in all_hpms if hpm["model.weights"] == "DEFAULT"]
-    hpms_B = [hpm for hpm in all_hpms if hpm["model.weights"] != "DEFAULT"]
-
+    all_runs_data = {**hpms_pre, **hpms_rand}
     return sweep_t_n_compare(
-        hpm_select_runs_metrics_by_hpm,
-        metric_calculation_runs_metric_by_hpm,
-        hpms_A,
-        hpms_B,
-        Tmax,
-        Nmax,
-        early_stopping=True,
-        b=b,
+        runs_metrics_for_eval=all_runs_data,
+        runs_metrics_for_hpm_select=None, # hpm select runs data
+        hpms_A=hpms_pre,
+        hpms_B=hpms_rand,
+        nmax=Nmax,
+        tmax=Tmax,
+        b=num_bootstraps,
+        early_stopping=False, # no hpm select 
     )
+
+# Compare weight inits via hpm selelction from a sweep.
+#  - metric: "acc1"
+#  - use val split for hpm select, eval for metric calculation
+# 
+# Defaults Explanation
+#  - arbitrary num bootstraps
+#  - tmax = num epochs for main run sets
+#  - nmax = minimum num runs from most hpm sets
+#  - early_stoppng = true by default, but controllable
+def sweep_tn_hpm_compare_weight_init(
+    rg, hpm_select_dict, Tmax=270, Nmax=20, num_bootstrap=1000, early_stopping=True,
+):
+    hpms_val_pre, hpms_val_rand = get_pretrained_vs_random_init_runs(
+        rg, hpm_select_dict, "val", one_per=False,
+    )
+    hpms_eval_pre, hpms_eval_rand = get_pretrained_vs_random_init_runs(
+        rg, hpm_select_dict, "eval", one_per=False,
+    )
+    all_runs_val_data = {**hpms_val_pre, **hpms_val_rand}
+    all_runs_eval_data = {**hpms_eval_pre, **hpms_eval_rand}
+    return sweep_t_n_compare(
+        runs_metrics_for_eval=all_runs_eval_data,
+        runs_metrics_for_hpm_select=all_runs_val_data,
+        hpms_A=hpms_val_pre,
+        hpms_B=hpms_val_rand,
+        nmax=Nmax,
+        tmax=Tmax,
+        b=bootstraps,
+        early_stopping=early_stopping,
+    )
+    
