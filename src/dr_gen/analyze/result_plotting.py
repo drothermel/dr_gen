@@ -1,12 +1,16 @@
 import numpy as np
 
-
 def runs_metrics_to_ndarray(runs_metrics):
     if isinstance(runs_metrics, np.ndarray):
         return runs_metrics
     min_run_len = min([len(rm) for rm in runs_metrics])
-    metric_array = np.array([rm[:min_run_len] for rm in runs_metrics])
-    return metric_array  # num_runs x T_min
+    return np.array([rm[:min_run_len] for rm in runs_metrics])
+
+def runs_metrics_dict_to_ndarray_dict(runs_metrics_dict):
+    runs_ndarrays = {}
+    for hpm, rms in runs_metrics_dict.items():
+        runs_ndarrays[hpm] = runs_metrics_to_ndarray(rms)
+    return runs_ndarrays  # {hpm: num_runs x T_min}
 
 def select_runs_by_hpms(run_data, hpms):
     if run_data is None:
@@ -19,13 +23,78 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
-# TODO
 def summary_stats(data, stat=None):
-    # [D] => [[D]] if needed
-    # TODO: grab from old fxn, add new, only stat if not none, return {name: float or nd.array}
-    # n, mean, median, min, max, variance, std, sem, 2.5th, 25th, 75th, 97.5th, IQR, CDF
-    # float only if squeeze produces a single elem
-    return {}
+    """
+    Calculate summary statistics for each bootstrap sample in `data`.
+    
+    Parameters
+    ----------
+    data : np.ndarray
+        A 2D numpy array of shape (b, n) where b is the number of bootstrap 
+        samples and n is the number of observations in each sample.
+    stat : str, optional
+        If provided, returns only the corresponding statistic. Options are:
+        'n', 'mean', 'median', 'min', 'max', 'variance', 'std', 'sem',
+        '2.5th', '25th', '75th', '97.5th', 'IQR', 'CDF'.
+    
+    Returns
+    -------
+    dict or float
+        A dictionary mapping statistic names to their computed values (each an array 
+        of length b or a float if the result is a single element). If `stat` is provided,
+        only the corresponding statistic is returned.
+    """
+    # Number of observations in each bootstrap sample
+    # (here assuming no missing values; otherwise, one could use np.sum(~np.isnan(data), axis=1))
+    n = np.full(data.shape[0], data.shape[1])
+    
+    # Basic descriptive statistics (using nan-aware functions if needed)
+    mean = np.nanmean(data, axis=1)
+    median = np.nanmedian(data, axis=1)
+    _min = np.nanmin(data, axis=1)
+    _max = np.nanmax(data, axis=1)
+    
+    # Variance and standard deviation (with Bessel's correction)
+    variance = np.nanvar(data, axis=1, ddof=1)
+    std = np.nanstd(data, axis=1, ddof=1)
+    
+    # Standard Error of the Mean
+    sem = std / np.sqrt(n)
+    
+    # Quantiles: compute 2.5th, 25th, 75th, and 97.5th percentiles along each row.
+    percentiles = np.nanpercentile(data, [2.5, 25, 75, 97.5], axis=1)
+    q2p5, q25, q75, q97p5 = percentiles[0], percentiles[1], percentiles[2], percentiles[3]
+    
+    # Interquartile range
+    iqr = q75 - q25
+    
+    # Empirical Cumulative Distribution Function (CDF):
+    # Here, we return the sorted values for each bootstrap sample.
+    sorted_vals = np.sort(data, axis=1)
+    
+    # Prepare the dictionary of statistics. We squeeze the outputs if they are single elements.
+    stats = {
+        "sorted_vals": sorted_vals,  # still 2D: one row per bootstrap sample, each sorted in ascending order
+        "n": np.squeeze(n),
+        "mean": np.squeeze(mean),
+        "median": np.squeeze(median),
+        "min": np.squeeze(_min),
+        "max": np.squeeze(_max),
+        "variance": np.squeeze(variance),
+        "std": np.squeeze(std),
+        "sem": np.squeeze(sem),
+        "2.5th": np.squeeze(q2p5),
+        "25th": np.squeeze(q25),
+        "75th": np.squeeze(q75),
+        "97.5th": np.squeeze(q97p5),
+        "IQR": np.squeeze(iqr),
+    }
+    
+    # If a specific statistic is requested, return just that one
+    if stat is not None:
+        return stats[stat]
+    
+    return stats
 
 
 # TODO
@@ -60,13 +129,13 @@ def bootstrap_summary_stats(dataset, b=None, stat=None):
         "ci_95": {},
     }
     for stat, dist in stats_dists.items():
-        if dist.dim != 1:
+        if len(dist.shape) != 1:
             continue
 
         b_estims["point"][stat] = np.mean(dist)
-        b_estims["std"][stat] = np.stddev(dist)
+        b_estims["std"][stat] = np.std(dist)
         b_estims["sem"][stat] = b_estims["std"][stat] / dist.shape[0]
-        b_estims["ci_95"][stat] = (np.percentile(2.5, dist), np.percentile(97.5, dist))
+        b_estims["ci_95"][stat] = (np.percentile(dist, 2.5), np.percentile(dist, 97.5))
     return b_estims
 
 
@@ -91,7 +160,7 @@ def bootstrap_select_hpms(runs_metrics_by_hpm, early_stopping=False, num_bootstr
         if early_stopping:
             best_t, best_t_mean = bootstrap_early_stopping(metric_array, num_bootstraps)
         else:
-            best_t = metric_array.shape[-1]
+            best_t = metric_array.shape[-1] - 1
             best_t_mean = metric_array[:, best_t].mean()
         hpm_metrics.append((hpm, best_t, best_t_mean))
     hpm, best_t, _ = max(hpm_metrics, key=lambda t: t[-1])
@@ -124,7 +193,6 @@ def bootstrap_best_hpms_stats(
     # Metric Calculation
     t_vals = runs_metrics_for_eval[hpm][:, best_t]
     b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
-    b_estims["vals"] = t_vals
     b_estims["num_bootstraps"] = num_bootstraps
     return (hpm, best_t), b_estims
 
@@ -215,7 +283,7 @@ def get_pretrained_vs_random_init_runs(
     all_hpms = rg.select_run_split_metrics_by_hpms(
         metric,
         split,
-        **hpm_select_dict,
+        **hpm_specs,
     )
     hpms_pre = {hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] == "DEFAULT"}
     hpms_rand = {hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] != "DEFAULT"}
