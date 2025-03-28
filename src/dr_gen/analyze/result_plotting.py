@@ -2,6 +2,7 @@ import numpy as np
 
 
 def runs_metrics_to_ndarray(runs_metrics):
+    """Convert list of run metrics to numpy array, trimming to shortest run length."""
     if isinstance(runs_metrics, np.ndarray):
         return runs_metrics
     min_run_len = min([len(rm) for rm in runs_metrics])
@@ -9,6 +10,7 @@ def runs_metrics_to_ndarray(runs_metrics):
 
 
 def runs_metrics_dict_to_ndarray_dict(runs_metrics_dict):
+    """Convert dictionary of run metrics to dictionary of numpy arrays."""
     runs_ndarrays = {}
     for hpm, rms in runs_metrics_dict.items():
         runs_ndarrays[hpm] = runs_metrics_to_ndarray(rms)
@@ -16,12 +18,14 @@ def runs_metrics_dict_to_ndarray_dict(runs_metrics_dict):
 
 
 def select_runs_by_hpms(run_data, hpms):
+    """Filter run data to only include specified hyperparameter combinations."""
     if run_data is None:
         return None
     return {h: rm for h, rm in run_data.items() if h in hpms}
 
 
 def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
+    """Trim run metrics to specified number of runs and time steps."""
     if runs_metrics_dict is None:
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
@@ -29,24 +33,14 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
 
 def summary_stats(data, stat=None):
     """
-    Calculate summary statistics for each bootstrap sample in `data`.
-
-    Parameters
-    ----------
-    data : np.ndarray
-        A 2D numpy array of shape (b, n) where b is the number of bootstrap
-        samples and n is the number of observations in each sample.
-    stat : str, optional
-        If provided, returns only the corresponding statistic. Options are:
-        'n', 'mean', 'median', 'min', 'max', 'variance', 'std', 'sem',
-        '2.5th', '25th', '75th', '97.5th', 'IQR', 'CDF'.
-
-    Returns
-    -------
-    dict or float
-        A dictionary mapping statistic names to their computed values (each an array
-        of length b or a float if the result is a single element). If `stat` is provided,
-        only the corresponding statistic is returned.
+    Calculate comprehensive summary statistics for bootstrap samples.
+    
+    Args:
+        data: 2D numpy array (bootstrap_samples x observations)
+        stat: Optional specific statistic to return
+    
+    Returns:
+        Dictionary of statistics or single statistic value
     """
     # Number of observations in each bootstrap sample
     # (here assuming no missing values; otherwise, one could use np.sum(~np.isnan(data), axis=1))
@@ -106,8 +100,8 @@ def summary_stats(data, stat=None):
     return stats
 
 
-# TODO
 def comparative_stats(estims_a, estims_b):
+    """Compare statistics between two sets of bootstrap estimates."""
     return {}
 
 
@@ -120,6 +114,16 @@ def comparative_stats(estims_a, estims_b):
 
 # accepts ndarray or list of lists
 def bootstrap_samples(dataset, b=None):
+    """
+    Generate bootstrap samples from dataset.
+    
+    Args:
+        dataset: Input data to bootstrap
+        b: Number of bootstrap samples (None for single sample)
+    
+    Returns:
+        Array of bootstrap samples
+    """
     # No bootstrap: one sample, the original dataset
     if b is None:
         return np.array([dataset])
@@ -128,8 +132,19 @@ def bootstrap_samples(dataset, b=None):
 
 
 # accepts ndarray or list of lists
-def bootstrap_summary_stats(dataset, b=None, stat=None):
-    samples = bootstrap_samples(dataset, b)
+def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
+    """
+    Calculate bootstrap summary statistics with uncertainty estimates.
+    
+    Args:
+        dataset: Input data to analyze
+        num_bootstraps: Number of bootstrap samples
+        stat: Optional specific statistic to return
+    
+    Returns:
+        Dictionary containing point estimates, standard errors, and confidence intervals
+    """
+    samples = bootstrap_samples(dataset, num_bootstraps)
     stats_dists = summary_stats(samples, stat=stat)
     b_estims = {
         "dist": stats_dists,
@@ -151,6 +166,16 @@ def bootstrap_summary_stats(dataset, b=None, stat=None):
 
 # runs metrics: [runs [metric_data ...]]
 def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
+    """
+    Find optimal stopping time using bootstrap estimates.
+    
+    Args:
+        runs_metrics: List of metric values across time steps
+        num_bootstraps: Number of bootstrap samples
+    
+    Returns:
+        Tuple of (best_time_step, best_metric_value)
+    """
     metric_array = runs_metrics_to_ndarray(runs_metrics)
 
     t_metrics = []
@@ -166,6 +191,17 @@ def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
 def bootstrap_select_hpms(
     runs_metrics_by_hpm, early_stopping=False, num_bootstraps=None
 ):
+    """
+    Select best hyperparameter combination using bootstrap estimates.
+    
+    Args:
+        runs_metrics_by_hpm: Dictionary mapping hyperparameters to metric values
+        early_stopping: Whether to use early stopping for time step selection
+        num_bootstraps: Number of bootstrap samples
+    
+    Returns:
+        Tuple of (best_hpm, best_time_step)
+    """
     hpm_metrics = []
     for hpm, runs_metrics in runs_metrics_by_hpm.items():
         metric_array = runs_metrics_to_ndarray(runs_metrics)
@@ -185,6 +221,18 @@ def bootstrap_best_hpms_stats(
     early_stopping=False,
     num_bootstraps=None,
 ):
+    """
+    Calculate statistics for best hyperparameter combination.
+    
+    Args:
+        runs_metrics_for_eval: Metrics for final evaluation
+        runs_metrics_for_hpm_select: Optional metrics for HPM selection
+        early_stopping: Whether to use early stopping
+        num_bootstraps: Number of bootstrap samples
+    
+    Returns:
+        Tuple of ((best_hpm, best_time), bootstrap_estimates)
+    """
     # -- Hpm Selection -- #
     hpm_select_runs = runs_metrics_for_hpm_select
     # No Hpm Selection: verify only one hpm, turn off early stopping
@@ -220,6 +268,19 @@ def bootstrap_compare_stats(
     early_stopping=False,
     num_bootstraps=None,
 ):
+    """
+    Compare statistics between two sets of hyperparameter combinations.
+    
+    Args:
+        runs_metrics_for_eval: Metrics for final evaluation
+        hpms_A, hpms_B: Sets of hyperparameters to compare
+        runs_metrics_for_hpm_select: Optional metrics for HPM selection
+        early_stopping: Whether to use early stopping
+        num_bootstraps: Number of bootstrap samples
+    
+    Returns:
+        Dictionary containing comparison results and statistics
+    """
     (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
         select_runs_by_hpms(runs_metrics_for_eval, hpms_A),
         select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_A),
@@ -257,6 +318,21 @@ def sweep_t_n_compare(
     early_stopping=False,
     num_bootstraps=None,
 ):
+    """
+    Compare statistics across different numbers of runs and time steps.
+    
+    Args:
+        runs_metrics_for_eval: Metrics for final evaluation
+        runs_metrics_for_hpm_select: Metrics for HPM selection
+        hpms_A, hpms_B: Sets of hyperparameters to compare
+        nmax: Maximum number of runs to consider
+        tmax: Maximum time step to consider
+        early_stopping: Whether to use early stopping
+        num_bootstraps: Number of bootstrap samples
+    
+    Returns:
+        Dictionary mapping (n, t) tuples to comparison results
+    """
     all_stats = {}
     for n in range(nmax):
         for t in range(tmax):
@@ -280,6 +356,17 @@ def make_hpm_specs(
     wd=1e-4,
     epochs=270,
 ):
+    """
+    Create hyperparameter specifications dictionary.
+    
+    Args:
+        lr: Learning rate
+        wd: Weight decay
+        epochs: Number of epochs
+    
+    Returns:
+        Dictionary of hyperparameter specifications
+    """
     return {
         "optim.lr": lr,
         "optim.weight_decay": wd,
@@ -294,6 +381,19 @@ def get_pretrained_vs_random_init_runs(
     metric="acc1",
     one_per=True,
 ):
+    """
+    Get runs comparing pretrained vs random initialization.
+    
+    Args:
+        rg: Run group containing experiment data
+        hpm_specs: Hyperparameter specifications
+        split: Data split to use
+        metric: Metric to compare
+        one_per: Whether to select one run per initialization
+    
+    Returns:
+        Tuple of (pretrained_runs, random_runs)
+    """
     # {hpm: runs_metrics}
     all_hpms = rg.select_run_split_metrics_by_hpms(
         metric,
@@ -324,9 +424,23 @@ def sweep_tn_no_hpm_select_compare_weight_init(
     hpm_select_dict,
     Tmax=270,
     Nmax=99,
-    num_bootstrap=1000,
+    num_bootstraps=1000,
     split="val",
 ):
+    """
+    Compare weight initializations without hyperparameter selection.
+    
+    Args:
+        rg: Run group containing experiment data
+        hpm_select_dict: Hyperparameter specifications
+        Tmax: Maximum time step
+        Nmax: Maximum number of runs
+        num_bootstraps: Number of bootstrap samples
+        split: Data split to use
+    
+    Returns:
+        Dictionary of comparison results across different n and t values
+    """
     hpms_pre, hpms_rand = get_pretrained_vs_random_init_runs(
         rg,
         hpm_select_dict,
@@ -341,7 +455,7 @@ def sweep_tn_no_hpm_select_compare_weight_init(
         hpms_B=hpms_rand,
         nmax=Nmax,
         tmax=Tmax,
-        b=num_bootstrap,
+        b=num_bootstraps,
         early_stopping=False,  # no hpm select
     )
 
@@ -360,9 +474,23 @@ def sweep_tn_hpm_compare_weight_init(
     hpm_select_dict,
     Tmax=270,
     Nmax=20,
-    num_bootstrap=1000,
+    num_bootstraps=1000,
     early_stopping=True,
 ):
+    """
+    Compare weight initializations with hyperparameter selection.
+    
+    Args:
+        rg: Run group containing experiment data
+        hpm_select_dict: Hyperparameter specifications
+        Tmax: Maximum time step
+        Nmax: Maximum number of runs
+        num_bootstraps: Number of bootstrap samples
+        early_stopping: Whether to use early stopping
+    
+    Returns:
+        Dictionary of comparison results across different n and t values
+    """
     hpms_val_pre, hpms_val_rand = get_pretrained_vs_random_init_runs(
         rg,
         hpm_select_dict,
@@ -384,6 +512,6 @@ def sweep_tn_hpm_compare_weight_init(
         hpms_B=hpms_val_rand,
         nmax=Nmax,
         tmax=Tmax,
-        b=num_bootstrap,
+        b=num_bootstraps,
         early_stopping=early_stopping,
     )
