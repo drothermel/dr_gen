@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 
 
 def runs_metrics_to_ndarray(runs_metrics):
@@ -30,6 +31,13 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
+def dist_estims(dist):
+    estims = {}
+    estims["point"] = np.mean(dist)
+    estims["std"] = np.std(dist)
+    estims["sem"] = estims["std"] / dist.shape[0]
+    estims["ci_95"] = (np.percentile(dist, 2.5), np.percentile(dist, 97.5))
+    return estims
 
 def summary_stats(data, stat=None):
     """
@@ -102,8 +110,51 @@ def summary_stats(data, stat=None):
 
 def comparative_stats(estims_a, estims_b):
     """Compare statistics between two sets of bootstrap estimates."""
-    return {}
 
+    stats_diffs = {}
+    # Calculate Explicit Difference Dist: KS Statistic
+    ks_stats = []
+    p_vals = []
+    vals_a = estims_a['dist']['sorted_vals']
+    vals_b = estims_b['dist']['sorted_vals']
+    for vs_a, vs_b in zip(vals_a, vals_b):
+        ks, p = stats.ks_2samp(vs_a, vs_b)
+        ks_stats.append(ks)
+        p_vals.append(p)
+    stats_diffs['ks'] = np.array(ks_stats)
+    stats_diffs['ks_p_values'] = np.array(p_vals)
+
+    # Calculate Difference in Summary Stats
+    for stat in estims_a['dist']:
+        if stat in ['n', 'sorted_vals']:
+            continue
+        stats_diffs[stat] = estims_a['dist'][stat] - estims_b['dist'][stat]
+
+    # Get Diff Dist Summaries
+    all_stats = {
+        "diff_dists": stats_diffs,
+        "point": {},
+        "std": {},
+        "sem": {},
+        "ci_95": {},
+    }
+    for stat, diff_dist in stats_diffs.items():
+        for k, v in dist_estims(diff_dist).items():
+            all_stats[k][stat] = v
+
+    # Get the Original Values
+    orig_stats = {}
+    orig_ks_stat, orig_ks_stat_p_val = stats.ks_2samp(
+        estims_a['original_data'], estims_b['original_data']
+    )
+    orig_stats['ks'] = orig_ks_stat
+    orig_stats['ks_p_val'] = orig_ks_stat_p_val
+    for stat in estims_a['original_data_stats']:
+        orig_stats[f'{stat}_diff'] = (
+            estims_a['original_data_stats'][stat] - estims_b['original_data_stats'][stat]
+        )
+    all_stats['original_stats'] = orig_stats
+    return all_stats
 
 # ============ Bootstrapping ==============
 
@@ -147,6 +198,7 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
     samples = bootstrap_samples(dataset, num_bootstraps)
     stats_dists = summary_stats(samples, stat=stat)
     b_estims = {
+        "num_bootstraps": num_bootstraps,
         "dist": stats_dists,
         "point": {},
         "std": {},
@@ -156,11 +208,12 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
     for stat, dist in stats_dists.items():
         if len(dist.shape) != 1:
             continue
+        # Point, Std, Sem, CI 95
+        for k, v in dist_estims(dist).items():
+            b_estims[k][stat] = v
 
-        b_estims["point"][stat] = np.mean(dist)
-        b_estims["std"][stat] = np.std(dist)
-        b_estims["sem"][stat] = b_estims["std"][stat] / dist.shape[0]
-        b_estims["ci_95"][stat] = (np.percentile(dist, 2.5), np.percentile(dist, 97.5))
+    b_estims['original_data'] = dataset
+    b_estims['original_data_stats'] = summary_stats([dataset], stat=stat)
     return b_estims
 
 
@@ -253,7 +306,6 @@ def bootstrap_best_hpms_stats(
     # Metric Calculation
     t_vals = runs_metrics_for_eval[hpm][:, best_t]
     b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
-    b_estims["num_bootstraps"] = num_bootstraps
     return (hpm, best_t), b_estims
 
 
