@@ -2,6 +2,14 @@ import numpy as np
 import scipy.stats as stats
 
 
+def expand_to_dim(array, dim, axis=0):
+    while len(array.shape) < dim:
+        if axis == 0:
+            array = array[np.newaxis, :]
+        else:
+            array = array[:, np.new_axis]
+    return array
+
 def runs_metrics_to_ndarray(runs_metrics):
     """Convert list of run metrics to numpy array, trimming to shortest run length."""
     if isinstance(runs_metrics, np.ndarray):
@@ -169,17 +177,18 @@ def bootstrap_samples(dataset, b=None):
     Generate bootstrap samples from dataset.
     
     Args:
-        dataset: Input data to bootstrap
+        dataset: Input data to bootstrap, np array
         b: Number of bootstrap samples (None for single sample)
     
     Returns:
         Array of bootstrap samples
     """
     # No bootstrap: one sample, the original dataset
+    ds = np.squeeze(dataset)
     if b is None:
-        return np.array([dataset])
-    n = len(dataset)
-    return np.random.choice(dataset, size=(b, n), replace=True)
+        return expand_to_dim(ds, 2, axis=0)
+    n = ds.shape[-1]
+    return np.random.choice(ds, size=(b, n), replace=True)
 
 
 # accepts ndarray or list of lists
@@ -195,6 +204,7 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
     Returns:
         Dictionary containing point estimates, standard errors, and confidence intervals
     """
+    dataset = expand_to_dim(dataset, 2, axis=0)
     samples = bootstrap_samples(dataset, num_bootstraps)
     stats_dists = summary_stats(samples, stat=stat)
     b_estims = {
@@ -213,7 +223,7 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
             b_estims[k][stat] = v
 
     b_estims['original_data'] = dataset
-    b_estims['original_data_stats'] = summary_stats([dataset], stat=stat)
+    b_estims['original_data_stats'] = summary_stats(dataset, stat=stat)
     return b_estims
 
 
@@ -390,8 +400,8 @@ def sweep_t_n_compare(
         for t in range(tmax):
             nt = (n, t)
             all_stats[nt] = bootstrap_compare_stats(
-                trim_runs_metrics_dict(runs_metrics_for_eval, nmax, tmax),
-                trim_runs_metrics_dict(runs_metrics_for_hpm_select, nmax, tmax),
+                trim_runs_metrics_dict(runs_metrics_for_eval, n, t),
+                trim_runs_metrics_dict(runs_metrics_for_hpm_select, n, t),
                 hpms_A,
                 hpms_B,
                 early_stopping=early_stopping,
@@ -461,6 +471,64 @@ def get_pretrained_vs_random_init_runs(
     if one_per:
         assert len(hpms_pre) == len(hpms_rand) == 1
     return hpms_pre, hpms_rand
+
+def one_tn_no_hpm_select_compare_weight_init(
+    rg,
+    hpm_select_dict,
+    t,
+    n,
+    num_bootstraps=1000,
+    split="val",
+):
+    hpms_pre, hpms_rand = get_pretrained_vs_random_init_runs(
+        rg,
+        hpm_select_dict,
+        split,
+        one_per=True,
+    )
+    all_runs_data = {**hpms_pre, **hpms_rand}
+    return bootstrap_compare_stats(
+        runs_metrics_for_eval=trim_runs_metrics_dict(all_runs_data, n, t),
+        runs_metrics_for_hpm_select=None,
+        hpms_A=hpms_pre,
+        hpms_B=hpms_rand,
+        early_stopping=False,
+        num_bootstraps=num_bootstraps,
+    )
+
+def one_tn_hpm_compare_weight_init(
+    rg,
+    hpm_select_dict,
+    t,
+    n,
+    early_stopping=True,
+    num_bootstraps=1000,
+    split="val",
+):
+    hpms_val_pre, hpms_val_rand = get_pretrained_vs_random_init_runs(
+        rg,
+        hpm_select_dict,
+        "val",
+        one_per=False,
+    )
+    hpms_eval_pre, hpms_eval_rand = get_pretrained_vs_random_init_runs(
+        rg,
+        hpm_select_dict,
+        "eval",
+        one_per=False,
+    )
+    all_runs_val_data = {**hpms_val_pre, **hpms_val_rand}
+    all_runs_eval_data = {**hpms_eval_pre, **hpms_eval_rand}
+    runs_metrics_for_eval = trim_runs_metrics_dict(all_runs_eval_data, n, t)
+    runs_metrics_for_hpm_select = trim_runs_metrics_dict(all_runs_val_data, n, t)
+    return bootstrap_compare_stats(
+        runs_metrics_for_eval=runs_metrics_for_eval,
+        runs_metrics_for_hpm_select=runs_metrics_for_hpm_select,
+        hpms_A=hpms_eval_pre,
+        hpms_B=hpms_eval_rand,
+        early_stopping=early_stopping,
+        num_bootstraps=num_bootstraps,
+    )
 
 
 # Compare a single set of hpms across inits.
