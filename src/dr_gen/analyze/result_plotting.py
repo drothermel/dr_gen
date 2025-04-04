@@ -20,6 +20,8 @@ def runs_metrics_to_ndarray(runs_metrics):
 
 def runs_metrics_dict_to_ndarray_dict(runs_metrics_dict):
     """Convert dictionary of run metrics to dictionary of numpy arrays."""
+    if runs_metrics_dict is None:
+        return None
     runs_ndarrays = {}
     for hpm, rms in runs_metrics_dict.items():
         runs_ndarrays[hpm] = runs_metrics_to_ndarray(rms)
@@ -44,7 +46,9 @@ def dist_estims(dist):
     estims["point"] = np.mean(dist)
     estims["std"] = np.std(dist)
     estims["sem"] = estims["std"] / dist.shape[0]
-    estims["ci_95"] = (np.percentile(dist, 2.5), np.percentile(dist, 97.5))
+    estims["ci_95"] = (
+        np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item()
+    )
     return estims
 
 def summary_stats(data, stat=None):
@@ -136,19 +140,31 @@ def comparative_stats(estims_a, estims_b):
     for stat in estims_a['dist']:
         if stat in ['n', 'sorted_vals']:
             continue
-        stats_diffs[stat] = estims_a['dist'][stat] - estims_b['dist'][stat]
+        stats_diffs[f'{stat}_a_minus_b'] = estims_a['dist'][stat] - estims_b['dist'][stat]
 
-    # Get Diff Dist Summaries
+    # TODO: This is where things are broken!!
+    # Get Difference Distribution Summaries
     all_stats = {
-        "diff_dists": stats_diffs,
-        "point": {},
-        "std": {},
-        "sem": {},
-        "ci_95": {},
+        "dists_of_difference_estims": stats_diffs,
+        "point_of_difference_estims": {},
+        "std_of_difference_estims": {},
+        "sem_of_difference_estims": {},
+        "ci_95_of_difference_estims": {},
     }
     for stat, diff_dist in stats_diffs.items():
         for k, v in dist_estims(diff_dist).items():
-            all_stats[k][stat] = v
+            kk = stat
+            if "point" in stat:
+                kk = "point_of_difference_estims"
+            elif 'std' in stat:
+                kk = "std_of_difference_estims"
+            elif "sem" in stat:
+                kk = "sem_of_difference_estims"
+            elif "ci_95" in stat:
+                kk = "ci_95_of_difference_estims"
+
+            all_stats[kk][k] = v 
+                
 
     # Get the Original Values
     orig_stats = {}
@@ -215,12 +231,12 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
         "sem": {},
         "ci_95": {},
     }
-    for stat, dist in stats_dists.items():
+    for stat_name, dist in stats_dists.items():
         if len(dist.shape) != 1:
             continue
         # Point, Std, Sem, CI 95
         for k, v in dist_estims(dist).items():
-            b_estims[k][stat] = v
+            b_estims[k][stat_name] = v
 
     b_estims['original_data'] = dataset
     b_estims['original_data_stats'] = summary_stats(dataset, stat=stat)
@@ -343,15 +359,17 @@ def bootstrap_compare_stats(
     Returns:
         Dictionary containing comparison results and statistics
     """
+    eval_metrics_arrays = runs_metrics_dict_to_ndarray_dict(runs_metrics_for_eval)
+    hpm_metrics_arrays = runs_metrics_dict_to_ndarray_dict(runs_metrics_for_hpm_select)
     (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
-        select_runs_by_hpms(runs_metrics_for_eval, hpms_A),
-        select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_A),
+        select_runs_by_hpms(eval_metrics_arrays, hpms_A),
+        select_runs_by_hpms(hpm_metrics_arrays, hpms_A),
         early_stopping=early_stopping,
         num_bootstraps=num_bootstraps,
     )
     (best_hpm_b, best_t_b), estims_b = bootstrap_best_hpms_stats(
-        select_runs_by_hpms(runs_metrics_for_eval, hpms_B),
-        select_runs_by_hpms(runs_metrics_for_hpm_select, hpms_B),
+        select_runs_by_hpms(eval_metrics_arrays, hpms_B),
+        select_runs_by_hpms(hpm_metrics_arrays, hpms_B),
         early_stopping=early_stopping,
         num_bootstraps=num_bootstraps,
     )
@@ -359,8 +377,10 @@ def bootstrap_compare_stats(
     return {
         "best_hpm_a": best_hpm_a,
         "best_t_a": best_t_a,
+        "runs_shape_a": eval_metrics_arrays[best_hpm_a].shape,
         "best_hpm_b": best_hpm_b,
         "best_t_b": best_t_b,
+        "runs_shape_b": eval_metrics_arrays[best_hpm_b].shape,
         "summary_stats_a": estims_a,
         "summary_stats_b": estims_b,
         "comparative_stats": comp_estims,
@@ -635,3 +655,49 @@ def sweep_tn_hpm_compare_weight_init(
         b=num_bootstraps,
         early_stopping=early_stopping,
     )
+
+def print_comparative_summary_stats(all_stats):
+    best_hpm_a = all_stats['best_hpm_a']
+    shape_a = all_stats['runs_shape_a']
+    best_t_a = all_stats['best_t_a']
+    best_hpm_b = all_stats['best_hpm_b']
+    shape_b = all_stats['runs_shape_b']
+    best_t_b = all_stats['best_t_b']
+
+
+    estims_a = all_stats['summary_stats_a']
+    estims_b = all_stats['summary_stats_b']
+    comp = all_stats['comparative_stats']
+
+    num_bootstraps = estims_a['num_bootstraps']
+
+    print(f"Compare using {num_bootstraps} bootstraps:")
+    print(f"  - [{shape_a} | best: {best_t_a}] {best_hpm_a}")
+    print(f"  - [{shape_b} | best: {best_t_b}] {best_hpm_b}")
+    print()
+    for k, va in estims_a.items():
+        if k in ['dist', 'num_bootstraps', 'original_data']:
+            continue
+        print(k)
+        if isinstance(va, dict):
+            for kk, vva in va.items():
+                if kk in ['sorted_vals']:
+                    continue
+                vvb = estims_b[k][kk]
+                if isinstance(vvb, tuple):
+                    print(f"   {kk:10} | ({vva[0]:.4f}, {vva[1]:.4f}) | ({vvb[0]:.4f}, {vvb[1]:.4f})")
+                else:
+                    print(f"   {kk:10} | {vva:.4f} | {vvb:.4f}")
+        else:
+            print("  ", v, estims_b[k])
+    print()
+
+    for k, v in comp['diff_dists'].items():
+        if k in ['diff_dists']:
+            continue
+        print(k)
+        if isinstance(v, dict):
+            for kk, vv in v.items():
+                print(" ", kk, v)
+        print(k, v.shape, v)
+        
