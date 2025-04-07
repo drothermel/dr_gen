@@ -555,10 +555,23 @@ def one_tn_hpm_compare_weight_init(
         "eval",
         one_per=False,
     )
+
+    # TODO: verify that the same hpm sets are included for both settings
+
     all_runs_val_data = {**hpms_val_pre, **hpms_val_rand}
     all_runs_eval_data = {**hpms_eval_pre, **hpms_eval_rand}
     runs_metrics_for_eval = trim_runs_metrics_dict(all_runs_eval_data, n, t)
     runs_metrics_for_hpm_select = trim_runs_metrics_dict(all_runs_val_data, n, t)
+
+    print("Pre:")
+    for hpm in hpms_val_pre:
+        print("  ", hpm)
+
+    print("Rand:")
+    for hpm in hpms_val_rand:
+        print("  ", hpm)
+    return
+
     return bootstrap_compare_stats(
         runs_metrics_for_eval=runs_metrics_for_eval,
         runs_metrics_for_hpm_select=runs_metrics_for_hpm_select,
