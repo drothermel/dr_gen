@@ -1,5 +1,7 @@
 import numpy as np
-import scipy.stats as stats
+import scipy.stats
+
+ESTIM_TYPES = ['point', 'std', 'sem', 'ci_95']
 
 
 def expand_to_dim(array, dim, axis=0):
@@ -41,23 +43,37 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
-def dist_estims(dist):
-    estims = {}
-    estims["point"] = np.mean(dist)
-    estims["std"] = np.std(dist)
-    estims["sem"] = estims["std"] / dist.shape[0]
-    estims["ci_95"] = (
-        np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item()
-    )
-    return estims
+def dist_estim(estim_type, dist):
+    assert estim_type in ESTIM_TYPES
+    assert isinstance(dist, np.ndarray)
+    match estim_type:
+        case "point":
+            return np.mean(dist)
+        case "std":
+            return np.std(dist)
+        case "sem":
+            return np.std(dist) / dist.shape[0]
+        case "ci_95":
+            return (
+                np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item()
+            )
+        case _:
+            print(f"Unknown estim_type: {estim_type}, update ESTIM_TYPES list")
+            return None
+    
 
-def summary_stats(data, stat=None):
+def dist_estims(dist):
+    return {
+        estim: dist_estim(estim, dist) for estim in ESTIM_TYPES
+    }
+
+
+def summary_stats(data):
     """
     Calculate comprehensive summary statistics for bootstrap samples.
     
     Args:
         data: 2D numpy array (bootstrap_samples x observations)
-        stat: Optional specific statistic to return
     
     Returns:
         Dictionary of statistics or single statistic value
@@ -112,72 +128,62 @@ def summary_stats(data, stat=None):
         "97.5th": np.squeeze(q97p5),
         "IQR": np.squeeze(iqr),
     }
-
-    # If a specific statistic is requested, return just that one
-    if stat is not None:
-        return stats[stat]
-
     return stats
 
 
 def comparative_stats(estims_a, estims_b):
     """Compare statistics between two sets of bootstrap estimates."""
 
-    stats_diffs = {}
+    dists_key = "dists_of_diff_estims"
+    diff_suffix = "_a_minus_b"
+    diff_estim_suffix = "_of_diff_estims"
+    all_stats = {
+        dists_key: {},
+        **{f"{estim_type}{diff_estim_suffix}": {} for estim_type in ESTIM_TYPES},
+    }
+
     # Calculate Explicit Difference Dist: KS Statistic
     ks_stats = []
     p_vals = []
-    vals_a = estims_a['dist']['sorted_vals']
-    vals_b = estims_b['dist']['sorted_vals']
+    vals_a = estims_a['bootstrap_dists']['sorted_vals']
+    vals_b = estims_b['bootstrap_dists']['sorted_vals']
     for vs_a, vs_b in zip(vals_a, vals_b):
-        ks, p = stats.ks_2samp(vs_a, vs_b)
+        ks, p = scipy.stats.ks_2samp(vs_a, vs_b)
         ks_stats.append(ks)
         p_vals.append(p)
-    stats_diffs['ks'] = np.array(ks_stats)
-    stats_diffs['ks_p_values'] = np.array(p_vals)
+    all_stats[dists_key]['ks_stats'] = np.array(ks_stats)
+    all_stats[dists_key]['ks_p_values'] = np.array(p_vals)
 
     # Calculate Difference in Summary Stats
-    for stat in estims_a['dist']:
+    for stat in estims_a['bootstrap_dists']:
         if stat in ['n', 'sorted_vals']:
             continue
-        stats_diffs[f'{stat}_a_minus_b'] = estims_a['dist'][stat] - estims_b['dist'][stat]
+        stat_key = f"{stat}{diff_suffix}"
+        all_stats[dists_key][stat_key] = (
+            estims_a['bootstrap_dists'][stat] - estims_b['bootstrap_dists'][stat]
+        )
 
-    # TODO: This is where things are broken!!
-    # Get Difference Distribution Summaries
-    all_stats = {
-        "dists_of_difference_estims": stats_diffs,
-        "point_of_difference_estims": {},
-        "std_of_difference_estims": {},
-        "sem_of_difference_estims": {},
-        "ci_95_of_difference_estims": {},
-    }
-    for stat, diff_dist in stats_diffs.items():
-        for k, v in dist_estims(diff_dist).items():
-            kk = stat
-            if "point" in stat:
-                kk = "point_of_difference_estims"
-            elif 'std' in stat:
-                kk = "std_of_difference_estims"
-            elif "sem" in stat:
-                kk = "sem_of_difference_estims"
-            elif "ci_95" in stat:
-                kk = "ci_95_of_difference_estims"
+    # Calculate estims of difference summary stats
+    for stat, diff_dist in all_stats[dists_key]:
+        diff_summary_stats = dist_estims(diff_dist)
+        for estim_type, val in diff_summary_stats.items():
+            base_stat = stat.strip(diff_suffix)
+            estim_key = f"{base_stat}{diff_estim_suffix}"
+            all_stats[estim_key][stat] = val
 
-            all_stats[kk][k] = v 
-                
-
-    # Get the Original Values
-    orig_stats = {}
+    # Add the Values from Original Data for Difference Estimates
     orig_ks_stat, orig_ks_stat_p_val = stats.ks_2samp(
         estims_a['original_data'], estims_b['original_data']
     )
-    orig_stats['ks'] = orig_ks_stat
-    orig_stats['ks_p_val'] = orig_ks_stat_p_val
+    all_stats['original_data_stats'] = {
+        "ks_stats": orig_ks_stat,
+        "ks_p_val": orig_ks_stat_p_val
+    }
     for stat in estims_a['original_data_stats']:
-        orig_stats[f'{stat}_diff'] = (
+        stat_diff_key = f"{stat}{diff_suffix}"
+        all_stats['original_data_stats'][stat_diff_key] = (
             estims_a['original_data_stats'][stat] - estims_b['original_data_stats'][stat]
         )
-    all_stats['original_stats'] = orig_stats
     return all_stats
 
 # ============ Bootstrapping ==============
@@ -185,7 +191,6 @@ def comparative_stats(estims_a, estims_b):
 # For all functions
 # - Assume n = len(dataset)
 # - b = num bootstrap samples
-
 
 # accepts ndarray or list of lists
 def bootstrap_samples(dataset, b=None):
@@ -208,7 +213,7 @@ def bootstrap_samples(dataset, b=None):
 
 
 # accepts ndarray or list of lists
-def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
+def bootstrap_summary_stats(dataset, num_bootstraps=None):
     """
     Calculate bootstrap summary statistics with uncertainty estimates.
     
@@ -222,24 +227,22 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None, stat=None):
     """
     dataset = expand_to_dim(dataset, 2, axis=0)
     samples = bootstrap_samples(dataset, num_bootstraps)
-    stats_dists = summary_stats(samples, stat=stat)
+    stats_dists = summary_stats(samples)
     b_estims = {
         "num_bootstraps": num_bootstraps,
-        "dist": stats_dists,
-        "point": {},
-        "std": {},
-        "sem": {},
-        "ci_95": {},
+        "bootstrap_dists": stats_dists,
+        **{estim_type: {} for estim_type in ESTIM_TYPES},
     }
     for stat_name, dist in stats_dists.items():
         if len(dist.shape) != 1:
             continue
         # Point, Std, Sem, CI 95
-        for k, v in dist_estims(dist).items():
-            b_estims[k][stat_name] = v
+        stat_summary_estims = dist_estims(dist)
+        for estim_type, val in stat_summary_estims.items():
+            b_estims[estim_type][stat_name] = val
 
     b_estims['original_data'] = dataset
-    b_estims['original_data_stats'] = summary_stats(dataset, stat=stat)
+    b_estims['original_data_stats'] = summary_stats(dataset)
     return b_estims
 
 
@@ -260,8 +263,9 @@ def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
     t_metrics = []
     for t in range(metric_array.shape[-1]):
         t_vals = metric_array[:, t]
-        b_estims = bootstrap_summary_stats(t_vals, num_bootstraps, stat="mean")
-        t_metrics.append(b_estims["point"]["mean"])
+        b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
+        mean_point_estim = b_estims['point']['mean']
+        t_metrics.append(mean_point_estim)
     best_t = np.argmax(t_metrics)
     best_vals_mean = t_metrics[best_t]
     return best_t, best_vals_mean
@@ -676,7 +680,7 @@ def print_comparative_summary_stats(all_stats):
     print(f"  - [{shape_b} | best: {best_t_b}] {best_hpm_b}")
     print()
     for k, va in estims_a.items():
-        if k in ['dist', 'num_bootstraps', 'original_data']:
+        if k in ['bootstrap_dists', 'num_bootstraps', 'original_data']:
             continue
         print(k)
         if isinstance(va, dict):
