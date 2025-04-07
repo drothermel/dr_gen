@@ -44,22 +44,33 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
+def np_to_float(val):
+    if isinstance(val, tuple):
+        return tuple(np_to_float(vv) for vv in val)
+    if isinstance(val, np.ndarray) and val.size == 1:
+        return val.item()
+
+    try:
+        return float(val)
+    except:
+        return val
+
 
 def dist_estim(estim_type, dist):
     assert estim_type in ESTIM_TYPES
     assert isinstance(dist, np.ndarray)
+    estim = None
     match estim_type:
         case "point":
-            return np.mean(dist)
+            estim = np.mean(dist)
         case "std":
-            return np.std(dist)
+            estim = np.std(dist)
         case "sem":
-            return np.std(dist) / dist.shape[0]
+            estim = np.std(dist) / dist.shape[0]
         case "ci_95":
-            return (np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item())
-        case _:
-            print(f"Unknown estim_type: {estim_type}, update ESTIM_TYPES list")
-            return None
+            estim = (np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item())
+    assert estim is not None, f"Add {estim_type} to match"
+    return np_to_float(estim)
 
 
 def dist_estims(dist):
@@ -126,6 +137,7 @@ def summary_stats(data):
         "97.5th": np.squeeze(q97p5),
         "IQR": np.squeeze(iqr),
     }
+    stats = {k: np_to_float(v) for k, v in stats.items()}
     return stats
 
 
@@ -134,10 +146,9 @@ def comparative_stats(estims_a, estims_b):
 
     dists_key = "dists_of_diff_estims"
     diff_suffix = "_a_minus_b"
-    diff_estim_suffix = "_of_diff_estims"
     all_stats = {
         dists_key: {},
-        **{f"{estim_type}{diff_estim_suffix}": {} for estim_type in ESTIM_TYPES},
+        **{estim_type: {} for estim_type in ESTIM_TYPES},
     }
 
     # Calculate Explicit Difference Dist: KS Statistic
@@ -157,29 +168,28 @@ def comparative_stats(estims_a, estims_b):
         if stat in ["n", "sorted_vals"]:
             continue
         stat_key = f"{stat}{diff_suffix}"
-        all_stats[dists_key][stat_key] = (
+        stat_diff = (
             estims_a["bootstrap_dists"][stat] - estims_b["bootstrap_dists"][stat]
         )
+        all_stats[dists_key][stat_key] = np_to_float(stat_diff)
 
     # Calculate estims of difference summary stats
-    for stat, diff_dist in all_stats[dists_key]:
+    for stat, diff_dist in all_stats[dists_key].items():
         diff_summary_stats = dist_estims(diff_dist)
         for estim_type, val in diff_summary_stats.items():
-            base_stat = stat.strip(diff_suffix)
-            estim_key = f"{base_stat}{diff_estim_suffix}"
-            all_stats[estim_key][stat] = val
+            all_stats[estim_type][stat] = np_to_float(val)
 
     # Add the Values from Original Data for Difference Estimates
     orig_ks_stat, orig_ks_stat_p_val = scipy.stats.ks_2samp(
         estims_a["original_data"], estims_b["original_data"]
     )
     all_stats["original_data_stats"] = {
-        "ks_stats": orig_ks_stat,
-        "ks_p_val": orig_ks_stat_p_val,
+        "ks_stats": np_to_float(orig_ks_stat),
+        "ks_p_val": np_to_float(orig_ks_stat_p_val),
     }
     for stat in estims_a["original_data_stats"]:
         stat_diff_key = f"{stat}{diff_suffix}"
-        all_stats["original_data_stats"][stat_diff_key] = (
+        all_stats["original_data_stats"][stat_diff_key] = np_to_float(
             estims_a["original_data_stats"][stat]
             - estims_b["original_data_stats"][stat]
         )
@@ -678,6 +688,7 @@ def print_comparative_summary_stats(all_stats):
 
     num_bootstraps = estims_a["num_bootstraps"]
 
+    print(">> :: Per Dist Summary Stats ::\n")
     print(f"Compare using {num_bootstraps} bootstraps:")
     print(f"  - [{shape_a} | best: {best_t_a}] {best_hpm_a}")
     print(f"  - [{shape_b} | best: {best_t_b}] {best_hpm_b}")
@@ -693,19 +704,26 @@ def print_comparative_summary_stats(all_stats):
                 vvb = estims_b[k][kk]
                 if isinstance(vvb, tuple):
                     print(
-                        f"   {kk:10} | ({vva[0]:.4f}, {vva[1]:.4f}) | ({vvb[0]:.4f}, {vvb[1]:.4f})"
+                        f"   {kk:10} | ({vva[0]:.8f}, {vva[1]:.8f}) | ({vvb[0]:.8f}, {vvb[1]:.8f})"
                     )
                 else:
-                    print(f"   {kk:10} | {vva:.4f} | {vvb:.4f}")
+                    print(f"   {kk:10} | {vva:.8f} | {vvb:.8f}")
         else:
             print("  ", va, estims_b[k])
     print()
 
-    for k, vc in comp["diff_dists"].items():
-        if k in ["diff_dists"]:
+    print(">> :: Comparative Summary Stats ::\n")
+    print(" A Minus B: Negative means B is bigger")
+    print(f"  - A: {best_hpm_a}")
+    print(f"  - B: {best_hpm_b}")
+
+    for k, vc in comp.items():
+        if k in ['dists_of_diff_estims', 'original_data_stats']:
             continue
-        print(k)
-        if isinstance(vc, dict):
-            for kk, vv in vc.items():
-                print(" ", kk, vc)
-        print(k, vc.shape, vc)
+        print(k, type(vc))
+        for kk, vv in vc.items():
+            if isinstance(vv, tuple):
+                print(f"  {kk:20} ({vv[0]:0.8f}, {vv[1]:0.8f})")
+            else:
+                print(f"  {kk:20} {vv:0.8f}")
+
