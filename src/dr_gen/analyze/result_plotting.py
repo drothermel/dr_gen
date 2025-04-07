@@ -44,6 +44,7 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
+
 def np_to_float(val):
     if isinstance(val, tuple):
         return tuple(np_to_float(vv) for vv in val)
@@ -52,7 +53,7 @@ def np_to_float(val):
 
     try:
         return float(val)
-    except:
+    except:  # noqa: E722
         return val
 
 
@@ -718,7 +719,7 @@ def print_comparative_summary_stats(all_stats):
     print(f"  - B: {best_hpm_b}")
 
     for k, vc in comp.items():
-        if k in ['dists_of_diff_estims', 'original_data_stats']:
+        if k in ["dists_of_diff_estims", "original_data_stats"]:
             continue
         print(k, type(vc))
         for kk, vv in vc.items():
@@ -726,4 +727,3 @@ def print_comparative_summary_stats(all_stats):
                 print(f"  {kk:20} ({vv[0]:0.8f}, {vv[1]:0.8f})")
             else:
                 print(f"  {kk:20} {vv:0.8f}")
-
