@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats
 
-ESTIM_TYPES = ['point', 'std', 'sem', 'ci_95']
+ESTIM_TYPES = ["point", "std", "sem", "ci_95"]
 
 
 def expand_to_dim(array, dim, axis=0):
@@ -11,6 +11,7 @@ def expand_to_dim(array, dim, axis=0):
         else:
             array = array[:, np.new_axis]
     return array
+
 
 def runs_metrics_to_ndarray(runs_metrics):
     """Convert list of run metrics to numpy array, trimming to shortest run length."""
@@ -43,6 +44,7 @@ def trim_runs_metrics_dict(runs_metrics_dict, nmax, tmax):
         return None
     return {h: [m[:tmax] for m in rm[:nmax]] for h, rm in runs_metrics_dict.items()}
 
+
 def dist_estim(estim_type, dist):
     assert estim_type in ESTIM_TYPES
     assert isinstance(dist, np.ndarray)
@@ -54,27 +56,23 @@ def dist_estim(estim_type, dist):
         case "sem":
             return np.std(dist) / dist.shape[0]
         case "ci_95":
-            return (
-                np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item()
-            )
+            return (np.percentile(dist, 2.5).item(), np.percentile(dist, 97.5).item())
         case _:
             print(f"Unknown estim_type: {estim_type}, update ESTIM_TYPES list")
             return None
-    
+
 
 def dist_estims(dist):
-    return {
-        estim: dist_estim(estim, dist) for estim in ESTIM_TYPES
-    }
+    return {estim: dist_estim(estim, dist) for estim in ESTIM_TYPES}
 
 
 def summary_stats(data):
     """
     Calculate comprehensive summary statistics for bootstrap samples.
-    
+
     Args:
         data: 2D numpy array (bootstrap_samples x observations)
-    
+
     Returns:
         Dictionary of statistics or single statistic value
     """
@@ -145,22 +143,22 @@ def comparative_stats(estims_a, estims_b):
     # Calculate Explicit Difference Dist: KS Statistic
     ks_stats = []
     p_vals = []
-    vals_a = estims_a['bootstrap_dists']['sorted_vals']
-    vals_b = estims_b['bootstrap_dists']['sorted_vals']
+    vals_a = estims_a["bootstrap_dists"]["sorted_vals"]
+    vals_b = estims_b["bootstrap_dists"]["sorted_vals"]
     for vs_a, vs_b in zip(vals_a, vals_b):
         ks, p = scipy.stats.ks_2samp(vs_a, vs_b)
         ks_stats.append(ks)
         p_vals.append(p)
-    all_stats[dists_key]['ks_stats'] = np.array(ks_stats)
-    all_stats[dists_key]['ks_p_values'] = np.array(p_vals)
+    all_stats[dists_key]["ks_stats"] = np.array(ks_stats)
+    all_stats[dists_key]["ks_p_values"] = np.array(p_vals)
 
     # Calculate Difference in Summary Stats
-    for stat in estims_a['bootstrap_dists']:
-        if stat in ['n', 'sorted_vals']:
+    for stat in estims_a["bootstrap_dists"]:
+        if stat in ["n", "sorted_vals"]:
             continue
         stat_key = f"{stat}{diff_suffix}"
         all_stats[dists_key][stat_key] = (
-            estims_a['bootstrap_dists'][stat] - estims_b['bootstrap_dists'][stat]
+            estims_a["bootstrap_dists"][stat] - estims_b["bootstrap_dists"][stat]
         )
 
     # Calculate estims of difference summary stats
@@ -172,19 +170,21 @@ def comparative_stats(estims_a, estims_b):
             all_stats[estim_key][stat] = val
 
     # Add the Values from Original Data for Difference Estimates
-    orig_ks_stat, orig_ks_stat_p_val = stats.ks_2samp(
-        estims_a['original_data'], estims_b['original_data']
+    orig_ks_stat, orig_ks_stat_p_val = scipy.stats.ks_2samp(
+        estims_a["original_data"], estims_b["original_data"]
     )
-    all_stats['original_data_stats'] = {
+    all_stats["original_data_stats"] = {
         "ks_stats": orig_ks_stat,
-        "ks_p_val": orig_ks_stat_p_val
+        "ks_p_val": orig_ks_stat_p_val,
     }
-    for stat in estims_a['original_data_stats']:
+    for stat in estims_a["original_data_stats"]:
         stat_diff_key = f"{stat}{diff_suffix}"
-        all_stats['original_data_stats'][stat_diff_key] = (
-            estims_a['original_data_stats'][stat] - estims_b['original_data_stats'][stat]
+        all_stats["original_data_stats"][stat_diff_key] = (
+            estims_a["original_data_stats"][stat]
+            - estims_b["original_data_stats"][stat]
         )
     return all_stats
+
 
 # ============ Bootstrapping ==============
 
@@ -192,15 +192,16 @@ def comparative_stats(estims_a, estims_b):
 # - Assume n = len(dataset)
 # - b = num bootstrap samples
 
+
 # accepts ndarray or list of lists
 def bootstrap_samples(dataset, b=None):
     """
     Generate bootstrap samples from dataset.
-    
+
     Args:
         dataset: Input data to bootstrap, np array
         b: Number of bootstrap samples (None for single sample)
-    
+
     Returns:
         Array of bootstrap samples
     """
@@ -216,12 +217,12 @@ def bootstrap_samples(dataset, b=None):
 def bootstrap_summary_stats(dataset, num_bootstraps=None):
     """
     Calculate bootstrap summary statistics with uncertainty estimates.
-    
+
     Args:
         dataset: Input data to analyze
         num_bootstraps: Number of bootstrap samples
         stat: Optional specific statistic to return
-    
+
     Returns:
         Dictionary containing point estimates, standard errors, and confidence intervals
     """
@@ -241,8 +242,8 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None):
         for estim_type, val in stat_summary_estims.items():
             b_estims[estim_type][stat_name] = val
 
-    b_estims['original_data'] = dataset
-    b_estims['original_data_stats'] = summary_stats(dataset)
+    b_estims["original_data"] = dataset
+    b_estims["original_data_stats"] = summary_stats(dataset)
     return b_estims
 
 
@@ -250,11 +251,11 @@ def bootstrap_summary_stats(dataset, num_bootstraps=None):
 def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
     """
     Find optimal stopping time using bootstrap estimates.
-    
+
     Args:
         runs_metrics: List of metric values across time steps
         num_bootstraps: Number of bootstrap samples
-    
+
     Returns:
         Tuple of (best_time_step, best_metric_value)
     """
@@ -264,7 +265,7 @@ def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
     for t in range(metric_array.shape[-1]):
         t_vals = metric_array[:, t]
         b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
-        mean_point_estim = b_estims['point']['mean']
+        mean_point_estim = b_estims["point"]["mean"]
         t_metrics.append(mean_point_estim)
     best_t = np.argmax(t_metrics)
     best_vals_mean = t_metrics[best_t]
@@ -276,12 +277,12 @@ def bootstrap_select_hpms(
 ):
     """
     Select best hyperparameter combination using bootstrap estimates.
-    
+
     Args:
         runs_metrics_by_hpm: Dictionary mapping hyperparameters to metric values
         early_stopping: Whether to use early stopping for time step selection
         num_bootstraps: Number of bootstrap samples
-    
+
     Returns:
         Tuple of (best_hpm, best_time_step)
     """
@@ -306,13 +307,13 @@ def bootstrap_best_hpms_stats(
 ):
     """
     Calculate statistics for best hyperparameter combination.
-    
+
     Args:
         runs_metrics_for_eval: Metrics for final evaluation
         runs_metrics_for_hpm_select: Optional metrics for HPM selection
         early_stopping: Whether to use early stopping
         num_bootstraps: Number of bootstrap samples
-    
+
     Returns:
         Tuple of ((best_hpm, best_time), bootstrap_estimates)
     """
@@ -352,14 +353,14 @@ def bootstrap_compare_stats(
 ):
     """
     Compare statistics between two sets of hyperparameter combinations.
-    
+
     Args:
         runs_metrics_for_eval: Metrics for final evaluation
         hpms_A, hpms_B: Sets of hyperparameters to compare
         runs_metrics_for_hpm_select: Optional metrics for HPM selection
         early_stopping: Whether to use early stopping
         num_bootstraps: Number of bootstrap samples
-    
+
     Returns:
         Dictionary containing comparison results and statistics
     """
@@ -406,7 +407,7 @@ def sweep_t_n_compare(
 ):
     """
     Compare statistics across different numbers of runs and time steps.
-    
+
     Args:
         runs_metrics_for_eval: Metrics for final evaluation
         runs_metrics_for_hpm_select: Metrics for HPM selection
@@ -415,7 +416,7 @@ def sweep_t_n_compare(
         tmax: Maximum time step to consider
         early_stopping: Whether to use early stopping
         num_bootstraps: Number of bootstrap samples
-    
+
     Returns:
         Dictionary mapping (n, t) tuples to comparison results
     """
@@ -444,12 +445,12 @@ def make_hpm_specs(
 ):
     """
     Create hyperparameter specifications dictionary.
-    
+
     Args:
         lr: Learning rate
         wd: Weight decay
         epochs: Number of epochs
-    
+
     Returns:
         Dictionary of hyperparameter specifications
     """
@@ -469,14 +470,14 @@ def get_pretrained_vs_random_init_runs(
 ):
     """
     Get runs comparing pretrained vs random initialization.
-    
+
     Args:
         rg: Run group containing experiment data
         hpm_specs: Hyperparameter specifications
         split: Data split to use
         metric: Metric to compare
         one_per: Whether to select one run per initialization
-    
+
     Returns:
         Tuple of (pretrained_runs, random_runs)
     """
@@ -495,6 +496,7 @@ def get_pretrained_vs_random_init_runs(
     if one_per:
         assert len(hpms_pre) == len(hpms_rand) == 1
     return hpms_pre, hpms_rand
+
 
 def one_tn_no_hpm_select_compare_weight_init(
     rg,
@@ -519,6 +521,7 @@ def one_tn_no_hpm_select_compare_weight_init(
         early_stopping=False,
         num_bootstraps=num_bootstraps,
     )
+
 
 def one_tn_hpm_compare_weight_init(
     rg,
@@ -573,7 +576,7 @@ def sweep_tn_no_hpm_select_compare_weight_init(
 ):
     """
     Compare weight initializations without hyperparameter selection.
-    
+
     Args:
         rg: Run group containing experiment data
         hpm_select_dict: Hyperparameter specifications
@@ -581,7 +584,7 @@ def sweep_tn_no_hpm_select_compare_weight_init(
         Nmax: Maximum number of runs
         num_bootstraps: Number of bootstrap samples
         split: Data split to use
-    
+
     Returns:
         Dictionary of comparison results across different n and t values
     """
@@ -623,7 +626,7 @@ def sweep_tn_hpm_compare_weight_init(
 ):
     """
     Compare weight initializations with hyperparameter selection.
-    
+
     Args:
         rg: Run group containing experiment data
         hpm_select_dict: Hyperparameter specifications
@@ -631,7 +634,7 @@ def sweep_tn_hpm_compare_weight_init(
         Nmax: Maximum number of runs
         num_bootstraps: Number of bootstrap samples
         early_stopping: Whether to use early stopping
-    
+
     Returns:
         Dictionary of comparison results across different n and t values
     """
@@ -660,48 +663,49 @@ def sweep_tn_hpm_compare_weight_init(
         early_stopping=early_stopping,
     )
 
+
 def print_comparative_summary_stats(all_stats):
-    best_hpm_a = all_stats['best_hpm_a']
-    shape_a = all_stats['runs_shape_a']
-    best_t_a = all_stats['best_t_a']
-    best_hpm_b = all_stats['best_hpm_b']
-    shape_b = all_stats['runs_shape_b']
-    best_t_b = all_stats['best_t_b']
+    best_hpm_a = all_stats["best_hpm_a"]
+    shape_a = all_stats["runs_shape_a"]
+    best_t_a = all_stats["best_t_a"]
+    best_hpm_b = all_stats["best_hpm_b"]
+    shape_b = all_stats["runs_shape_b"]
+    best_t_b = all_stats["best_t_b"]
 
+    estims_a = all_stats["summary_stats_a"]
+    estims_b = all_stats["summary_stats_b"]
+    comp = all_stats["comparative_stats"]
 
-    estims_a = all_stats['summary_stats_a']
-    estims_b = all_stats['summary_stats_b']
-    comp = all_stats['comparative_stats']
-
-    num_bootstraps = estims_a['num_bootstraps']
+    num_bootstraps = estims_a["num_bootstraps"]
 
     print(f"Compare using {num_bootstraps} bootstraps:")
     print(f"  - [{shape_a} | best: {best_t_a}] {best_hpm_a}")
     print(f"  - [{shape_b} | best: {best_t_b}] {best_hpm_b}")
     print()
     for k, va in estims_a.items():
-        if k in ['bootstrap_dists', 'num_bootstraps', 'original_data']:
+        if k in ["bootstrap_dists", "num_bootstraps", "original_data"]:
             continue
         print(k)
         if isinstance(va, dict):
             for kk, vva in va.items():
-                if kk in ['sorted_vals']:
+                if kk in ["sorted_vals"]:
                     continue
                 vvb = estims_b[k][kk]
                 if isinstance(vvb, tuple):
-                    print(f"   {kk:10} | ({vva[0]:.4f}, {vva[1]:.4f}) | ({vvb[0]:.4f}, {vvb[1]:.4f})")
+                    print(
+                        f"   {kk:10} | ({vva[0]:.4f}, {vva[1]:.4f}) | ({vvb[0]:.4f}, {vvb[1]:.4f})"
+                    )
                 else:
                     print(f"   {kk:10} | {vva:.4f} | {vvb:.4f}")
         else:
-            print("  ", v, estims_b[k])
+            print("  ", va, estims_b[k])
     print()
 
-    for k, v in comp['diff_dists'].items():
-        if k in ['diff_dists']:
+    for k, vc in comp["diff_dists"].items():
+        if k in ["diff_dists"]:
             continue
         print(k)
-        if isinstance(v, dict):
-            for kk, vv in v.items():
-                print(" ", kk, v)
-        print(k, v.shape, v)
-        
+        if isinstance(vc, dict):
+            for kk, vv in vc.items():
+                print(" ", kk, vc)
+        print(k, vc.shape, vc)
