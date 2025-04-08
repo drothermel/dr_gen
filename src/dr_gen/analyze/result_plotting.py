@@ -1,4 +1,5 @@
 import numpy as np
+from collections import defaultdict
 import scipy.stats
 
 ESTIM_TYPES = ["point", "std", "sem", "ci_95"]
@@ -56,6 +57,35 @@ def np_to_float(val):
     except:  # noqa: E722
         return val
 
+def select_matching_hpms(
+    hpms_A, hpms_B, hpm_whitelist=None, ignore_key='model.weights',
+):
+    hpms_to_use = set()
+
+    # Group hpms by hash
+    hpms_by_hash = defaultdict(list)
+    for hpm in [*hpms_A, *hpms_B]:
+        # Verify hpm in whitelist
+        if hpm_whitelist is not None and hpm not in hpm_whitelist:
+            print(hpm, "not in whitelist")
+            continue
+
+        # Get the hash which ignores key if specified
+        new_hash = hash(hpm)
+        if ignore_key is not None:
+            new_important_vals = {
+                k: v for k, v in hpm.important_values.items() if k != ignore_key
+            }
+            new_hash = hash(hpm.as_tupledict(important_vals=new_important_vals))
+
+        hpms_by_hash[new_hash].append(hpm)
+
+    # Only use hpms where the hash has a value for group A and B
+    for hash_hpms in hpms_by_hash.values():
+        if len(hash_hpms) == 2:
+            hpms_to_use.update(hash_hpms)
+
+    return hpms_to_use
 
 def dist_estim(estim_type, dist):
     assert estim_type in ESTIM_TYPES
@@ -543,6 +573,7 @@ def one_tn_hpm_compare_weight_init(
     num_bootstraps=1000,
     split="val",
 ):
+    # Get the runs by hpm from val for hpm select and eval for metric calc
     hpms_val_pre, hpms_val_rand = get_pretrained_vs_random_init_runs(
         rg,
         hpm_select_dict,
@@ -556,21 +587,23 @@ def one_tn_hpm_compare_weight_init(
         one_per=False,
     )
 
-    # TODO: verify that the same hpm sets are included for both settings
+    # Filter to only hpms that exist both splits of both settings
+    hpms_to_use = select_matching_hpms(
+        hpms_A=hpms_val_pre.keys(),
+        hpms_B=hpms_val_rand.keys(),
+        hpm_whitelist=[*hpms_eval_pre.keys(), *hpms_eval_rand.keys()],
+        ignore_key='model.weights', # the hpm we're comparing between
+    )
+    hpms_val_pre = {h: d for h, d in hpms_val_pre.items() if h in hpms_to_use}
+    hpms_val_rand = {h: d for h, d in hpms_val_rand.items() if h in hpms_to_use}
+    hpms_eval_pre = {h: d for h, d in hpms_eval_pre.items() if h in hpms_to_use}
+    hpms_eval_rand = {h: d for h, d in hpms_eval_rand.items() if h in hpms_to_use}
 
+    # Setup the run dicts for the compare function
     all_runs_val_data = {**hpms_val_pre, **hpms_val_rand}
     all_runs_eval_data = {**hpms_eval_pre, **hpms_eval_rand}
     runs_metrics_for_eval = trim_runs_metrics_dict(all_runs_eval_data, n, t)
     runs_metrics_for_hpm_select = trim_runs_metrics_dict(all_runs_val_data, n, t)
-
-    print("Pre:")
-    for hpm in hpms_val_pre:
-        print("  ", hpm)
-
-    print("Rand:")
-    for hpm in hpms_val_rand:
-        print("  ", hpm)
-    return
 
     return bootstrap_compare_stats(
         runs_metrics_for_eval=runs_metrics_for_eval,
@@ -734,7 +767,7 @@ def print_comparative_summary_stats(all_stats):
     for k, vc in comp.items():
         if k in ["dists_of_diff_estims", "original_data_stats"]:
             continue
-        print(k, type(vc))
+        print(k)
         for kk, vv in vc.items():
             if isinstance(vv, tuple):
                 print(f"  {kk:20} ({vv[0]:0.8f}, {vv[1]:0.8f})")
