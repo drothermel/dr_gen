@@ -301,16 +301,19 @@ def bootstrap_early_stopping(runs_metrics, num_bootstraps=None):
         Tuple of (best_time_step, best_metric_value)
     """
     metric_array = runs_metrics_to_ndarray(runs_metrics)
+    metadata = {'estims': []}
 
     t_metrics = []
     for t in range(metric_array.shape[-1]):
         t_vals = metric_array[:, t]
         b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
+        metadata['estims'].append(b_estims)
         mean_point_estim = b_estims["point"]["mean"]
         t_metrics.append(mean_point_estim)
+    metadata['t_metrics'] = t_metrics
     best_t = np.argmax(t_metrics)
     best_vals_mean = t_metrics[best_t]
-    return best_t, best_vals_mean
+    return best_t, best_vals_mean, metadata
 
 
 def bootstrap_select_hpms(
@@ -327,17 +330,25 @@ def bootstrap_select_hpms(
     Returns:
         Tuple of (best_hpm, best_time_step)
     """
+    metadata = {}
+
     hpm_metrics = []
     for hpm, runs_metrics in runs_metrics_by_hpm.items():
+        metadata[hpm] = {}
         metric_array = runs_metrics_to_ndarray(runs_metrics)
         if early_stopping:
-            best_t, best_t_mean = bootstrap_early_stopping(metric_array, num_bootstraps)
+            best_t, best_t_mean, md = bootstrap_early_stopping(metric_array, num_bootstraps)
         else:
             best_t = metric_array.shape[-1] - 1
             best_t_mean = metric_array[:, best_t].mean()
+            md = None
         hpm_metrics.append((hpm, best_t, best_t_mean))
+
+        metadata[hpm]['early_stopping'] = md
+        metadata[hpm]['best_t'] = best_t
+        metadata[hpm]['best_t_mean'] = best_t_mean
     hpm, best_t, _ = max(hpm_metrics, key=lambda t: t[-1])
-    return hpm, best_t
+    return hpm, best_t, metadata
 
 
 def bootstrap_best_hpms_stats(
@@ -366,7 +377,7 @@ def bootstrap_best_hpms_stats(
         assert len(runs_metrics_for_eval) == 1
         hpm_select_runs = runs_metrics_for_eval
         early_stopping = False
-    hpm, best_t = bootstrap_select_hpms(
+    hpm, best_t, metadata = bootstrap_select_hpms(
         hpm_select_runs,
         early_stopping=early_stopping,
         num_bootstraps=num_bootstraps,
@@ -378,7 +389,7 @@ def bootstrap_best_hpms_stats(
     # Metric Calculation
     t_vals = runs_metrics_for_eval[hpm][:, best_t]
     b_estims = bootstrap_summary_stats(t_vals, num_bootstraps)
-    return (hpm, best_t), b_estims
+    return (hpm, best_t), b_estims, metadata
 
 
 # =======================
@@ -407,13 +418,13 @@ def bootstrap_compare_stats(
     """
     eval_metrics_arrays = runs_metrics_dict_to_ndarray_dict(runs_metrics_for_eval)
     hpm_metrics_arrays = runs_metrics_dict_to_ndarray_dict(runs_metrics_for_hpm_select)
-    (best_hpm_a, best_t_a), estims_a = bootstrap_best_hpms_stats(
+    (best_hpm_a, best_t_a), estims_a, md_a = bootstrap_best_hpms_stats(
         select_runs_by_hpms(eval_metrics_arrays, hpms_A),
         select_runs_by_hpms(hpm_metrics_arrays, hpms_A),
         early_stopping=early_stopping,
         num_bootstraps=num_bootstraps,
     )
-    (best_hpm_b, best_t_b), estims_b = bootstrap_best_hpms_stats(
+    (best_hpm_b, best_t_b), estims_b, md_b = bootstrap_best_hpms_stats(
         select_runs_by_hpms(eval_metrics_arrays, hpms_B),
         select_runs_by_hpms(hpm_metrics_arrays, hpms_B),
         early_stopping=early_stopping,
@@ -421,6 +432,8 @@ def bootstrap_compare_stats(
     )
     comp_estims = comparative_stats(estims_a, estims_b)
     return {
+        "metadata_a": md_a,
+        "metadata_b": md_b,
         "best_hpm_a": best_hpm_a,
         "best_t_a": best_t_a,
         "runs_shape_a": eval_metrics_arrays[best_hpm_a].shape,
