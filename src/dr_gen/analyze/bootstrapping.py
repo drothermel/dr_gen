@@ -155,7 +155,7 @@ def calc_stats_across_bootstrap_samples(timestep_data):
         stats["median"] = np.median(timestep_data, axis=1)
         stats["min"] = np.min(timestep_data, axis=1)
         stats["max"] = np.max(timestep_data, axis=1)
-        stats["std_dev"] = (std,)
+        stats["std_dev"] = std
         stats["sem_of_mean"] = std / np.sqrt(R) if R > 0 else np.full(B, np.nan)
         stats["percentile_2.5"] = all_percentiles[0, :]
         stats["percentile_25"] = all_percentiles[1, :]
@@ -244,6 +244,7 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
     return final_results
 
 
+
 def select_best_hpms(summary_stats_data):
     """
     Selects the best hyperparameter set (experiment) and the best timestep
@@ -276,141 +277,184 @@ def select_best_hpms(summary_stats_data):
 
 
 # Calculates point differences and bootstrap CIs for the differences.
-def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b, T):
+def calc_diff_stats_and_ci(
+    summary_stats_a, summary_stats_b
+):
     """
     Calculates point differences and bootstrap CIs for the difference between statistics.
     The inputs are lists of timestep summary dicts for each exp.
     """
-    difference_results = []
     stat_names = [
         k.replace("_point_estimate", "")
-        for k in summary_stats_a[0]
+        for k in summary_stats_a
         if k.endswith("_point_estimate")
     ]
-    for t in range(T):
-        ts_diff = {"timestep": t}  # Dictionary for results of this timestep
-        for stat_name in stat_names:
-            # Get point estimates, default to NaN if key missing
-            pa = summary_stats_a[t].get(f"{stat_name}_point_estimate", np.nan)
-            pb = summary_stats_b[t].get(f"{stat_name}_point_estimate", np.nan)
-            ts_diff[f"{stat_name}_diff_point_estimate"] = pa - pb
+    diff = {}
+    for stat_name in stat_names:
+        # Get point estimates, default to NaN if key missing
+        pa = summary_stats_a.get(f"{stat_name}_point_estimate", np.nan)
+        pb = summary_stats_b.get(f"{stat_name}_point_estimate", np.nan)
+        diff[f"{stat_name}_diff_point_estimate"] = pa - pb
 
-            # Get distributions for CI calculation, default to None if key missing
-            dist_a = summary_stats_a[t].get(f"{stat_name}_distribution")
-            dist_b = summary_stats_b[t].get(f"{stat_name}_distribution")
+        # Get distributions for CI calculation, default to None if key missing
+        dist_a = summary_stats_a.get(f"{stat_name}_distribution")
+        dist_b = summary_stats_b.get(f"{stat_name}_distribution")
 
-            # Calculate difference dist, confidence interval
-            diff_dist = dist_a - dist_b
-            ci_lower, ci_upper = np.percentile(diff_dist, [2.5, 97.5])
-            ts_diff[f"{stat_name}_diff_ci_95"] = (ci_lower, ci_upper)
+        # Calculate difference dist, confidence interval
+        diff_dist = dist_a - dist_b
+        ci_lower, ci_upper = np.percentile(diff_dist, [2.5, 97.5])
+        diff[f"{stat_name}_diff_ci_95"] = (ci_lower, ci_upper)
 
-            # Null hypothesis: difference is zero. Reject if 0 is outside CI.
-            ts_diff[f"{stat_name}_diff_reject_null_ci_95"] = not (
-                ci_lower <= 0 <= ci_upper
-            )
-        difference_results.append(ts_diff)
-    return difference_results
+        # Null hypothesis: difference is zero. Reject if 0 is outside CI.
+        diff[f"{stat_name}_diff_reject_null_ci_95"] = not (
+            ci_lower <= 0 <= ci_upper
+        )
+    return diff
 
 
-def calc_ks_stat_and_summary(bdata_a, bdata_b, T, num_bootstraps):
+def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
     """
     Calculates bootstrap confidence interval for the KS statistic between matched samples.
-    Takes: bootstrapped data, shape (T, B, R).
+    Takes: bootstrapped data for one timestep, shape (B, R).
     Returns: List of results per timestep.
     """
-    ks_results = []
-    for t in range(T):
-        # Calculate KS stat for each matched bootstrap sample pair
-        ks_dist = np.empty(num_bootstraps)
-        for b in range(num_bootstraps):
-            ks_dist[b], _ = ks_2samp(bdata_a[t, b, :], bdata_b[t, b, :])
+    # Calculate KS stat for each matched bootstrap sample pair
+    ks_dist = np.empty(num_bootstraps)
+    for b in range(num_bootstraps):
+        ks_dist[b], _ = ks_2samp(bdata_a[b, :], bdata_b[b, :])
 
-        # Get the dist summary
-        summary = summarize_distribution(ks_dist)
-        ks_results.append(
-            {
-                "timestep": t,
-                "ks_stat_distribution": ks_dist,
-                "ks_stat_point_estimate": summary["point_estimate"],
-                "ks_stat_spread": summary["spread"],
-                "ks_stat_ci_95_lower": summary["ci_95_lower"],
-                "ks_stat_ci_95_upper": summary["ci_95_upper"],
-            }
-        )
-    return ks_results
+    # Get the dist summary
+    summary = summarize_distribution(ks_dist)
+    return {
+        "ks_stat_distribution": ks_dist,
+        "ks_stat_point_estimate": summary["point_estimate"],
+        "ks_stat_spread": summary["spread"],
+        "ks_stat_ci_95_lower": summary["ci_95_lower"],
+        "ks_stat_ci_95_upper": summary["ci_95_upper"],
+    }
 
 
-def perform_ks_permutation_test(arr_a, arr_b, T, R, num_permutations):
+def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
     """
     Performs a bootstrap permutation test using the KS statistic.
 
     Args:
-        arr_a (np.ndarray): Standardized original data for exp A, shape (R, T).
-        arr_b (np.ndarray): Standardized original data for exp B, shape (R, T).
-        T (int): Number of timesteps.
+        arr_a (np.ndarray): Standardized original data for exp A, shape (R).
+        arr_b (np.ndarray): Standardized original data for exp B, shape (R).
         R (int): Number of runs.
         num_permutations (int): Number of permutations to generate the null distribution.
         alpha (float): Significance level for p-value comparison.
 
     Returns:
-        list: A list of dictionaries, one per timestep, containing the observed KS,
-              p-value, and null hypothesis rejection decision.
+        dict: Containing the observed KS, p-value, and null hypothesis rejection decision.
     """
-    ks_permutation_test_results = []
-    for t in range(T):
         # Calculate the observed KS statistic on the original data
-        observed_ks, _ = ks_2samp(arr_a[:, t], arr_b[:, t])
+    observed_ks, _ = ks_2samp(arr_a, arr_b)
 
-        # Combine original data for permutation and generate null dist
-        combined_data = np.concatenate((arr_a[:, t], arr_b[:, t]))  # Shape (2R,)
-        null_ks_dist = np.empty(num_permutations)
+    # Combine original data for permutation and generate null dist
+    combined_data = np.concatenate((arr_a, arr_b))  # Shape (2R,)
+    null_ks_dist = np.empty(num_permutations)
 
-        # Shuffle, split and calc ks stat on null dist
-        shuffled = np.copy(combined_data)
-        for p in range(num_permutations):
-            np.random.shuffle(shuffled)
-            null_ks_dist[p], _ = ks_2samp(shuffled[:R], shuffled[R:])
+    # Shuffle, split and calc ks stat on null dist
+    shuffled = np.copy(combined_data)
+    for p in range(num_permutations):
+        np.random.shuffle(shuffled)
+        null_ks_dist[p], _ = ks_2samp(shuffled[:R], shuffled[R:])
 
-        # Calculate p-value: proportion of null KS stats >= observed KS stat
-        p_value = np.mean(null_ks_dist >= observed_ks)
-        reject_null = p_value < 0.05
-        ks_permutation_test_results.append(
-            {
-                "timestep": t,
-                "observed_ks": observed_ks,
-                "p_value": p_value,
-                "reject_null": reject_null,
-            }
-        )
-    return ks_permutation_test_results
+    # Calculate p-value: proportion of null KS stats >= observed KS stat
+    p_value = np.mean(null_ks_dist >= observed_ks)
+    reject_null = p_value < 0.05
+    return {
+        "observed_ks": observed_ks,
+        "p_value": p_value,
+        "reject_null": reject_null,
+    }
 
 
 def compare_experiments_bootstrap(
     data_a_raw,
     data_b_raw,
+    hpm_a,
+    hpm_b,
+    timestep_a,
+    timestep_b,
     num_bootstraps=1000,
     num_permutations=1000,
 ):
-    # Make data uniform and get bootstrap samples
+
+    # Make data uniform and select best timestep
     arr_a, arr_b, R, T = make_uniform_2D_data_arrays_pair(data_a_raw, data_b_raw)
+    arr_a = arr_a[:, timestep_a:timestep_a + 1]
+    arr_b = arr_b[:, timestep_b:timestep_b + 1]
+
+    # Bootstrap samples
     bdata_a = bootstrap_samples_batched(arr_a.T, b=num_bootstraps)  # Shape (T, B, R)
     bdata_b = bootstrap_samples_batched(arr_b.T, b=num_bootstraps)  # Shape (T, B, R)
 
     # Calculate statistics
-    summary_list_a = calc_multi_stat_bootstrap_summary({"exp_A": bdata_a})["exp_A"]
-    summary_list_b = calc_multi_stat_bootstrap_summary({"exp_B": bdata_b})["exp_B"]
+    summary_a_list = calc_multi_stat_bootstrap_summary({"exp_A": bdata_a})["exp_A"]
+    summary_b_list = calc_multi_stat_bootstrap_summary({"exp_B": bdata_b})["exp_B"]
+    assert len(summary_a_list) == len(summary_b_list) == 1
+    summary_a = summary_a_list[0]
+    summary_b = summary_b_list[0]
+
+    print(">> Compare setting A to setting B")
+    exp_a_name = f"{hpm_a}_t{timestep_a}"
+    exp_b_name = f"{hpm_b}_t{timestep_b}"
+    print_bootstrap_summary_exp_results(
+        exp_a_name,
+        summary_a,
+    )
+    print_bootstrap_summary_exp_results(
+        exp_b_name,
+        summary_b,
+    )
 
     # Calculate difference results
-    diff_results = calc_diff_stats_and_ci(summary_list_a, summary_list_b, T)
-    ks_stat_results = calc_ks_stat_and_summary(bdata_a, bdata_b, T, num_bootstraps)
+    diff_results = calc_diff_stats_and_ci(summary_a, summary_b)
+    ks_stat_results = calc_ks_stat_and_summary(
+        bdata_a.squeeze(), bdata_b.squeeze(), num_bootstraps=num_bootstraps,
+    )
     ks_permutation_test_results = perform_ks_permutation_test(
-        arr_a, arr_b, T, R, num_permutations
+        arr_a.squeeze(), arr_b.squeeze(), R=R, num_permutations=num_permutations
     )
 
     return {
-        "summary_A": summary_list_a,
-        "summary_B": summary_list_b,
+        "hpm_A": hpm_a,
+        "timestep_A": timestep_a,
+        "original_A": arr_a.squeeze(),
+        "bootstraps_A": bdata_a.squeeze(),
+        "summary_A": summary_a,
+        "hpm_B": hpm_b,
+        "timestep_B": timestep_b,
+        "original_B": arr_b.squeeze(),
+        "bootstraps_B": bdata_b.squeeze(),
+        "summary_B": summary_b,
         "difference_stats": diff_results,
         "ks_ci_test": ks_stat_results,
         "ks_permutation_test": ks_permutation_test_results,
     }
+
+
+# --- Utility Functions ---
+def print_bootstrap_summary_exp_results(
+    exp_name,
+    exp_result,
+    max_list_print_len=3,
+):
+    print(f"--- Experiment: {exp_name} ---")
+    for key, value in exp_result.items():
+        if key == 'timestep': # Already printed
+            continue
+
+        if isinstance(value, np.ndarray) or isinstance(value, list):
+            continue
+        elif isinstance(value, tuple):
+            print(f"    {key}: {value}", end="")
+        elif isinstance(value, (int, float, bool, str)) or value is None:
+            # Print primitive types directly
+            if isinstance(value, float):
+                    print(f"    {key}: {value:.4f}") # Format floats
+            else:
+                    print(f"    {key}: {value}")
+    print("\n") # Add space between experiments

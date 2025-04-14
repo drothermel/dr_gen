@@ -154,7 +154,7 @@ def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
 
 
 # TODO: this is what I want to call in the script
-# After using get_compare_runs_pretrain_vs_random() to get the gorup data
+# After using get_compare_runs_pretrain_vs_random() to get the group data
 def run_comparison_eval(
     group_a_data,
     group_b_data,
@@ -172,9 +172,30 @@ def run_comparison_eval(
     best_hpm_B, best_ts_B = find_best_hpm_for_group(
         val_b, group_b_name, val_num_bootstraps
     )
+
+    # Check if best HPMs were found
+    if best_hpm_A is None or best_hpm_B is None:
+        print(f"Error: Could not find best HPM for group A ('{best_hpm_A}') or group B ('{best_hpm_B}')")
+        # Return indicating failure but providing partial results if available
+        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+
+    # --- Perform comparison on evaluation data using ONLY the best HPMs found ---
+    # Get the evaluation data for the *specific* best HPMs and timesteps
+    eval_data_A = eval_a.get(best_hpm_A)
+    eval_data_B = eval_b.get(best_hpm_B)
+
+    # Ensure we have data for the best HPMs in the evaluation set
+    if eval_data_A is None or eval_data_B is None:
+        print(f"Error: Evaluation data not found for best HPM A ('{best_hpm_A}') or B ('{best_hpm_B}')")
+        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+
     comparison_results = bu.compare_experiments_bootstrap(
-        eval_a,
-        eval_b,
+        eval_data_A, # just the best hpm data, all timesteps
+        eval_data_B, # just the best hpm data, all timesteps
+        hpm_a=best_hpm_A, # for naming
+        hpm_b=best_hpm_B, # for naming
+        timestep_a=best_ts_A, # to select best timestep from eval data
+        timestep_b=best_ts_B, # to select best timestep from eval data
         num_bootstraps=eval_num_bootstraps,
         num_permutations=num_permutations,
     )
@@ -205,9 +226,7 @@ def print_results_report(
     print("\nComparison on Evaluation Data (using selected HPMs):")
 
     # Report Difference Statistics
-    final_diff_stats = comparison_results["difference_stats"][
-        0
-    ]  # each hpm uses best ts
+    final_diff_stats = comparison_results["difference_stats"]
     mean_diff = final_diff_stats["mean_diff_point_estimate"]
     mean_diff_ci = final_diff_stats["mean_diff_ci_95"]
     mean_reject_null = final_diff_stats["mean_diff_reject_null_ci_95"]
@@ -222,7 +241,7 @@ def print_results_report(
     )
 
     # Report KS Permutation Test Results
-    final_ks_perm_stats = comparison_results["ks_permutation_test"][0]
+    final_ks_perm_stats = comparison_results["ks_permutation_test"]
     ks_observed = final_ks_perm_stats.get("observed_ks", "N/A")
     ks_p_value = final_ks_perm_stats.get("p_value", "N/A")
     ks_reject_null = final_ks_perm_stats.get("reject_null", None)  # Default to None
@@ -231,7 +250,7 @@ def print_results_report(
         "\nKS Permutation Test (Comparing Distributions) at Final Evaluation Timestep:"
     )
     print(f"  Observed KS Statistic: {ks_observed:.4f}")
-    print(f"  P-value: {ks_p_value:.4f}")
+    print(f"  P-value: {ks_p_value:.8f}")
     print(
         f"  Statistically Significant Difference (p < 0.05)? {'Yes' if ks_reject_null else 'No'}"
     )
