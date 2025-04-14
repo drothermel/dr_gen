@@ -4,6 +4,7 @@ from scipy.stats import ks_2samp
 
 # --- Helpers for prepping data for bootstrapping ---
 
+
 def get_min_2D_data_shape(data_dict):
     """
     Takes { exp_name: list_of_lists }
@@ -12,27 +13,30 @@ def get_min_2D_data_shape(data_dict):
     """
     if not data_dict:
         return None
-    min_first = math.inf # Will hold min_R
-    min_second = math.inf # Will hold min_T
+    min_first = math.inf  # Will hold min_R
+    min_second = math.inf  # Will hold min_T
     for outer_list in data_dict.values():
-        if not outer_list: return None # Check runs list
+        if not outer_list:
+            return None  # Check runs list
         min_first = min(min_first, len(outer_list))
         for inner_list in outer_list:
-            if not inner_list: return None # Check timesteps list
+            if not inner_list:
+                return None  # Check timesteps list
             min_second = min(min_second, len(inner_list))
     # Safeguard: Ensure minimums were actually found
     if min_first == math.inf or min_second == math.inf:
         return None
-    return (int(min_first), int(min_second)) # (min_R, min_T)
+    return (int(min_first), int(min_second))  # (min_R, min_T)
+
 
 def make_uniform_2D_data_arrays_pair(data_a, data_b):
-    """ Make numpy arrrays, determine min common dimensions and crop """
+    """Make numpy arrays, determine min common dimensions and crop"""
     arr_a, arr_b = np.array(data_a, dtype=float), np.array(data_b, dtype=float)
-    assert arr_a.ndim ==2 and arr_b.ndim == 2 and arr_a.size != 0 and arr_b.size != 0
+    assert arr_a.ndim == 2 and arr_b.ndim == 2 and arr_a.size != 0 and arr_b.size != 0
     R = min(arr_a.shape[0], arr_b.shape[0])
     T = min(arr_a.shape[1], arr_b.shape[1])
     return arr_a[:R, :T], arr_b[:R, :T], R, T
-    
+
 
 def make_uniform_2D_data_arrays_dict(data_dict):
     """
@@ -43,7 +47,7 @@ def make_uniform_2D_data_arrays_dict(data_dict):
     if min_dims is None:
         return None
 
-    R, L = min_dims # Num runs, Length Runs
+    R, L = min_dims  # Num runs, Length Runs
     result_arrays = {}
     for key, outer_list in data_dict.items():
         truncated_data = [inner[:L] for inner in outer_list[:R]]
@@ -52,6 +56,7 @@ def make_uniform_2D_data_arrays_dict(data_dict):
 
 
 # --- Bootstrapping Functions ---
+
 
 # Takes (batch_dim, data_dim), returns (batch_dim, B, data_dim)
 def bootstrap_samples_batched(dataset, b=None):
@@ -65,9 +70,9 @@ def bootstrap_samples_batched(dataset, b=None):
     if len(dataset.shape) == 1:
         dataset = dataset[np.newaxis, :]
     if b is None:
-        return dataset[:, np.newaxis] # Shape (B, 1, L)
+        return dataset[:, np.newaxis]  # Shape (B, 1, L)
 
-    B, L = dataset.shape # Batch Size, Data Length
+    B, L = dataset.shape  # Batch Size, Data Length
     indices = np.random.randint(0, L, size=(B, b, L))
     batch_indices = np.arange(B)[:, np.newaxis, np.newaxis]
     bootstrap_result = dataset[batch_indices, indices]
@@ -80,7 +85,7 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
 
     Standardizes experiments to (min_R, min_T), transposes to (min_T, min_R),
     stacks experiments, performs batched bootstrapping on the runs (R) for each
-    timestep (T) across all experiments simultaneously, then unnpacks results.
+    timestep (T) across all experiments simultaneously, then unpacks results.
 
     Args:
         data_dict (dict): Dict mapping experiment names (str) to lists of lists
@@ -99,11 +104,11 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
     uniform_arrays = make_uniform_2D_data_arrays_dict(data_dict)
     if uniform_arrays is None or not uniform_arrays:
         return None
-    R, T = next(iter(uniform_arrays.values()).shape
+    R, T = next(iter(uniform_arrays.values())).shape
 
     # === Reshape to make one batched bootstrap samples call ===
     experiment_names = list(uniform_arrays.keys())
-    E = len(experiment_names) # Number of experiments
+    E = len(experiment_names)  # Number of experiments
 
     # Consider that we have R sampled metrics for each timestep T
     #   Transpose each array from (min_R, min_T) to (min_T, min_R)
@@ -140,23 +145,25 @@ def calc_stats_across_bootstrap_samples(timestep_data):
     Takes a np array for a single timestep shape (B, R).
     Returns dict mapping stat names to 1D arrays (shape B,).
     """
-    B, R = timestep_data.shape # Num bootstrap samples, Num Runs
+    B, R = timestep_data.shape  # Num bootstrap samples, Num Runs
     stats = {}
     # Use errstate to handle potential warnings (e.g., std dev of single value if R=1)
-    with np.errstate(invalid='ignore', divide='ignore'):
+    std = np.std(timestep_data, axis=1, ddof=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
         all_percentiles = np.percentile(timestep_data, [2.5, 25, 75, 97.5], axis=1)
-        stats['mean'] = np.mean(timestep_data, axis=1)
-        stats['median'] = np.median(timestep_data, axis=1)
-        stats['min'] = np.min(timestep_data, axis=1)
-        stats['max'] = np.max(timestep_data, axis=1)
-        stats['std_dev'] = np.std(timestep_data, axis=1, ddof=1)
-        stats['sem_of_mean'] = stds_B / np.sqrt(R) if R > 0 else np.full(B, np.nan)
-        stats['percentile_2.5'] = all_percentiles[0, :]
-        stats['percentile_25'] = all_percentiles[1, :]
-        stats['percentile_75'] = all_percentiles[2, :]
-        stats['percentile_97.5'] = all_percentiles[3, :]
-        stats['iqr'] = all_percentiles[2, :] - all_percentiles[1, :]
+        stats["mean"] = np.mean(timestep_data, axis=1)
+        stats["median"] = np.median(timestep_data, axis=1)
+        stats["min"] = np.min(timestep_data, axis=1)
+        stats["max"] = np.max(timestep_data, axis=1)
+        stats["std_dev"] = (std,)
+        stats["sem_of_mean"] = std / np.sqrt(R) if R > 0 else np.full(B, np.nan)
+        stats["percentile_2.5"] = all_percentiles[0, :]
+        stats["percentile_25"] = all_percentiles[1, :]
+        stats["percentile_75"] = all_percentiles[2, :]
+        stats["percentile_97.5"] = all_percentiles[3, :]
+        stats["iqr"] = all_percentiles[2, :] - all_percentiles[1, :]
     return stats
+
 
 def summarize_distribution(dist):
     """
@@ -168,24 +175,25 @@ def summarize_distribution(dist):
     # Handle cases where stats are undefined or unreliable
     if B <= 1:
         summary = {
-            'point_estimate': np.nan,
-            'spread': np.nan,
-            'ci_95_lower': np.nan,
-            'ci_95_upper': np.nan
+            "point_estimate": np.nan,
+            "spread": np.nan,
+            "ci_95_lower": np.nan,
+            "ci_95_upper": np.nan,
         }
         if B == 1:
-             # Mean is defined for B=1, others are not.
-             summary['point_estimate'] = dist[0]
+            # Mean is defined for B=1, others are not.
+            summary["point_estimate"] = dist[0]
         return summary
 
-    # Use ddof=0 for population std dev 
+    # Use ddof=0 for population std dev
     ci_lower, ci_upper = np.percentile(dist, [2.5, 97.5])
     return {
-        'point_estimate': np.mean(dist),    # Mean of the B values
-        'spread': np.std(dist, ddof=0),     # Std Dev, ddof=0 for pop std dev
-        'ci_95_lower': ci_lower,            # 2.5th percentile of B values
-        'ci_95_upper': ci_upper,            # 97.5th percentile of B values
+        "point_estimate": np.mean(dist),  # Mean of the B values
+        "spread": np.std(dist, ddof=0),  # Std Dev, ddof=0 for pop std dev
+        "ci_95_lower": ci_lower,  # 2.5th percentile of B values
+        "ci_95_upper": ci_upper,  # 97.5th percentile of B values
     }
+
 
 def calc_multi_stat_bootstrap_summary(bootstrapped_data):
     """
@@ -210,30 +218,31 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
         # Validate the data structure for the current experiment
         if not isinstance(exp_data, np.ndarray) or exp_data.ndim != 3:
             continue
-        T, B, R = exp_data.shape # Timesteps, Bootstrap samples, Runs/Replicates
+        T, B, R = exp_data.shape  # Timesteps, Bootstrap samples, Runs/Replicates
         if B <= 1 or R == 0:
             continue
 
         timestep_results_list = []
         for t in range(T):
-            timestep_data = exp_data[t, :, :] # (B, R)
+            timestep_data = exp_data[t, :, :]  # (B, R)
 
             # --- Calculate base statistics distributions ---
             # Returns dict: {'mean': array(B,), 'median': array(B,), ...}
             stats_dists = calc_stats_across_bootstrap_samples(timestep_data)
 
             # --- Summarize each distribution ---
-            t_result = {'timestep': t}
+            t_result = {"timestep": t}
             for stat_name, dist in stats_dists.items():
                 summary = summarize_distribution(dist)
-                t_result[f'{stat_name}_distribution'] = dist
-                t_result[f'{stat_name}_point_estimate'] = summary['point_estimate']
-                t_result[f'{stat_name}_spread'] = summary['spread']
-                t_result[f'{stat_name}_ci_95_lower'] = summary['ci_95_lower']
-                t_result[f'{stat_name}_ci_95_upper'] = summary['ci_95_upper']
+                t_result[f"{stat_name}_distribution"] = dist
+                t_result[f"{stat_name}_point_estimate"] = summary["point_estimate"]
+                t_result[f"{stat_name}_spread"] = summary["spread"]
+                t_result[f"{stat_name}_ci_95_lower"] = summary["ci_95_lower"]
+                t_result[f"{stat_name}_ci_95_upper"] = summary["ci_95_upper"]
             timestep_results_list.append(t_result)
         final_results[exp_name] = timestep_results_list
     return final_results
+
 
 def select_best_hpms(summary_stats_data):
     """
@@ -248,13 +257,14 @@ def select_best_hpms(summary_stats_data):
 
     # Iterate through each experiment (hyperparameter set)
     for exp_name, timestep_data_list in summary_stats_data.items():
-
         # Find the timestep summary with the maximum 'mean_point_estimate' for this experiment
-        best_ts_summary_for_exp = max(timestep_data_list, key=lambda ts: ts['mean_point_estimate'])
+        best_ts_summary_for_exp = max(
+            timestep_data_list, key=lambda ts: ts["mean_point_estimate"]
+        )
 
         # Get the score and timestep for this experiment's best
-        current_best_score_for_exp = best_ts_summary_for_exp['mean_point_estimate']
-        current_best_timestep_for_exp = best_ts_summary_for_exp['timestep']
+        current_best_score_for_exp = best_ts_summary_for_exp["mean_point_estimate"]
+        current_best_timestep_for_exp = best_ts_summary_for_exp["timestep"]
 
         # Check if this experiment's best score is the overall best so far
         if current_best_score_for_exp > overall_best_score:
@@ -264,6 +274,7 @@ def select_best_hpms(summary_stats_data):
 
     return (best_experiment_name, best_timestep_for_best_exp)
 
+
 # Calculates point differences and bootstrap CIs for the differences.
 def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b, T):
     """
@@ -271,26 +282,32 @@ def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b, T):
     The inputs are lists of timestep summary dicts for each exp.
     """
     difference_results = []
-    stat_names = [k.replace('_point_estimate', '') for k in summary_list_a[0] if k.endswith('_point_estimate')]
+    stat_names = [
+        k.replace("_point_estimate", "")
+        for k in summary_stats_a[0]
+        if k.endswith("_point_estimate")
+    ]
     for t in range(T):
-        ts_diff = {'timestep': t} # Dictionary for results of this timestep
+        ts_diff = {"timestep": t}  # Dictionary for results of this timestep
         for stat_name in stat_names:
             # Get point estimates, default to NaN if key missing
-            pa = summary_stats_a[t].get(f'{stat_name}_point_estimate', np.nan)
-            pb = summary_stats_b[t].get(f'{stat_name}_point_estimate', np.nan)
-            ts_diff[f'{stat_name}_diff_point_estimate'] = pa - pb
+            pa = summary_stats_a[t].get(f"{stat_name}_point_estimate", np.nan)
+            pb = summary_stats_b[t].get(f"{stat_name}_point_estimate", np.nan)
+            ts_diff[f"{stat_name}_diff_point_estimate"] = pa - pb
 
             # Get distributions for CI calculation, default to None if key missing
-            dist_a = summary_stats_a[t].get(f'{stat_name}_distribution')
-            dist_b = summary_stats_b[t].get(f'{stat_name}_distribution')
+            dist_a = summary_stats_a[t].get(f"{stat_name}_distribution")
+            dist_b = summary_stats_b[t].get(f"{stat_name}_distribution")
 
             # Calculate difference dist, confidence interval
             diff_dist = dist_a - dist_b
             ci_lower, ci_upper = np.percentile(diff_dist, [2.5, 97.5])
-            ts_diff[f'{stat_name}_diff_ci_95'] = (ci_lower, ci_upper)
+            ts_diff[f"{stat_name}_diff_ci_95"] = (ci_lower, ci_upper)
 
             # Null hypothesis: difference is zero. Reject if 0 is outside CI.
-            ts_diff[f'{stat_name}_diff_reject_null_ci_95'] = not (ci_lower <= 0 <= ci_upper)
+            ts_diff[f"{stat_name}_diff_reject_null_ci_95"] = not (
+                ci_lower <= 0 <= ci_upper
+            )
         difference_results.append(ts_diff)
     return difference_results
 
@@ -310,16 +327,18 @@ def calc_ks_stat_and_summary(bdata_a, bdata_b, T, num_bootstraps):
 
         # Get the dist summary
         summary = summarize_distribution(ks_dist)
-        ks_results.append({
-            'timestep': t,
-            'ks_stat_distribution': ks_dist
-            'ks_stat_point_estimate': summary['point_estimate']
-            'ks_stat_spread': summary['spread']
-            'ks_stat_ci_95_lower': summary['ci_95_lower']
-            'ks_stat_ci_95_upper': summary['ci_95_upper']
-
-        })
+        ks_results.append(
+            {
+                "timestep": t,
+                "ks_stat_distribution": ks_dist,
+                "ks_stat_point_estimate": summary["point_estimate"],
+                "ks_stat_spread": summary["spread"],
+                "ks_stat_ci_95_lower": summary["ci_95_lower"],
+                "ks_stat_ci_95_upper": summary["ci_95_upper"],
+            }
+        )
     return ks_results
+
 
 def perform_ks_permutation_test(arr_a, arr_b, T, R, num_permutations):
     """
@@ -340,41 +359,46 @@ def perform_ks_permutation_test(arr_a, arr_b, T, R, num_permutations):
     ks_permutation_test_results = []
     for t in range(T):
         # Calculate the observed KS statistic on the original data
-        observed_ks, _ = ks_2samp(arr_a[:, t], orig_b)
+        observed_ks, _ = ks_2samp(arr_a[:, t], arr_b[:, t])
 
         # Combine original data for permutation and generate null dist
-        combined_data = np.concatenate((arr_a[:, t], orig_b)) # Shape (2R,)
+        combined_data = np.concatenate((arr_a[:, t], arr_b[:, t]))  # Shape (2R,)
         null_ks_dist = np.empty(num_permutations)
 
         # Shuffle, split and calc ks stat on null dist
         shuffled = np.copy(combined_data)
         for p in range(num_permutations):
-            np.random.shuffle(shuffled_data)
+            np.random.shuffle(shuffled)
             null_ks_dist[p], _ = ks_2samp(shuffled[:R], shuffled[R:])
 
         # Calculate p-value: proportion of null KS stats >= observed KS stat
         p_value = np.mean(null_ks_dist >= observed_ks)
         reject_null = p_value < 0.05
-        ks_permutation_test_results.append({
-            'timestep': t,
-            'observed_ks': observed_ks,
-            'p_value': p_value,
-            'reject_null': reject_null
-        })
+        ks_permutation_test_results.append(
+            {
+                "timestep": t,
+                "observed_ks": observed_ks,
+                "p_value": p_value,
+                "reject_null": reject_null,
+            }
+        )
     return ks_permutation_test_results
 
 
 def compare_experiments_bootstrap(
-    data_a_raw, data_b_raw, num_bootstraps=1000, num_permutations=1000,
+    data_a_raw,
+    data_b_raw,
+    num_bootstraps=1000,
+    num_permutations=1000,
 ):
     # Make data uniform and get bootstrap samples
     arr_a, arr_b, R, T = make_uniform_2D_data_arrays_pair(data_a_raw, data_b_raw)
-    bdata_a = bootstrap_samples_batched(arr_a.T, b=num_bootstraps) # Shape (T, B, R)
-    bdata_b = bootstrap_samples_batched(arr_b.T, b=num_bootstraps) # Shape (T, B, R)
+    bdata_a = bootstrap_samples_batched(arr_a.T, b=num_bootstraps)  # Shape (T, B, R)
+    bdata_b = bootstrap_samples_batched(arr_b.T, b=num_bootstraps)  # Shape (T, B, R)
 
     # Calculate statistics
-    summary_list_a = calc_multi_stat_bootstrap_summary({'exp_A': bdata_a})['exp_A']
-    summary_list_b = calc_multi_stat_bootstrap_summary({'exp_B': bdata_b})['exp_B']
+    summary_list_a = calc_multi_stat_bootstrap_summary({"exp_A": bdata_a})["exp_A"]
+    summary_list_b = calc_multi_stat_bootstrap_summary({"exp_B": bdata_b})["exp_B"]
 
     # Calculate difference results
     diff_results = calc_diff_stats_and_ci(summary_list_a, summary_list_b, T)
@@ -384,11 +408,9 @@ def compare_experiments_bootstrap(
     )
 
     return {
-        'summary_A': summary_list_a,
-        'summary_B': summary_list_b,
-        'difference_stats': diff_results,
-        'ks_ci_test': ks_stat_results,
-        'ks_permutation_test': ks_permutation_test_results
+        "summary_A": summary_list_a,
+        "summary_B": summary_list_b,
+        "difference_stats": diff_results,
+        "ks_ci_test": ks_stat_results,
+        "ks_permutation_test": ks_permutation_test_results,
     }
-
-
