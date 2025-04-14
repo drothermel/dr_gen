@@ -145,8 +145,10 @@ class Hpm(MutableMapping):
     def as_dict(self):
         return self.important_values
 
-    def as_tupledict(self):
-        return gu.dict_to_tupledict(self.important_values)
+    def as_tupledict(self, important_vals=None):
+        if important_vals is None:
+            important_vals = self.important_values
+        return gu.dict_to_tupledict(important_vals)
 
     def as_strings(self):
         # Use as_tupledict to get consistent sort order

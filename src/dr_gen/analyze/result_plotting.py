@@ -1,389 +1,401 @@
-# Runs: the output of rg.select_run_data_by_hpms(...)
-def get_split_curves_from_runs(runs, metric_name, split):
-    # [hpm [curves [curve_data ...]]]
-    split_curves = []
-    for hpm, rlist in runs.items():
-        split_curves.append(
-            [rdata.get_split_metrics(split).get_vals(metric_name) for _, rdata in rlist]
-        )
-    return split_curves
+import numpy as np
+import pandas as pd
+import re
+import dr_gen.analyze.bootstrapping as bu
+from collections import defaultdict
+
+# === Helpers to Select Relevant Run Groups === #
 
 
-# Runs: the output of rg.select_run_data_by_hpms(...)
-def get_curves_from_runs(runs, metric_name, splits=["train", "val", "eval"]):
-    # [hpm [split [curves [curve_data ...]]]]
-    hpm_split_curves = []
-    for hpm, rlist in runs.items():
-        split_curves = []
-        for split in splits:
-            split_curves.append(
-                [
-                    rdata.get_split_metrics(split).get_vals(metric_name)
-                    for _, rdata in rlist
-                ]
-            )
-        hpm_split_curves.append(split_curves)
-    return hpm_split_curves
-
-
-"""
-
-def get_run_sweep_kvs(
-    run_logs,
-    combo_key_order,
-    ind,
-    seed=False,
-    ignore_keys=[],
+def make_hpm_specs(
+    lr=0.1,
+    wd=1e-4,
+    epochs=270,
 ):
-    keys = [*combo_key_order, "seed" if seed else ""]
-    keys = [k for k in keys if k != "" and k not in ignore_keys]
+    """
+    Create hyperparameter specifications dictionary.
 
-    run_cfg, _, _ = run_logs[ind]
-    kvs = [(k, run_cfg[k]) for k in keys]
-    kv_str = kvs_to_str(kvs)
-    return kvs, kv_str
+    Args:
+        lr: Learning rate
+        wd: Weight decay
+        epochs: Number of epochs
 
-
-def plot_run_splits(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    run_ind,
-    splits=["train", "val", "eval"],
-    metric="acc1",
-    ignore_keys=[],
-    **kwargs,
-):
-    _, kvstr = get_run_sweep_kvs(
-        runs,
-        sweep_info["combo_key_order"],
-        run_ind,
-        seed=True,
-        ignore_keys=ignore_keys,
-    )
-    plc_args = {
-        "ylim": (70, 100),
-        "labels": splits,
-        "title": f"{metric} | {kvstr}",
-        "ylabel": metric,
+    Returns:
+        Dictionary of hyperparameter specifications
+    """
+    return {
+        "optim.lr": lr,
+        "optim.weight_decay": wd,
+        "epochs": epochs,
     }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_lines(
-        plc,
-        [
-            rp.get_run_metrics(
-                remapped_metrics,
-                split,
-                metric,
-                run_ind,
-            )
-            for split in splits
-        ],
-    )
 
 
-def plot_split_summaries(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    splits=["train", "val", "eval"],
+def get_pretrained_vs_random_init_runs(
+    rg,
+    hpm_specs,
+    split,
     metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    **kwargs,
+    one_per=True,
 ):
-    all_kvs, split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits,
+    """
+    Get runs comparing pretrained vs random initialization.
+
+    Args:
+        rg: Run group containing experiment data
+        hpm_specs: Hyperparameter specifications
+        split: Data split to use
+        metric: Metric to compare
+        one_per: Whether to select one run per initialization
+
+    Returns:
+        Tuple of (pretrained_runs, random_runs)
+    """
+    # {hpm: runs_metrics}
+    all_hpms = rg.select_run_split_metrics_by_hpms(
         metric,
-        ignore_keys,
-        num_seeds,
+        split,
+        **hpm_specs,
     )
-    assert len(all_kvs) == 1, ">> Only supports one combo for now"
-
-    # Get the title from the kvs and num runs
-    kv_str = kvs_to_str(all_kvs[0])
-    num_seeds = len(split_vals[splits[0]][0])
-    kv_str = f"{kv_str} | #Seeds: {num_seeds:,}"
-
-    # Prepare plot
-    plc_args = {
-        "ylim": (70, 100),
-        "labels": [f"{spl} mean {metric}" for spl in splits],
-        "title": kv_str,
-        "ylabel": metric,
+    hpms_pre = {
+        hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] == "DEFAULT"
     }
-    plc_args.update(kwargs)
-    pu.plot_summary_lines(
-        pu.get_plt_cfg(**plc_args),
-        [split_vals[split][0] for split in splits],
-    )
-    return
+    hpms_rand = {
+        hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] != "DEFAULT"
+    }
+    if one_per:
+        assert len(hpms_pre) == len(hpms_rand) == 1
+    return hpms_pre, hpms_rand
 
 
-def plot_combo_histogram(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    **kwargs,
+def select_matching_hpms(
+    hpms_A,
+    hpms_B,
+    hpm_whitelist=None,
+    ignore_key="model.weights",
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
-    )
+    hpms_to_use = set()
 
-    all_ind_stats = []
-    for split_vals in all_split_vals[split]:
-        all_ind_stats.append(
-            pu.get_runs_data_stats_ind(
-                split_vals,
-                ind=epoch,
-            )
-        )
+    # Group hpms by hash
+    hpms_by_hash = defaultdict(list)
+    for hpm in [*hpms_A, *hpms_B]:
+        # Verify hpm in whitelist
+        if hpm_whitelist is not None and hpm not in hpm_whitelist:
+            print(hpm, "not in whitelist")
+            continue
 
-    if len(all_ind_stats) > 1:
-        print(f">> Just using first of {len(all_ind_stats)} combos")
+        # Get the hash which ignores key if specified
+        new_hash = hash(hpm)
+        if ignore_key is not None:
+            new_important_vals = {
+                k: v for k, v in hpm.important_values.items() if k != ignore_key
+            }
+            new_hash = hash(hpm.as_tupledict(important_vals=new_important_vals))
 
-    n = all_ind_stats[0]["n"]
-    plc_args = {
-        "nbins": n // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution, {n} Seeds",
-        "ylabel": "Num Runs",
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
+        hpms_by_hash[new_hash].append(hpm)
 
-    hp.plot_histogram(
-        plc,
-        all_ind_stats[0]["vals"],
-    )
+    # Only use hpms where the hash has a value for group A and B
+    for hash_hpms in hpms_by_hash.values():
+        if len(hash_hpms) == 2:
+            hpms_to_use.update(hash_hpms)
+
+    return hpms_to_use
 
 
-def plot_combo_histogram_compare(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    **kwargs,
+def get_compare_runs_pretrain_vs_random(
+    rg,
+    hpm_select_dict,
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
+    # Get the runs by hpm from val for hpm select and eval for metric calc
+    hpms_val_pre, hpms_val_rand = get_pretrained_vs_random_init_runs(
+        rg,
+        hpm_select_dict,
+        "val",
+        one_per=False,
+    )
+    hpms_eval_pre, hpms_eval_rand = get_pretrained_vs_random_init_runs(
+        rg,
+        hpm_select_dict,
+        "eval",
+        one_per=False,
     )
 
-    all_ind_stats = []
-    for split_vals in all_split_vals[split]:
-        all_ind_stats.append(
-            pu.get_runs_data_stats_ind(
-                split_vals,
-                ind=epoch,
-            )
-        )
-
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in all_kvs
-    ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in all_kvs[0] if k != vary_key])
-    ns = [sts["n"] for sts in all_ind_stats]
-    plc_args = {
-        "nbins": max(ns) // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution | {title_kvstr}",
-        "ylabel": "Num Runs",
-        "labels": labels_kvstrs,
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
+    # Filter to only hpms that exist both splits of both settings
+    hpms_to_use = select_matching_hpms(
+        hpms_A=hpms_val_pre.keys(),
+        hpms_B=hpms_val_rand.keys(),
+        hpm_whitelist=[*hpms_eval_pre.keys(), *hpms_eval_rand.keys()],
+        ignore_key="model.weights",  # the hpm we're comparing between
     )
+    hpms_val_pre = {str(h): d for h, d in hpms_val_pre.items() if h in hpms_to_use}
+    hpms_eval_pre = {str(h): d for h, d in hpms_eval_pre.items() if h in hpms_to_use}
+    hpms_val_rand = {str(h): d for h, d in hpms_val_rand.items() if h in hpms_to_use}
+    hpms_eval_rand = {str(h): d for h, d in hpms_eval_rand.items() if h in hpms_to_use}
+    return (hpms_val_pre, hpms_eval_pre), (hpms_val_rand, hpms_eval_rand)
 
-    hp.plot_histogram_compare(plc, all_ind_stats)
+
+def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
+    """
+    Finds the best hyperparameter set and timestep for a given group
+    based on validation data.
+    tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
+    """
+    if not group_val_data:
+        return None, None
+
+    bootstrapped_val = bu.bootstrap_experiment_timesteps(
+        group_val_data, num_bootstraps=num_bootstraps
+    )
+    summary_stats_val = bu.calc_multi_stat_bootstrap_summary(bootstrapped_val)
+    best_exp_name, best_timestep = bu.select_best_hpms(summary_stats_val)
+    print(
+        f">> Best HPM for {group_name}: {best_exp_name} (based on validation timestep {best_timestep})"
+    )
+    return best_exp_name, best_timestep
 
 
-def ks_stats_plot_cdfs(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    vary_vals=None,
-    **kwargs,
+# TODO: this is what I want to call in the script
+# After using get_compare_runs_pretrain_vs_random() to get the group data
+def run_comparison_eval(
+    group_a_data,
+    group_b_data,
+    group_a_name,
+    group_b_name,
+    val_num_bootstraps=1000,
+    eval_num_bootstraps=1000,
+    num_permutations=1000,
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
+    val_a, eval_a = group_a_data
+    val_b, eval_b = group_b_data
+    best_hpm_A, best_ts_A = find_best_hpm_for_group(
+        val_a, group_a_name, val_num_bootstraps
+    )
+    best_hpm_B, best_ts_B = find_best_hpm_for_group(
+        val_b, group_b_name, val_num_bootstraps
     )
 
-    selected_kvs = []
-    all_ind_vals = []
-    for i, split_vals in enumerate(all_split_vals[split]):
-        kv = all_kvs[i]
-        v = [v for k, v in kv if k == vary_key]
-        assert len(v) == 1
-        v = v[0]
-        if vary_vals is None or v in vary_vals:
-            all_ind_vals.append(
-                pu.get_runs_data_stats_ind(
-                    split_vals,
-                    ind=epoch,
-                )["vals"]
-            )
-            selected_kvs.append(kv)
+    # Check if best HPMs were found
+    if best_hpm_A is None or best_hpm_B is None:
+        print(f"Error: Could not find best HPM for group A ('{best_hpm_A}') or group B ('{best_hpm_B}')")
+        # Return indicating failure but providing partial results if available
+        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
 
-    assert len(all_ind_vals) == 2
-    results = ks.calculate_ks_for_run_sets(
-        all_ind_vals[0],
-        all_ind_vals[1],
+    # --- Perform comparison on evaluation data using ONLY the best HPMs found ---
+    # Get the evaluation data for the *specific* best HPMs and timesteps
+    eval_data_A = eval_a.get(best_hpm_A)
+    eval_data_B = eval_b.get(best_hpm_B)
+
+    # Ensure we have data for the best HPMs in the evaluation set
+    if eval_data_A is None or eval_data_B is None:
+        print(f"Error: Evaluation data not found for best HPM A ('{best_hpm_A}') or B ('{best_hpm_B}')")
+        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+
+    comparison_results = bu.compare_experiments_bootstrap(
+        eval_data_A, # just the best hpm data, all timesteps
+        eval_data_B, # just the best hpm data, all timesteps
+        hpm_a=best_hpm_A, # for naming
+        hpm_b=best_hpm_B, # for naming
+        timestep_a=best_ts_A, # to select best timestep from eval data
+        timestep_b=best_ts_B, # to select best timestep from eval data
+        num_bootstraps=eval_num_bootstraps,
+        num_permutations=num_permutations,
     )
-
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
-    ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
-    ns = [len(vs) for vs in all_ind_vals]
-
-    plc_args = {
-        "labels": [
-            f"{label} | #seed: {ns[i]}" for i, label in enumerate(labels_kvstrs)
-        ],
-        "title": f"CDF | {title_kvstr}",
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_cdfs(
-        plc,
-        results["all_vals"],
-        [results["cdf1"], results["cdf2"]],
-    )
+    return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results)
 
 
-def ks_stat_plot_cdfs_histograms(
-    runs,
-    remapped_metrics,
-    sweep_info,
-    kv_select,
-    split,
-    epoch,
-    metric="acc1",
-    ignore_keys=[],
-    num_seeds=None,
-    vary_key="model.weights",
-    vary_vals=None,
-    **kwargs,
+def print_results_report(
+    best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results
 ):
-    all_kvs, all_split_vals, _ = rp.get_selected_combo(
-        runs,
-        remapped_metrics,
-        sweep_info,
-        kv_select,
-        splits=[split],
-        metric=metric,
-        ignore_keys=ignore_keys,
-        num_seeds=num_seeds,
+    """
+    Prints a formatted report summarizing the analysis results.
+    Args:
+        best_hpm_A (str): Name of the best HPM for Group A.
+        best_ts_A (int): Best validation timestep for Group A.
+        best_hpm_B (str): Name of the best HPM for Group B.
+        best_ts_B (int): Best validation timestep for Group B.
+        comparison_results (dict): Results from the evaluation comparison.
+    """
+    print("\n--- Results Report ---")
+    print("Best Hyperparameters (selected using Validation data):")
+    print(
+        f"  Group A: {best_hpm_A} (Best performance observed at validation timestep {best_ts_A})"
+    )
+    print(
+        f"  Group B: {best_hpm_B} (Best performance observed at validation timestep {best_ts_B})"
     )
 
-    selected_kvs = []
-    all_ind_stats = []
-    for i, split_vals in enumerate(all_split_vals[split]):
-        kv = all_kvs[i]
-        v = [v for k, v in kv if k == vary_key]
-        assert len(v) == 1
-        v = v[0]
-        if vary_vals is None or v in vary_vals:
-            all_ind_stats.append(
-                pu.get_runs_data_stats_ind(
-                    split_vals,
-                    ind=epoch,
-                )
+    print("\nComparison on Evaluation Data (using selected HPMs):")
+
+    # Report Difference Statistics
+    final_diff_stats = comparison_results["difference_stats"]
+    mean_diff = final_diff_stats["mean_diff_point_estimate"]
+    mean_diff_ci = final_diff_stats["mean_diff_ci_95"]
+    mean_reject_null = final_diff_stats["mean_diff_reject_null_ci_95"]
+
+    print("\nPerformance Difference (Group A - Group B) at Final Evaluation Timestep:")
+    print(f"  Mean Metric Difference: {mean_diff:.4f}")
+    print(
+        f"  95% CI for Mean Difference: ({mean_diff_ci[0]:.4f}, {mean_diff_ci[1]:.4f})"
+    )
+    print(
+        f"  Statistically Significant Difference (via CI)? {'Yes' if mean_reject_null else 'No'}"
+    )
+
+    # Report KS Permutation Test Results
+    final_ks_perm_stats = comparison_results["ks_permutation_test"]
+    ks_observed = final_ks_perm_stats.get("observed_ks", "N/A")
+    ks_p_value = final_ks_perm_stats.get("p_value", "N/A")
+    ks_reject_null = final_ks_perm_stats.get("reject_null", None)  # Default to None
+
+    print(
+        "\nKS Permutation Test (Comparing Distributions) at Final Evaluation Timestep:"
+    )
+    print(f"  Observed KS Statistic: {ks_observed:.4f}")
+    print(f"  P-value: {ks_p_value:.8f}")
+    print(
+        f"  Statistically Significant Difference (p < 0.05)? {'Yes' if ks_reject_null else 'No'}"
+    )
+
+
+# ================  CSV Export  ===================
+
+
+# --- Helper Functions for HPM Parsing ---
+
+
+def parse_hpm_value(value_str):
+    """Attempts to convert a string value to float, int, bool, or None."""
+    try:
+        # Attempt integer conversion first
+        return int(value_str)
+    except ValueError:
+        try:
+            # Attempt float conversion
+            return float(value_str)
+        except ValueError:
+            # Check for boolean/None strings (case-insensitive)
+            lower_val = value_str.lower()
+            if lower_val == "none":
+                return "NONE"
+            if lower_val == "true":
+                return True
+            if lower_val == "false":
+                return False
+            # Return the original string if no conversion applies
+            return value_str
+
+
+def parse_group_name(group_name_str):
+    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters."""
+    hpm_dict = {}
+    # Split by space, handling potential multiple spaces and stripping whitespace
+    parts = re.split(r"\s+", group_name_str.strip())
+    for part in parts:
+        if not part:  # Skip empty strings resulting from multiple spaces
+            continue
+        # Split by '=', ensuring only the first '=' is used
+        key_value = part.split("=", 1)
+        if len(key_value) == 2:
+            key, value_str = key_value
+            hpm_dict[key] = parse_hpm_value(value_str)
+        else:
+            # Log a warning if a part cannot be parsed as key=value
+            print(
+                f"Warning: Could not parse part '{part}' as key=value in group name '{group_name_str}'"
             )
-            selected_kvs.append(kv)
+            # Optionally assign a default value or skip:
+            # hpm_dict[part] = None # Example: Assign None if parsing fails
+    return hpm_dict
 
-    assert len(all_ind_stats) == 2
-    results = ks.calculate_ks_for_run_sets(
-        all_ind_stats[0]["vals"],
-        all_ind_stats[1]["vals"],
+
+# --- Convert run data into dataframes ---
+
+
+# Helper
+def add_hpm_columns(df):
+    """
+    Parses the 'group_name' column and adds HPMs as separate columns.
+
+    Args:
+        df (pd.DataFrame): The initial DataFrame with a 'group_name' column.
+
+    Returns:
+        pd.DataFrame: DataFrame with HPM columns added/merged.
+    """
+    if df.empty or "group_name" not in df.columns:
+        return df  # Return original df if empty or missing column
+
+    # Apply the parsing function to get a Series of dictionaries
+    hpm_series = df["group_name"].apply(parse_group_name)
+
+    # Convert the Series of dictionaries into a DataFrame
+    hpm_df = pd.DataFrame(hpm_series.tolist(), index=df.index)
+
+    # Join the new HPM columns to the original DataFrame
+    # Use suffixes if there's an unlikely column name collision, though joining on index should be fine
+    df_with_hpms = df.join(hpm_df)
+    return df_with_hpms
+
+
+def run_groups_to_df(valid_groups, min_steps):
+    """
+    Builds intermediate NumPy arrays for columns based on valid groups and min_steps,
+    then concatenates them and creates the initial Pandas DataFrame.
+
+    Args:
+        valid_groups (dict): Dictionary of valid group names to 2D NumPy arrays.
+        min_steps (int): The number of steps/columns to trim each array to.
+
+    Returns:
+        pd.DataFrame: The initial DataFrame with raw data ('group_name',
+                      'run_index', 'step_index', 'metric_value'). Returns
+                      an empty DataFrame if valid_groups is empty.
+    """
+    if not valid_groups:
+        return pd.DataFrame()
+
+    all_group_names, all_run_indices, all_step_indices, all_metric_values = (
+        [],
+        [],
+        [],
+        [],
     )
 
-    labels_kvstrs = [
-        kvs_to_str([(k, v) for k, v in kvs if k == vary_key]) for kvs in selected_kvs
-    ]
-    title_kvstr = kvs_to_str([(k, v) for k, v in selected_kvs[0] if k != vary_key])
-    ns = [len(vs) for vs in all_ind_stats]
+    # Build lists of NumPy arrays for each column
+    for group_name, run_metrics_array in valid_groups.items():
+        num_runs = run_metrics_array.shape[0]
+        trimmed_array = run_metrics_array[:, :min_steps]
+        num_data_points = num_runs * min_steps  # Total points for this group
 
-    # Plot the CDFs
-    plc_args = {
-        "labels": labels_kvstrs,
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
-    pu.plot_cdfs(
-        plc,
-        results["all_vals"],
-        [results["cdf1"], results["cdf2"]],
-    )
+        # Generate column data using repeat/tile
+        group_col = np.repeat(group_name, num_data_points)
+        run_idx_col = np.repeat(np.arange(num_runs), min_steps)
+        step_idx_col = np.tile(np.arange(min_steps), num_runs)
+        metric_col = trimmed_array.flatten()  # Flatten trimmed array
 
-    # Plot the histograms
-    plc_args = {
-        "nbins": max(ns) // 4,
-        "hist_range": (80, 90),
-        "title": f"Accuracy Distribution | {title_kvstr}",
-        "ylabel": "Num Runs",
-        "labels": labels_kvstrs,
-        "density": True,
-    }
-    plc_args.update(kwargs)
-    plc = pu.get_plt_cfg(
-        **plc_args,
-    )
+        # Append arrays for this group to the main lists
+        all_group_names.append(group_col)
+        all_run_indices.append(run_idx_col)
+        all_step_indices.append(step_idx_col)
+        all_metric_values.append(metric_col)
 
-    hp.plot_histogram_compare(plc, all_ind_stats)
-"""
+    # Check if any data was actually processed before concatenating
+    if not all_group_names:
+        return pd.DataFrame()
+
+    # Concatenate the data from all groups
+    final_group_names = np.concatenate(all_group_names)
+    final_run_indices = np.concatenate(all_run_indices)
+    final_step_indices = np.concatenate(all_step_indices)
+    final_metric_values = np.concatenate(all_metric_values)
+
+    # Create the initial DataFrame
+    df = pd.DataFrame(
+        {
+            "group_name": final_group_names,
+            "run_index": final_run_indices,
+            "step_index": final_step_indices,
+            "metric_value": final_metric_values,
+        }
+    )
+    hpm_df = add_hpm_columns(df)
+    return hpm_df
