@@ -60,6 +60,7 @@ eval:
 
 
 seed: 0
+weight_type: scratch
 device: cuda
 epochs: 270
 load_checkpoint:
