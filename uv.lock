@@ -380,7 +380,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dr-util", git = "https://github.com/drothermel/dr_util.git" },
+    { name = "dr-util", git = "https://github.com/drothermel/dr_util" },
     { name = "hydra-core", specifier = "==1.3" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "pandas", specifier = ">=2.2.3" },
@@ -402,7 +402,7 @@ dev = [
 [[package]]
 name = "dr-util"
 version = "0.1.0"
-source = { git = "https://github.com/drothermel/dr_util.git#0e94974e8a8a29e0f4822f57d8bb3d9017ff9633" }
+source = { git = "https://github.com/drothermel/dr_util#0e94974e8a8a29e0f4822f57d8bb3d9017ff9633" }
 dependencies = [
     { name = "boto3" },
     { name = "hydra-core" },

@@ -32,4 +32,4 @@ dev = [
 ]
 
 [tool.uv.sources]
-dr-util = { git = "https://github.com/drothermel/dr_util.git" }
+dr-util = { git = "https://github.com/drothermel/dr_util" }
