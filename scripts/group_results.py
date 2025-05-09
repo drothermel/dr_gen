@@ -19,7 +19,7 @@ def file_path_to_name(fpath, init):
 
 
 sweep_name = "lr_wd_init_v0"
-root_dir = Path("/scratch/ddr8143/logs/cifar10_scratch/")
+root_dir = Path("/scratch/ddr8143/logs/cifar10/")
 dest_dir = Path(f"/scratch/ddr8143/data/run_results/cifar_sweeps/{sweep_name}")
 all_json = []
 for file in root_dir.rglob("*.jsonl"):
