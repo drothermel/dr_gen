@@ -1,11 +1,11 @@
 import hydra
 from omegaconf import DictConfig
 
+import dr_util
 from dr_util.config_verification import validate_cfg
 
 from dr_gen.schemas import get_schema
 from dr_gen.utils.metrics import GenMetrics
-from dr_gen.utils.run import set_deterministic
 from dr_gen.data.load_data import get_dataloaders
 from dr_gen.train.loops import train_loop
 
@@ -34,7 +34,7 @@ def run(cfg: DictConfig):
     md.log(">> Running Training")
 
     # Setup
-    generator = set_deterministic(cfg.seed)
+    generator = dr_util.determinism_utils.set_deterministic(cfg.seed)
 
     # Data
     md.log(" :: Loading Dataloaders :: ")
