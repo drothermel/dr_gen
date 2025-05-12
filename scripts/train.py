@@ -27,6 +27,14 @@ def run(cfg: DictConfig):
     if not validate_run_cfg(cfg):
         return
 
+    # Interpret weight initialization
+    if cfg.weight_type == "pretrained":
+        cfg.model.weights = "DEFAULT"
+    elif cfg.weight_type == "scratch":
+        cfg.model.weights = None
+    else:
+        assert False
+
     # Make Metrics and Log Cfg
     md = GenMetrics(cfg)
     md.log(cfg)
