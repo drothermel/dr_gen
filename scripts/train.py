@@ -1,12 +1,15 @@
 import hydra
 from omegaconf import DictConfig
+from torch.utils.data import (
+    RandomSampler,
+)
 
-import dr_util
+import dr_util.determinism_utils as dtu
 from dr_util.config_verification import validate_cfg
 
 from dr_gen.schemas import get_schema
 from dr_gen.utils.metrics import GenMetrics
-from dr_gen.data.load_data import get_dataloaders
+from dr_gen.data.load_data import get_dataloaders_refactored
 from dr_gen.train.loops import train_loop
 
 
@@ -42,12 +45,21 @@ def run(cfg: DictConfig):
     md.log(">> Running Training")
 
     # Setup
-    generator = dr_util.determinism_utils.set_deterministic(cfg.seed)
+    generator = dtu.set_deterministic(cfg.seed)
 
     # Data
     md.log(" :: Loading Dataloaders :: ")
-    split_dls = get_dataloaders(cfg, generator)
+    split_dls = get_dataloaders_refactored(cfg, generator)
     md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
+    md.log("\n--- Dataloader Creation Summary ---")
+    for name, loader in split_dls.items():
+        md.log(f"DataLoader '{name}':")
+        md.log(f"  Number of samples: {len(loader.dataset)}")
+        md.log(f"  Batch size: {loader.batch_size}")
+        md.log(f"  Shuffle: {isinstance(loader.sampler, RandomSampler)}")
+        # Test iterating through one batch
+        data_batch, label_batch = next(iter(loader))
+        md.log(f"  First batch data shape: {data_batch.shape}, label shape: {label_batch.shape}")
 
     # Run Train
     train_loop(
