@@ -142,10 +142,14 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=str, default=DEFAULT_LR, help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}")
     parser.add_argument("--wd", type=str, default=DEFAULT_WEIGHT_DECAY, help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}")
     parser.add_argument("--wtype", type=str, default=DEFAULT_WEIGHT_TYPE, help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}")
+    parser.add_argument("--wn", type=str, default="resnet18.a1_in1k")
+    parser.add_argument("--xft", type=str, default="timm")
+    parser.add_argument("--use_percent", type=str, default="1.0")
 
     args = parser.parse_args()
     AVAILABLE_GPUS = None if args.avail_gpus == "" else parse_value_list(args.avail_gpus, target_type=int)
     MAX_PARALLEL_JOBS = args.max_parallel_jobs
+    WEIGHT_NAME = args.wn
 
     # Determine seeds to run
     if args.max_seed is not None:
@@ -172,6 +176,9 @@ if __name__ == "__main__":
         "optim.lr": (args.lr, float),
         "optim.weight_decay": (args.wd, float),
         "weight_type": (args.wtype, str),
+        "model.weights": (args.wn, str),
+        "data.transform_type": (args.xft, str),
+        "data.train.use_percent": (args.use_percent, float),
     }
 
     # Always include 'seed' as the first parameter to sweep
@@ -189,6 +196,9 @@ if __name__ == "__main__":
         "optim.lr": (args.lr, float),
         "optim.weight_decay": (args.wd, float),
         "weight_type": (args.wtype, str),
+        "model.weights": (args.wn, str),
+        "data.transform_type": (args.xft, str),
+        "data.train.use_percent": (args.use_percent, float),
     }
     
     for hydra_path_key, (cli_value_str, target_type) in hydra_param_cli_map.items():
