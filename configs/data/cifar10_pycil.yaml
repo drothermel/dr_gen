@@ -7,19 +7,25 @@ defaults:
 name: cifar10
 num_workers: 8
 download: true
+data_split_seed: 1
+num_classes: 10
+transform_type: timm
 
 train:
     source: train 
     source_percent: 0.8
+    use_percent: 1.0
     shuffle: true
     transform: 
 val:
     source: train
     source_percent: 0.2
+    use_percent: 1.0
     shuffle: false
     transform: 
 eval:
     source: eval
     source_percent: 1.0
+    use_percent: 1.0
     shuffle: false
     transform: 

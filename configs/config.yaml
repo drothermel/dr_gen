@@ -26,8 +26,9 @@ metrics:
         acc5: batch_weighted_avg_list
 
 model:
+    source: timm
     name: resnet18
-    weights: 
+    weights: resnet18.a1_in1k
 
 optim:
     loss: cross_entropy
@@ -42,9 +43,11 @@ optim:
     eps: 0.0316
     alpha: 0.9
     nesterov: false
-    lr_scheduler: steplr
+    lr_scheduler: timm_cosine
     lr_min: 0.0
-    lr_warmup_epochs: 0
+    warmup_epochs: 5
+    warmup_start_lr: 0.0
+    cycle_limit: 1
 
 train:
     run: true
@@ -52,15 +55,16 @@ train:
 
 val:
     run: true
-    batch_size: 10000
+    batch_size: 500
 
 eval:
     run: true
-    batch_size: 10000
+    batch_size: 500
 
 
 seed: 0
+weight_type: pretrained
 device: cuda
-epochs: 270
+epochs: 100
 load_checkpoint:
 write_checkpoint: 

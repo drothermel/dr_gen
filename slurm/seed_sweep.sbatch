@@ -15,5 +15,5 @@
 
 singularity exec --nv --overlay $SCRATCH/continual_learning.ext3:ro /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif /bin/bash -c "
 source /scratch/ddr8143/repos/dr_gen/.venv/bin/activate
-CUBLAS_WORKSPACE_CONFIG=:4096:8 python /scratch/ddr8143/repos/dr_gen/scripts/train.py paths.proj_dir_name=cifar10_scratch seed=${SLURM_ARRAY_TASK_ID} optim.lr=${LR} optim.weight_decay=${WD}
+CUBLAS_WORKSPACE_CONFIG=:4096:8 python /scratch/ddr8143/repos/dr_gen/scripts/train.py paths.proj_dir_name=cifar10 seed=${SLURM_ARRAY_TASK_ID} optim.lr=${LR} optim.weight_decay=${WD} weight_type=scratch
 "

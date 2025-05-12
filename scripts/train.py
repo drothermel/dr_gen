@@ -1,13 +1,17 @@
 import hydra
 from omegaconf import DictConfig
+from torch.utils.data import (
+    RandomSampler,
+)
 
+import dr_util.determinism_utils as dtu
 from dr_util.config_verification import validate_cfg
 
 from dr_gen.schemas import get_schema
 from dr_gen.utils.metrics import GenMetrics
-from dr_gen.utils.run import set_deterministic
-from dr_gen.data.load_data import get_dataloaders
+from dr_gen.data.load_data import get_dataloaders_refactored
 from dr_gen.train.loops import train_loop
+from dr_gen.train.model import get_model_optim_lrsched
 
 
 def validate_run_cfg(cfg):
@@ -27,6 +31,16 @@ def run(cfg: DictConfig):
     if not validate_run_cfg(cfg):
         return
 
+    """
+    # Interpret weight initialization
+    if cfg.weight_type == "pretrained":
+        cfg.model.weights = "DEFAULT"
+    elif cfg.weight_type == "scratch":
+        cfg.model.weights = None
+    else:
+        assert False
+    """
+
     # Make Metrics and Log Cfg
     md = GenMetrics(cfg)
     md.log(cfg)
@@ -34,17 +48,31 @@ def run(cfg: DictConfig):
     md.log(">> Running Training")
 
     # Setup
-    generator = set_deterministic(cfg.seed)
+    generator = dtu.set_deterministic(cfg.seed)
+
+    model, optim, lr_sched = get_model_optim_lrsched(cfg, cfg.data.num_classes, md=md)
 
     # Data
     md.log(" :: Loading Dataloaders :: ")
-    split_dls = get_dataloaders(cfg, generator)
+    split_dls = get_dataloaders_refactored(cfg, generator, model)
     md.log(f">> Downloaded to: {cfg.paths.dataset_cache_root}")
+    md.log("\n--- Dataloader Creation Summary ---")
+    for name, loader in split_dls.items():
+        md.log(f"DataLoader '{name}':")
+        md.log(f"  Number of samples: {len(loader.dataset)}")
+        md.log(f"  Batch size: {loader.batch_size}")
+        md.log(f"  Shuffle: {isinstance(loader.sampler, RandomSampler)}")
+        # Test iterating through one batch
+        data_batch, label_batch = next(iter(loader))
+        md.log(f"  First batch data shape: {data_batch.shape}, label shape: {label_batch.shape}")
 
     # Run Train
     train_loop(
         cfg,
         split_dls["train"],
+        model,
+        optim,
+        lr_sched,
         val_dl=split_dls["val"],
         eval_dl=split_dls["eval"],
         md=md,
