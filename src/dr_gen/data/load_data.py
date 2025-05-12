@@ -10,7 +10,8 @@ from torch.utils.data.dataloader import default_collate
 from torchvision import datasets
 from torchvision.transforms import v2 as transforms_v2
 
-import dr_util
+import dr_util.data_utils as du
+import dr_util.determinism_utils as dtu
 import dr_gen.schemas as vu
 
 DEFAULT_DATASET_CACHE_ROOT = "../data/"
@@ -65,7 +66,7 @@ def get_dataset(
     download=DEFAULT_DOWNLOAD,
 ):
     if dataset_name in ["cifar10", "cifar100"]:
-        ds = dr_util.data_utils.get_cifar_dataset(
+        ds = du.get_cifar_dataset(
             dataset_name,
             source_split,
             root,
@@ -136,9 +137,9 @@ def _load_source_datasets(cfg, unique_source_names_to_load):
     """
     loaded_raw_datasets = {}
     for source_name in unique_source_names_to_load:
-        loaded_raw_datasets[source_name] = _get_dataset_glob(
+        loaded_raw_datasets[source_name] = get_dataset(
             dataset_name=cfg.data.name,
-            source_split_name=source_name, # e.g., 'train' or 'eval' for CIFAR10 source
+            source_split=source_name, # e.g., 'train' or 'eval' for CIFAR10 source
             root=cfg.paths.dataset_cache_root,
             transform=None, # Load raw data; transforms applied later
             download=cfg.data.download,
@@ -180,7 +181,7 @@ def _perform_source_splitting(raw_datasets, source_usage_details, data_split_see
             # print(f"Splitting source '{source_name}' for '{target1_info['target_split_key']}' ({ratio_for_target1*100}%) "
             #       f"and '{target2_info['target_split_key']}' ({(1-ratio_for_target1)*100}%) using seed {data_split_seed}.")
             
-            dataset_for_target1, dataset_for_target2 = dr_util.data_utils.split_data(
+            dataset_for_target1, dataset_for_target2 = du.split_data(
                 original_dataset_for_source, 
                 ratio_for_target1,
                 data_split_seed=data_split_seed
@@ -224,10 +225,10 @@ def _apply_transforms(datasets_to_be_transformed, parsed_configs):
     datasets_with_transforms = {}
     for target_key, dataset_obj in datasets_to_be_transformed.items():
         transform_config_details = parsed_configs[target_key]['transform_config']
-        transform_function = _build_transforms_glob(transform_config_details) # Returns None if no transforms
+        transform_function = build_transforms(transform_config_details) # Returns None if no transforms
         
         if transform_function:
-            datasets_with_transforms[target_key] = dr_util.data_utils.TransformedSubset(dataset_obj, transform_function)
+            datasets_with_transforms[target_key] = du.TransformedSubset(dataset_obj, transform_function)
         else:
             datasets_with_transforms[target_key] = dataset_obj # No transforms to apply
             
@@ -250,14 +251,15 @@ def _create_dataloaders_from_final_datasets(final_datasets_for_loaders, parsed_c
         else:
             sampler = SequentialSampler(final_dataset)
             
-        data_loaders_map[target_key] = DataLoader(
+        data_loaders_map[target_key] = torch.utils.data.DataLoader(
             final_dataset,
             batch_size=current_batch_size,
             sampler=sampler,
             num_workers=num_workers_global,
             collate_fn=default_collate, 
-            pin_memory=True, # Common optimization
-            worker_init_fn=dr_util.determinism_utils.seed_worker,
+            #pin_memory=True, # Common optimization
+            pin_memory=False,
+            worker_init_fn=dtu.seed_worker,
             # generator for DataLoader (>=1.9) can also be set for workers if worker_init_fn isn't covering all needs.
         )
         # print(f"Created DataLoader for '{target_key}': batch_size={current_batch_size}, shuffle={use_shuffle_in_dl}, num_samples={len(final_dataset)}")
@@ -360,12 +362,12 @@ def get_dataloaders(cfg, generator):
             transform=None,
             download=cfg.data.download,
         )
-        subsets = dr_util.data_utils.split_data(
+        subsets = du.split_data(
             dataset, ratio1, data_split_seed=cfg.data.split_seed,
         )
         for (split, _), subset in zip(split_ratio_list, subsets):
             transform_cfg = cfg.data[split].transform
-            split_data[split] = dr_util.data_utils.TransformedSubset(
+            split_data[split] = du.TransformedSubset(
                 subset, build_transforms(transform_cfg),
             )
             
@@ -382,7 +384,7 @@ def get_dataloaders(cfg, generator):
             num_workers=cfg.data.num_workers,
             collate_fn=default_collate,
             pin_memory=True,
-            worker_init_fn=dr_util.determinism_utils.seed_worker,
+            worker_init_fn=dtu.seed_worker,
             generator=generator,
         )
     return split_dls
