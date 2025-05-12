@@ -1,6 +1,10 @@
 from pathlib import Path
 import torch
 import torchvision
+import timm
+from timm.scheduler.cosine_lr import CosineLRScheduler
+from timm.optim import create_optimizer
+from types import SimpleNamespace
 
 import dr_gen.schemas as vu
 from dr_gen.schemas import (
@@ -23,6 +27,8 @@ OPTIM_DEFAULTS = {
 # These match the torch defaults
 LRSCHED_DEFAULTS = {
     "gamma": 0.1,
+    "warmup_epochs": 0,
+    "warmup_start_lr": 0.0,
 }
 
 CRITERION_DEFAULTS = {
@@ -35,6 +41,13 @@ CRITERION_DEFAULTS = {
 def create_optim(name, model_params, optim_params):
     assert "lr" in optim_params
     match name:
+        case "timm_sgd":
+            args = SimpleNamespace()
+            args.weight_decay = optim_params['weight_decay']
+            args.lr = optim_params['lr']
+            args.opt = 'sgd'
+            args.momentum = optim_params['momentum']
+            return create_optimizer(args, model_params)
         case OptimizerTypes.SGD.value:
             return torch.optim.SGD(
                 model_params,
@@ -85,19 +98,23 @@ def create_optim(name, model_params, optim_params):
             )
 
 
-def create_lrsched(name, optimizer, lrsched_params):
-    match name:
+def create_lrsched(cfg, optimizer):
+    match cfg.optim.lr_scheduler:
         case None:
             return None
+        case "timm_cosine":
+            return CosineLRScheduler(
+                optimizer,
+                t_initial=cfg.epochs,
+                warmup_t=cfg.optim.warmup_epochs,
+                warmup_lr_init=cfg.optim.warmup_start_lr,
+                lr_min=cfg.optim.lr_min,
+                cycle_limit=cfg.optim.cycle_limit,
+            )
         case LRSchedTypes.STEP_LR.value:
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                **lrsched_params,
-            )
-        case LRSchedTypes.EXPONENTIAL_LR.value:
-            return torch.optim.lr_scheduler.ExponentialLR(
-                optimizer,
-                **lrsched_params,
+                gamma=cfg.optim.gamma,
             )
 
 
@@ -107,19 +124,35 @@ def create_lrsched(name, optimizer, lrsched_params):
 # Config Req: cfg.model.name
 def create_model(cfg, num_classes):
     assert "resnet" in cfg.model.name
-    model = torchvision.models.get_model(
-        cfg.model.name,
-        weights=cfg.model.get("weights", None),
-    )
-    if model.fc.out_features != num_classes:
-        model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
+    if cfg.model.source == "torchvision":
+        model = torchvision.models.get_model(
+            cfg.model.name,
+            weights=cfg.model.get("weights", None),
+        )
+        if model.fc.out_features != num_classes:
+            model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
+    elif cfg.model.source == "timm":
+        if cfg.weight_type == "pretrained":
+            model_name = cfg.model.weights
+            pretrained = True
+        else:
+            model_name = cfg.model.name
+            pretrained = False
+        print(f">> Model: {model_name} pretrained: {pretrained}")
+        model = timm.create_model(
+            model_name,
+            num_classes=num_classes,
+            pretrained=pretrained,
+        )
+    else:
+        assert False, f"{cfg.model.source} {cfg.model.weights}"
     return model
 
 
 # Config Req: cfg.optim.name, cfg.optim.lr
 def create_optim_lrsched(cfg, model):
-    vu.validate_optimizer(cfg.optim.name)
-    vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
+    #vu.validate_optimizer(cfg.optim.name)
+    #vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
     model_params = model.parameters()
 
     # ---------- Optim -----------
@@ -128,13 +161,9 @@ def create_optim_lrsched(cfg, model):
     optimizer = create_optim(cfg.optim.name, model_params, optim_params)
 
     # ---------- LR Sched -----------
-    lrsched_params = {k: cfg.optim.get(k, v) for k, v in LRSCHED_DEFAULTS.items()}
-    if "step_size" in cfg.optim:
-        lrsched_params["step_size"] = cfg.optim.step_size
     lr_scheduler = create_lrsched(
-        cfg.optim.get("lr_scheduler", None),
+        cfg,
         optimizer,
-        lrsched_params,
     )
     return optimizer, lr_scheduler
 

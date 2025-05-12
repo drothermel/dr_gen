@@ -10,6 +10,9 @@ from torch.utils.data.dataloader import default_collate
 from torchvision import datasets
 from torchvision.transforms import v2 as transforms_v2
 
+import timm
+import timm.data
+
 import dr_util.data_utils as du
 import dr_util.determinism_utils as dtu
 import dr_gen.schemas as vu
@@ -218,14 +221,18 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs):
             
     return final_subsetted_datasets
 
-def _apply_transforms(datasets_to_be_transformed, parsed_configs):
+def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model):
     """
     Applies transforms to the datasets.
     """
     datasets_with_transforms = {}
     for target_key, dataset_obj in datasets_to_be_transformed.items():
-        transform_config_details = parsed_configs[target_key]['transform_config']
-        transform_function = build_transforms(transform_config_details) # Returns None if no transforms
+        data_config = timm.data.resolve_model_data_config(model)
+        if cfg.data.transform_type == "timm":
+            transform_function = timm.data.create_transform(**data_config, is_training=(target_key == "train"))
+        else:
+            transform_config_details = parsed_configs[target_key]['transform_config']
+            transform_function = build_transforms(transform_config_details) # Returns None if no transforms
         
         if transform_function:
             datasets_with_transforms[target_key] = du.TransformedSubset(dataset_obj, transform_function)
@@ -266,7 +273,7 @@ def _create_dataloaders_from_final_datasets(final_datasets_for_loaders, parsed_c
         
     return data_loaders_map
 
-def get_dataloaders_refactored(cfg, main_torch_generator):
+def get_dataloaders_refactored(cfg, main_torch_generator, model):
     """
     Refactored function to create dataloaders, incorporating source_percent splits
     (with data_split_seed) and use_percent subsampling, with a modular design.
@@ -303,8 +310,10 @@ def get_dataloaders_refactored(cfg, main_torch_generator):
     # 5. Apply Transforms
     # Applies data augmentation and preprocessing.
     final_datasets_ready_for_loader = _apply_transforms(
+        cfg,
         datasets_after_use_percent,
-        parsed_split_level_configs
+        parsed_split_level_configs,
+        model,
     )
 
     # 6. Create DataLoaders
@@ -318,6 +327,7 @@ def get_dataloaders_refactored(cfg, main_torch_generator):
     return dataloaders_map
 
 
+"""
 def get_dataloaders(cfg, generator):
     vu.validate_dataset(cfg.data.name)
 
@@ -388,5 +398,5 @@ def get_dataloaders(cfg, generator):
             generator=generator,
         )
     return split_dls
-
+"""
 
