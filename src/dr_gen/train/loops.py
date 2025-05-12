@@ -75,7 +75,7 @@ def train_loop(cfg, train_dl, val_dl=None, eval_dl=None, md=None):
     assert md is not None  # Temporarily
     model, optim, lr_sched = mu.get_model_optim_lrsched(
         cfg,
-        len(train_dl.dataset.classes),
+        cfg.data.num_classes,
         md=md,
     )
     criterion = mu.get_criterion(cfg)

@@ -8,6 +8,7 @@ name: cifar10
 num_workers: 8
 download: true
 data_split_seed: 1
+num_classes: 10
 
 train:
     source: train 
