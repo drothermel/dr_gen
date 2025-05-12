@@ -7,6 +7,7 @@ defaults:
 name: cifar10
 num_workers: 8
 download: true
+data_split_seed: 1
 
 train:
     source: train 
