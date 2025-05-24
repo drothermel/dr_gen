@@ -29,6 +29,9 @@ _current_gpu_idx = 0
 
 LAUNCHER_LOG_DIR = "launcher_run_logs_combinations"
 
+def print_flush(in_val):
+    print(in_val, flush=True)
+
 def parse_value_list(value_str, target_type=str):
     """
     Parses a command-line string. If it contains commas, splits it into a list.
@@ -52,9 +55,9 @@ def parse_value_list(value_str, target_type=str):
 def setup_launcher_logging():
     """Creates or cleans the launcher log directory."""
     if os.path.exists(LAUNCHER_LOG_DIR):
-        print(f"Launcher log directory '{LAUNCHER_LOG_DIR}' already exists.")
+        print_flush(f"Launcher log directory '{LAUNCHER_LOG_DIR}' already exists.")
     os.makedirs(LAUNCHER_LOG_DIR, exist_ok=True)
-    print(f"Launcher stdout/stderr logs will be stored in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
+    print_flush(f"Launcher stdout/stderr logs will be stored in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
 
 def get_next_gpu_id():
     """Cycles through available GPUs if specified."""
@@ -97,11 +100,11 @@ def start_training_run(param_combination_dict, job_name):
     current_env["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     assigned_gpu_id = get_next_gpu_id()
     launch_message_gpu = f"on GPU {assigned_gpu_id}" if assigned_gpu_id is not None else "(default GPU)"
-    print(f"Attempting to launch job '{job_name}' {launch_message_gpu}...")
+    print_flush(f"Attempting to launch job '{job_name}' {launch_message_gpu}...")
     if assigned_gpu_id is not None:
         current_env["CUDA_VISIBLE_DEVICES"] = str(assigned_gpu_id)
     
-    print(f"  Command: {' '.join(command)}")
+    print_flush(f"  Command: {' '.join(command)}")
 
     # --- Define unique stdout and stderr log files for this subprocess ---
     stdout_log_path = os.path.join(LAUNCHER_LOG_DIR, f"{job_name}_stdout.log")
@@ -111,15 +114,15 @@ def start_training_run(param_combination_dict, job_name):
     try:
         with open(stdout_log_path, 'wb') as stdout_file, open(stderr_log_path, 'wb') as stderr_file:
             process = subprocess.Popen(command, env=current_env, stdout=stdout_file, stderr=stderr_file)
-        print(f"  Successfully launched PID: {process.pid} for job '{job_name}'. Logs: {stdout_log_path}")
+        print_flush(f"  Successfully launched PID: {process.pid} for job '{job_name}'. Logs: {stdout_log_path}")
         return process, job_name
     except FileNotFoundError:
-        print(f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or script '{TRAINING_SCRIPT_PATH}'. Please check paths.")
+        print_flush(f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or script '{TRAINING_SCRIPT_PATH}'. Please check paths.")
         with open(os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log"), "a") as f_err:
             f_err.write(f"FileNotFoundError for job '{job_name}': Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n")
         return None, job_name
     except Exception as e:
-        print(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
+        print_flush(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
         with open(os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log"), "a") as f_err:
             f_err.write(f"Launch exception for job '{job_name}': {e}\nCommand: {' '.join(command)}\n")
         return None, job_name
@@ -155,16 +158,16 @@ if __name__ == "__main__":
     # Determine seeds to run
     if args.max_seed is not None:
         if args.max_seed < args.start_seed:
-            print(f"[ERROR] --max_seed ({args.max_seed}) must be >= --start_seed ({args.start_seed}). Exiting.")
+            print_flush(f"[ERROR] --max_seed ({args.max_seed}) must be >= --start_seed ({args.start_seed}). Exiting.")
             exit(1)
         actual_seeds_to_run = list(range(args.start_seed, args.max_seed + 1))
-        print(f"Using generated seeds from {args.start_seed} to {args.max_seed}.")
+        print_flush(f"Using generated seeds from {args.start_seed} to {args.max_seed}.")
     else:
         actual_seeds_to_run = parse_value_list(args.seeds_list, int)
-        print(f"Using provided seeds list: {actual_seeds_to_run}")
+        print_flush(f"Using provided seeds list: {actual_seeds_to_run}")
 
     if not os.path.isfile(TRAINING_SCRIPT_PATH):
-        print(f"[ERROR] Training script not found at '{TRAINING_SCRIPT_PATH}'. Please check the path. Exiting.")
+        print_flush(f"[ERROR] Training script not found at '{TRAINING_SCRIPT_PATH}'. Please check the path. Exiting.")
         exit(1)
 
     # Prepare lists of parameter values for itertools.product
@@ -216,9 +219,9 @@ if __name__ == "__main__":
         all_param_dicts_to_run.append(dict(zip(param_names_for_product, combo_values)))
 
     total_jobs = len(all_param_dicts_to_run)
-    print(f"\nTotal number of unique parameter combinations to run: {total_jobs}")
+    print_flush(f"\nTotal number of unique parameter combinations to run: {total_jobs}")
     if total_jobs == 0:
-        print("No jobs to run. Exiting.")
+        print_flush("No jobs to run. Exiting.")
         exit(0)
     
     setup_launcher_logging()
@@ -230,49 +233,49 @@ if __name__ == "__main__":
         current_job_name = create_unique_job_name(current_run_param_dict)
         
         if current_job_name in launched_job_names:
-            print(f"Job '{current_job_name}' seems to be a duplicate (already launched). Skipping.")
+            print_flush(f"Job '{current_job_name}' seems to be a duplicate (already launched). Skipping.")
             continue
 
         while len(active_processes) >= MAX_PARALLEL_JOBS:
-            print(f"Max parallel jobs ({MAX_PARALLEL_JOBS}) reached. Waiting ({len(active_processes)} active)...")
+            print_flush(f"Max parallel jobs ({MAX_PARALLEL_JOBS}) reached. Waiting ({len(active_processes)} active)...")
             for proc_info in active_processes[:]:
                 process, p_job_name = proc_info
                 if process.poll() is not None:
                     rc = process.returncode
                     status = "successfully" if rc == 0 else f"with error code {rc}"
-                    print(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status}.")
+                    print_flush(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status}.")
                     if rc != 0:
-                        print(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
+                        print_flush(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
                     active_processes.remove(proc_info)
             if len(active_processes) >= MAX_PARALLEL_JOBS:
                 time.sleep(15)
         
-        print(f"\n[{i+1}/{total_jobs}] Launching job with params: {current_run_param_dict}")
+        print_flush(f"\n[{i+1}/{total_jobs}] Launching job with params: {current_run_param_dict}")
         process_obj, launched_job_name = start_training_run(current_run_param_dict, current_job_name)
 
         if process_obj:
             active_processes.append((process_obj, launched_job_name))
             launched_job_names.add(launched_job_name)
-            print(f"  Active jobs: {len(active_processes)}/{MAX_PARALLEL_JOBS}")
+            print_flush(f"  Active jobs: {len(active_processes)}/{MAX_PARALLEL_JOBS}")
         else:
-            print(f"[WARNING] Failed to launch job '{current_job_name}'. It will be skipped.")
+            print_flush(f"[WARNING] Failed to launch job '{current_job_name}'. It will be skipped.")
         
         time.sleep(2) # Brief pause between launches
 
-    print("\nAll jobs launched. Waiting for remaining to complete...")
+    print_flush("\nAll jobs launched. Waiting for remaining to complete...")
     while active_processes:
-        print(f"Waiting for {len(active_processes)} remaining job(s)...")
+        print_flush(f"Waiting for {len(active_processes)} remaining job(s)...")
         for proc_info in active_processes[:]:
             process, p_job_name = proc_info
             if process.poll() is not None:
                 rc = process.returncode
                 status = "successfully" if rc == 0 else f"with error code {rc}"
-                print(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status} (final check).")
-                if rc != 0: print(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
+                print_flush(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status} (final check).")
+                if rc != 0: print_flush(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
                 active_processes.remove(proc_info)
         if active_processes: time.sleep(20)
 
-    print("\n--- All training runs initiated by the launcher have completed. ---")
-    print(f"Launcher's per-job stdout/stderr logs are in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
-    print("--- Launcher script finished. ---")
+    print_flush("\n--- All training runs initiated by the launcher have completed. ---")
+    print_flush(f"Launcher's per-job stdout/stderr logs are in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
+    print_flush("--- Launcher script finished. ---")
 
