@@ -142,8 +142,9 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=str, default=DEFAULT_LR, help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}")
     parser.add_argument("--wd", type=str, default=DEFAULT_WEIGHT_DECAY, help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}")
     parser.add_argument("--wtype", type=str, default=DEFAULT_WEIGHT_TYPE, help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}")
-    parser.add_argument("--wn", type=str, default="resnet18.a1_in1k")
-    parser.add_argument("--xft", type=str, default="timm")
+    parser.add_argument("--wn", type=str, default="DEFAULT")
+    parser.add_argument("--ws", type=str, default="torchvision")
+    parser.add_argument("--xft", type=str, default="pycil")
     parser.add_argument("--use_percent", type=str, default="1.0")
 
     args = parser.parse_args()
@@ -177,6 +178,7 @@ if __name__ == "__main__":
         "optim.weight_decay": (args.wd, float),
         "weight_type": (args.wtype, str),
         "model.weights": (args.wn, str),
+        "model.source": (args.ws, str),
         "data.transform_type": (args.xft, str),
         "data.train.use_percent": (args.use_percent, float),
     }
@@ -197,6 +199,7 @@ if __name__ == "__main__":
         "optim.weight_decay": (args.wd, float),
         "weight_type": (args.wtype, str),
         "model.weights": (args.wn, str),
+        "model.source": (args.ws, str),
         "data.transform_type": (args.xft, str),
         "data.train.use_percent": (args.use_percent, float),
     }
