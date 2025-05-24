@@ -230,9 +230,11 @@ def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model):
         data_config = timm.data.resolve_model_data_config(model)
         if cfg.data.transform_type == "timm":
             transform_function = timm.data.create_transform(**data_config, is_training=(target_key == "train"))
-        else:
+        elif cfg.data.transform_type == "pycil":
             transform_config_details = parsed_configs[target_key]['transform_config']
             transform_function = build_transforms(transform_config_details) # Returns None if no transforms
+        else:
+            assert False, f">> Invalid transform type: {cfg.data.transform_type}"
         
         if transform_function:
             datasets_with_transforms[target_key] = du.TransformedSubset(dataset_obj, transform_function)
