@@ -121,9 +121,12 @@ def train_loop(cfg, train_dl, model, optim, lr_sched, val_dl=None, eval_dl=None,
             eval_model(cfg, model, eval_dl, criterion, "eval", md=md)
             md.agg_log("eval")
 
-        # mu.checkpoint_model(cfg, model, f"epoch_{epoch}", md=md)
+        # TODO: Hacky
+        if epoch + 1 in [5, 10, 25]:
+            mu.checkpoint_model(cfg, model, f"epoch_{epoch}", md=md)
         md.clear_data()
         md.log("")
+    mu.checkpoint_model(cfg, model, f"final_model_epoch{cfg.epochs - 1}", md=md)
 
     total_time = time.time() - start_time
     total_ts = str(timedelta(seconds=int(total_time)))
