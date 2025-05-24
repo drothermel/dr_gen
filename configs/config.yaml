@@ -24,6 +24,8 @@ metrics:
         loss: batch_weighted_avg_list
         acc1: batch_weighted_avg_list
         acc5: batch_weighted_avg_list
+        grad_norm: batch_weighted_avg_list
+        lr: batch_weighted_avg_list
 
 model:
     source: timm
@@ -65,6 +67,6 @@ eval:
 seed: 0
 weight_type: pretrained
 device: cuda
-epochs: 100
+epochs: 50
 load_checkpoint:
 write_checkpoint: 

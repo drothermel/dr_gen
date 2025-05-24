@@ -16,6 +16,9 @@ def log_metrics(md, group_name, **kwargs):
     loss = kwargs.get("loss", None)
     output = kwargs.get("output", None)
     target = kwargs.get("target", None)
+    mean_grad_norm = kwargs.get("mean_grad_norm", None)
+    lr = kwargs.get("lr", None)
+
 
     if output is not None:
         md.log_data((BATCH_KEY, output.shape[0]), group_name)
@@ -27,6 +30,12 @@ def log_metrics(md, group_name, **kwargs):
 
     if loss is not None:
         md.log_data(("loss", loss.item()), group_name)
+
+    if mean_grad_norm is not None:
+        md.log_data(("grad_norm", mean_grad_norm), group_name)
+
+    if lr is not None:
+        md.log_data(("lr", lr), group_name)
 
 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
@@ -44,6 +53,19 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
                 model.paramteres(),
                 cfg.optim.clip_grad_norm,
             )
+        mean_grad_norm = None
+        with torch.no_grad():
+            total_norm = 0
+            num_parameters = 0
+            for p in model.parameters():
+                if p.grad is not None:
+                    param_norm = p.grad.data.norm(2) # L2 norm
+                    total_norm += param_norm.item() ** 2 # Sum of squares
+                    num_parameters += 1
+
+            if num_parameters > 0:
+                mean_grad_norm = (total_norm / num_parameters) ** 0.5 # Root of mean of squares
+
         optimizer.step()
         log_metrics(
             md,
@@ -51,6 +73,8 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
             loss=loss,
             output=output,
             target=target,
+            grad_norm=mean_grad_norm,
+            lr=optimizer.param_groups[0]['lr'],
         )
 
 
