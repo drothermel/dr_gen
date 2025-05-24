@@ -125,9 +125,16 @@ def create_lrsched(cfg, optimizer):
 def create_model(cfg, num_classes):
     assert "resnet" in cfg.model.name
     if cfg.model.source == "torchvision":
+        weights_name = cfg.model.get("weights", None)
+        if weights_name == "None":
+            weights_name = None
+        if weights_name is None:
+            assert cfg.weight_type != "pretrained"
+        else:
+            assert cfg.weight_type == "pretrained"
         model = torchvision.models.get_model(
             cfg.model.name,
-            weights=cfg.model.get("weights", None),
+            weights=weights_name,
         )
         if model.fc.out_features != num_classes:
             model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
