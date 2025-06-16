@@ -1,6 +1,7 @@
 import logging
-from dataclasses import MISSING, dataclass
+from dataclasses import MISSING, dataclass, field
 from enum import Enum
+from typing import Any, cast
 
 import dr_util.schemas as drutil_schemas
 from dr_util.schema_utils import lenient_validate
@@ -11,7 +12,7 @@ SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = ["cifar10", "cifar100"]
 
 
-def check_contains(cls, val):
+def check_contains(cls: Any, val: Any) -> bool:
     try:
         cls(val)
     except ValueError:
@@ -27,7 +28,7 @@ class OptimizerTypes(Enum):
     RMSPROP = "rmsprop"
     ADAMW = "adamw"
 
-    def __contains__(self, val):
+    def __contains__(self, val: Any) -> bool:
         return check_contains(self, val)
 
 
@@ -35,51 +36,53 @@ class LRSchedTypes(Enum):
     STEP_LR = "steplr"
     EXPONENTIAL_LR = "exponentiallr"
 
-    def __contains__(self, val):
+    def __contains__(self, val: Any) -> bool:
         return check_contains(self, val)
 
 
 class CriterionTypes(Enum):
     CROSS_ENTROPY = "cross_entropy"
 
-    def __contains__(self, val):
+    def __contains__(self, val: Any) -> bool:
         return check_contains(self, val)
 
 
 # ---- Val Fxns
 
 
-def validate_split(split):
+def validate_split(split: str) -> bool:
     if split not in SPLIT_NAMES:
         logging.error(f"Split {split} should be in {SPLIT_NAMES}")
         return False
     return True
 
 
-def validate_dataset(dataset):
+def validate_dataset(dataset: str) -> bool:
     if dataset not in AVAIL_DATASETS:
         logging.error(f"Dataset {dataset} should be in {AVAIL_DATASETS}")
         return False
     return True
 
 
-def validate_optimizer(optim):
+def validate_optimizer(optim: str) -> bool:
     if optim not in OptimizerTypes:
         logging.error(f">> Invalid Optimizer: {optim}")
         return False
     return True
 
 
-def validate_lrsched(lrsched):
+def validate_lrsched(lrsched: str | None) -> bool:
     if lrsched not in LRSchedTypes and lrsched is not None:
         logging.error(f">> Invalid LR Scheduler Type: {lrsched}")
         return False
     return True
 
 
-def validate_criterion(criterion):
+def validate_criterion(criterion: str) -> bool:
     if criterion not in CriterionTypes:
         logging.error(f">> Invalid criterion: {criterion}")
+        return False
+    return True
 
 
 # -------------- Validate Configs --------------
@@ -93,7 +96,7 @@ class ConfigType(Enum):
     PERFORMS_RUN = "performs_run"
 
 
-def get_schema(config_type):
+def get_schema(config_type: str) -> type | None:
     match config_type:
         case ConfigType.USES_METRICS.value:
             return drutil_schemas.UsingMetricsConfig
@@ -116,27 +119,27 @@ def get_schema(config_type):
 @lenient_validate
 @dataclass
 class DataConfig:
-    name: str = MISSING
+    name: str = field(default=cast(str, MISSING))
 
 
 @lenient_validate
 @dataclass
 class ModelConfig:
-    name: str = MISSING
+    name: str = field(default=cast(str, MISSING))
 
 
 @lenient_validate
 @dataclass
 class OptimConfig:
-    name: str = MISSING
-    loss: str = MISSING
-    lr: float = MISSING
+    name: str = field(default=cast(str, MISSING))
+    loss: str = field(default=cast(str, MISSING))
+    lr: float = field(default=cast(float, MISSING))
 
 
 @lenient_validate
 @dataclass
 class RunConfig:
-    run: bool = MISSING
+    run: bool = field(default=cast(bool, MISSING))
 
 
 #########################################################
@@ -172,14 +175,14 @@ class UsingDataConfig:
 @lenient_validate
 @dataclass
 class UsingModelConfig:
-    device: str = MISSING
+    device: str = field(default=cast(str, MISSING))
     model: type = ModelConfig
 
 
 @lenient_validate
 @dataclass
 class UsingOptimConfig:
-    device: str = MISSING
+    device: str = field(default=cast(str, MISSING))
     model: type = ModelConfig
     optim: type = OptimConfig
 
@@ -187,7 +190,7 @@ class UsingOptimConfig:
 @lenient_validate
 @dataclass
 class PerformingRun:
-    seed: int = MISSING
-    epochs: int = MISSING
     train: RunConfig
     val: RunConfig
+    seed: int = field(default=cast(int, MISSING))
+    epochs: int = field(default=cast(int, MISSING))

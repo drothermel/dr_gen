@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from typing import Any
 
 # --- Default Configuration for the Launcher ---
 DEFAULT_MAX_PARALLEL_JOBS = 7
@@ -25,7 +26,7 @@ PYTHON_EXECUTABLE = "python"
 # IMPORTANT: Update this path!
 TRAINING_SCRIPT_PATH = "/scratch/ddr8143/repos/dr_gen/scripts/train.py"
 
-AVAILABLE_GPUS = None # Example: [0, 1] for specific GPU assignment
+AVAILABLE_GPUS: list[int] | None = None  # Example: [0, 1] for specific GPU assignment
 _current_gpu_idx = 0
 
 LAUNCHER_LOG_DIR = "launcher_run_logs_combinations"
@@ -33,7 +34,7 @@ LAUNCHER_LOG_DIR = "launcher_run_logs_combinations"
 def print_flush(in_val: object) -> None:
     print(in_val, flush=True)
 
-def parse_value_list(value_str: object, target_type: type = str) -> list:
+def parse_value_list(value_str: object, target_type: type = str) -> list[Any]:
     """Parses a command-line string. If it contains commas, splits it into a list.
 
     Converts elements to the target_type.
@@ -64,13 +65,13 @@ def setup_launcher_logging() -> None:
 def get_next_gpu_id() -> int | None:
     """Cycles through available GPUs if specified."""
     global _current_gpu_idx  # noqa: PLW0603
-    if AVAILABLE_GPUS and len(AVAILABLE_GPUS) > 0:
+    if AVAILABLE_GPUS is not None:
         gpu_id = AVAILABLE_GPUS[_current_gpu_idx % len(AVAILABLE_GPUS)]
         _current_gpu_idx += 1
         return gpu_id
     return None
 
-def create_unique_job_name(param_dict: dict) -> str:
+def create_unique_job_name(param_dict: dict[str, Any]) -> str:
     """Creates a unique and descriptive name from parameter dictionary.
 
     Used for logging and directories.
@@ -87,8 +88,8 @@ def create_unique_job_name(param_dict: dict) -> str:
     return "-".join(name_parts)
 
 def start_training_run(
-    param_combination_dict: dict, job_name: str
-) -> tuple[object, str] | tuple[None, str]:
+    param_combination_dict: dict[str, Any], job_name: str
+) -> tuple[subprocess.Popen[bytes], str] | tuple[None, str]:
     """Constructs the command to run the Hydra script with parameters.
 
     Starts it as a subprocess.
@@ -322,7 +323,7 @@ if __name__ == "__main__":
         exit(0)
 
     setup_launcher_logging()
-    active_processes = []  # List of (process_object, job_name)
+    active_processes: list[tuple[subprocess.Popen[bytes], str]] = []  # List of (process_object, job_name)
     launched_job_names = set()
 
     for i, current_run_param_dict in enumerate(all_param_dicts_to_run):

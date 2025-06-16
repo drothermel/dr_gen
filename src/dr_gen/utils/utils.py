@@ -3,11 +3,11 @@ from datetime import datetime
 from typing import Any
 
 
-def make_list(in_val: Any) -> list:
+def make_list(in_val: Any) -> list[Any]:
     return in_val if isinstance(in_val, list) else [in_val]
 
 
-def make_list_of_lists(in_val: Any, dim: int = 0) -> list:
+def make_list_of_lists(in_val: Any, dim: int = 0) -> list[Any]:
     in_val = make_list(in_val)
     if isinstance(in_val[0], list):
         return in_val
@@ -17,13 +17,13 @@ def make_list_of_lists(in_val: Any, dim: int = 0) -> list:
     return [[iv] for iv in in_val]
 
 
-def add_dim(inlist: list, dim: int = 0) -> list:
+def add_dim(inlist: list[Any], dim: int = 0) -> list[Any]:
     if dim == 0:
         return [inlist]
     return [[v] for v in inlist]
 
 
-def make_list_of_lols(in_val: Any, dim: int = 0) -> list:
+def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:
     in_val = make_list(in_val)
     if isinstance(in_val[0], list) and isinstance(in_val[0][0], list):
         return in_val
@@ -43,9 +43,12 @@ def make_list_of_lols(in_val: Any, dim: int = 0) -> list:
         if dim == 1:
             return [[vs] for vs in in_val]
         return [[[v] for v in vs] for vs in in_val]
+    
+    # Default fallback (should not reach here in normal cases)
+    return in_val
 
 
-def flatten_dict_tuple_keys(d: dict, parent_key: tuple = ()) -> dict:
+def flatten_dict_tuple_keys(d: dict[Any, Any], parent_key: tuple[Any, ...] = ()) -> dict[tuple[Any, ...], Any]:
     items = {}
     for k, v in d.items():
         new_key = parent_key + (k,)
@@ -56,7 +59,7 @@ def flatten_dict_tuple_keys(d: dict, parent_key: tuple = ()) -> dict:
     return items
 
 
-def flatten_dict(in_dict: dict) -> dict:
+def flatten_dict(in_dict: dict[Any, Any]) -> dict[str, Any]:
     flat_tuple_keys = flatten_dict_tuple_keys(in_dict)
     return {".".join(k): v for k, v in flat_tuple_keys.items()}
 
@@ -74,11 +77,11 @@ def hash_from_time(length: int) -> str:
     return hash_string_to_length(str(datetime.now()), length)
 
 
-def dict_to_tupledict(in_dict: dict) -> tuple:
+def dict_to_tupledict(in_dict: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
     return tuple(sorted(list(in_dict.items())))
 
 
-def tupledict_to_dict(in_tupledict: tuple) -> dict:
+def tupledict_to_dict(in_tupledict: tuple[tuple[Any, Any], ...]) -> dict[Any, Any]:
     return {k: v for k, v in in_tupledict}
 
 
