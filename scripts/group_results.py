@@ -3,6 +3,11 @@ import re
 import shutil
 from pathlib import Path
 
+# Constants for hyperparameter segment positions
+XFT_SEGMENT_INDEX = 4  # 5th hyperparameter segment (0-indexed)
+INIT_TYPE_SEGMENT_INDEX = 6  # 7th hyperparameter segment (0-indexed)
+INIT_NAME_SEGMENT_INDEX = 7  # 8th hyperparameter segment (0-indexed)
+
 
 def parse_sweep2_path_hyperparameters(path_string: str):
     normalized_path = path_string.strip("/")
@@ -38,11 +43,11 @@ def parse_sweep2_path_hyperparameters(path_string: str):
                 # This segment does not fit the key-numeric pattern. processed_as_key_num remains False.
                 pass
         if not processed_as_key_num:
-            if idx == 4: # 5th hyperparameter segment in the list
+            if idx == XFT_SEGMENT_INDEX:
                 hpm_dict["xft"] = segment
-            elif idx == 6: # 7th hyperparameter segment
+            elif idx == INIT_TYPE_SEGMENT_INDEX:
                 hpm_dict["init_type"] = segment
-            elif idx == 7: # 8th hyperparameter segment
+            elif idx == INIT_NAME_SEGMENT_INDEX:
                 hpm_dict["init_name"] = segment
         if not is_seed_segment:
             run_label_parts.append(segment)

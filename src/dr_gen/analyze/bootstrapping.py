@@ -3,6 +3,9 @@ import math
 import numpy as np
 from scipy.stats import ks_2samp
 
+# Modern NumPy random generator
+_RNG = np.random.default_rng()
+
 # --- Helpers for prepping data for bootstrapping ---
 
 
@@ -71,7 +74,7 @@ def bootstrap_samples_batched(dataset, b=None):
         return dataset[:, np.newaxis]  # Shape (B, 1, L)
 
     B, L = dataset.shape  # Batch Size, Data Length
-    indices = np.random.randint(0, L, size=(B, b, L))
+    indices = _RNG.integers(0, L, size=(B, b, L))
     batch_indices = np.arange(B)[:, np.newaxis, np.newaxis]
     bootstrap_result = dataset[batch_indices, indices]
     return bootstrap_result
@@ -347,7 +350,7 @@ def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
     # Shuffle, split and calc ks stat on null dist
     shuffled = np.copy(combined_data)
     for p in range(num_permutations):
-        np.random.shuffle(shuffled)
+        _RNG.shuffle(shuffled)
         null_ks_dist[p], _ = ks_2samp(shuffled[:R], shuffled[R:])
 
     # Calculate p-value: proportion of null KS stats >= observed KS stat

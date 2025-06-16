@@ -23,27 +23,29 @@ def test_set_deterministic_torch_random_np():
     assert torch.allclose(x, y)
 
     # Test that numpy produces identical values after re-seeding.
-    np.random.rand()
+    # Note: Testing legacy NumPy random API behavior for compatibility
+    np.random.rand()  # noqa: NPY002
     # Reset seeds for numpy.
-    np.random.seed(seed)
-    np.random.rand()
+    np.random.seed(seed)  # noqa: NPY002
+    np.random.rand()  # noqa: NPY002
     # After set_deterministic, numpy seed should have been set.
     ru.set_deterministic(seed)
-    np_val2 = np.random.rand()
-    np.random.seed(seed)
-    expected_np2 = np.random.rand()
+    np_val2 = np.random.rand()  # noqa: NPY002
+    np.random.seed(seed)  # noqa: NPY002
+    expected_np2 = np.random.rand()  # noqa: NPY002
     # Both values computed after seeding with the same seed should be equal.
     assert np.isclose(np_val2, expected_np2)
 
     # Test Python's random module.
-    random.random()
+    # Note: Testing Python's random module behavior for reproducibility tests
+    random.random()  # noqa: S311
     random.seed(seed)
-    random.random()
+    random.random()  # noqa: S311
     # After set_deterministic, random.seed was called.
     ru.set_deterministic(seed)
-    rand_val2 = random.random()
+    rand_val2 = random.random()  # noqa: S311
     random.seed(seed)
-    expected_rand2 = random.random()
+    expected_rand2 = random.random()  # noqa: S311
     assert rand_val2 == expected_rand2
 
 
@@ -57,14 +59,15 @@ def test_seed_worker():
     ru.seed_worker(0)
 
     # Get a random number from NumPy and random.
-    np_val = np.random.rand()
-    rand_val = random.random()
+    # Note: Testing legacy random API behavior for seeding compatibility 
+    np_val = np.random.rand()  # noqa: NPY002
+    rand_val = random.random()  # noqa: S311
 
     # Now, simulate the same seeding to compute expected values.
-    np.random.seed(worker_seed)
-    expected_np = np.random.rand()
+    np.random.seed(worker_seed)  # noqa: NPY002
+    expected_np = np.random.rand()  # noqa: NPY002
     random.seed(worker_seed)
-    expected_rand = random.random()
+    expected_rand = random.random()  # noqa: S311
 
     # The values produced after seed_worker should match those when re-seeded with worker_seed.
     assert np.isclose(np_val, expected_np)
