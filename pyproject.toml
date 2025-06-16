@@ -28,7 +28,6 @@ build-backend = "hatchling.build"
 dev = [
     "jupyterlab>=4.3.5",
     "jupyterlab-vim>=4.1.4",
-    "pytest>=8.3.4",
     "ruff>=0.9.6",
     "mypy>=1.16.0",
     "tomlkit>=0.12.0",
@@ -44,6 +43,8 @@ test = [
 test-ml = [
     #"pytest-pytorch>=0.2",   # PyTorch test utilities
     #"pytest-randomly>=3.0",  # Randomize test order
+    "pytest-pytorch>=0.2",
+    "pytest-randomly>=3.0"
 ]
 all = [
     {include-group = "dev"},
@@ -148,6 +149,10 @@ ignore = [
 "scripts/**/*.py" = [
     "T201",     # print() is fine in scripts
 ]
+"*_notebook.py" = [
+    "E402", # Import order OK in notebooks
+    "F401", # Unused imports OK in notebooks
+]  
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15  # Higher threshold for ML
