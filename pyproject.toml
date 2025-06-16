@@ -42,13 +42,12 @@ test = [
     "pytest-benchmark>=4.0", # Performance benchmarking
 ]
 test-ml = [
-    "pytest-pytorch>=0.2",   # PyTorch test utilities
-    "pytest-randomly>=3.0",  # Randomize test order
+    #"pytest-pytorch>=0.2",   # PyTorch test utilities
+    #"pytest-randomly>=3.0",  # Randomize test order
 ]
 all = [
     {include-group = "dev"},
     {include-group = "test"},
-    {include-group = "test-ml"},
 ]
 
 [tool.uv.sources]
@@ -150,9 +149,6 @@ ignore = [
     "T201",     # print() is fine in scripts
 ]
 
-[tool.ruff.lint.extend-ignore]
-"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
-
 [tool.ruff.lint.mccabe]
 max-complexity = 15  # Higher threshold for ML
 
@@ -225,10 +221,6 @@ markers = [
     "serial: marks tests that must run serially",
     "integration: marks integration tests",
 ]
-
-# Coverage integration
-plugins = ["pytest-cov"]
-
 
 [tool.coverage.report]
 exclude_lines = [
