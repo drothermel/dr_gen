@@ -78,7 +78,7 @@ def get_dataset(
         assert False
     return ds
 
-def _parse_and_validate_config(cfg: Any) -> tuple[dict[str, Any], dict[str, tuple[float, float]]]:
+def _parse_and_validate_config(cfg: Any) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
     """Parses data configuration, identifies sources, and prepares for splitting.
     """
     vu.validate_dataset(cfg.data.name)
@@ -236,7 +236,7 @@ def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model):
 
     return datasets_with_transforms
 
-def _create_dataloaders_from_final_datasets(final_datasets_for_loaders, parsed_configs, num_workers_global, main_torch_generator):
+def _create_dataloaders_from_final_datasets(final_datasets_for_loaders: dict[str, Any], parsed_configs: dict[str, dict[str, Any]], num_workers_global: int, main_torch_generator: torch.Generator) -> dict[str, torch.utils.data.DataLoader[Any]]:
     """Creates DataLoaders for each processed dataset.
     """
     data_loaders_map = {}

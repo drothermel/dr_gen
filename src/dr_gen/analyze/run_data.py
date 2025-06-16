@@ -28,7 +28,7 @@ def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[s
 
 def get_train_time(train_time_json: dict[str, Any]) -> str | None:
     if train_time_json.get("type", None) == "str" and "value" in train_time_json:
-        return train_time_json["value"].strip("Training time ")
+        return train_time_json["value"].strip("Training time ")  # type: ignore[no-any-return]
     return None
 
 
@@ -66,7 +66,7 @@ def get_logged_metrics_infer_epoch(hpm: Any, jsonl_contents: list[dict[str, Any]
     return metrics_by_split
 
 
-def validate_metrics(expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]) -> bool:
+def validate_metrics(expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]) -> list[str]:
     if expected_epochs is None or len(metrics_by_split) == 0:
         return [f"invalid input: {expected_epochs}, {len(metrics_by_split)}"]
 
