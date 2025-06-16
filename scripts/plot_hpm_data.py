@@ -45,14 +45,14 @@ def load_data(pkl_filepath):
         return None
 
 
-def get_user_choice(prompt, options, allow_skip=False, allow_done=False):
+def get_user_choice(prompt, options, *, allow_skip=False, allow_done=False):
     """Generic function to get a numbered choice from the user."""
     print(prompt)
     # Display options. If an option is a list or dict, use json.dumps for
     # cleaner display.
     display_options = []
     for opt in options:
-        if isinstance(opt, (list, dict)):
+        if isinstance(opt, list | dict):
             try:
                 display_options.append(json.dumps(opt, sort_keys=True))
             except TypeError:
@@ -109,7 +109,7 @@ def select_run_group_interactively(all_runs_data):
         if isinstance(run_details.get("hpms"), dict):
             all_hpm_keys_overall.update(run_details["hpms"].keys())
 
-    sorted_hpm_keys_to_consider = sorted(list(all_hpm_keys_overall))
+    sorted_hpm_keys_to_consider = sorted(all_hpm_keys_overall)
 
     user_selected_hpms = {}
     candidate_run_names = list(all_runs_data.keys())
@@ -132,11 +132,6 @@ def select_run_group_interactively(all_runs_data):
             ]
             if hpm_key in remaining_hpms_from_candidate:
                 user_selected_hpms[hpm_key] = remaining_hpms_from_candidate[hpm_key]
-                # print(
-                #     f"Auto-filled for {hpm_key}: "
-                #     f"{user_selected_hpms[hpm_key]} "
-                #     f"(from single remaining candidate)"
-                # )
             # Continue to the next HPM key; filtering will happen based on
             # accumulated user_selected_hpms
             # No, we should not 'continue' here if we want to show the auto-selection.
@@ -173,7 +168,7 @@ def select_run_group_interactively(all_runs_data):
                 option_val = actual_options_for_selection[0]
                 option_display = (
                     json.dumps(option_val)
-                    if isinstance(option_val, (list, dict))
+                    if isinstance(option_val, list | dict)
                     else option_val
                 )
                 print(
@@ -187,14 +182,10 @@ def select_run_group_interactively(all_runs_data):
             current_selection_for_key = user_selected_hpms[
                 hpm_key
             ]  # Could be from this auto-select or prior user choice
-            new_candidates = []
-            for name in candidate_run_names:
-                if (
-                    all_runs_data[name]["hpms"].get(hpm_key)
-                    == current_selection_for_key
-                ):
-                    new_candidates.append(name)
-            candidate_run_names = new_candidates
+            candidate_run_names = [
+                name for name in candidate_run_names
+                if all_runs_data[name]["hpms"].get(hpm_key) == current_selection_for_key
+            ]
 
             if not candidate_run_names:
                 print(
@@ -232,11 +223,10 @@ def select_run_group_interactively(all_runs_data):
         user_selected_hpms[hpm_key] = user_choice_val
 
         # Filter candidate_run_names based on the new selection
-        new_candidates = []
-        for name in candidate_run_names:
-            if all_runs_data[name]["hpms"].get(hpm_key) == user_selected_hpms[hpm_key]:
-                new_candidates.append(name)
-        candidate_run_names = new_candidates
+        candidate_run_names = [
+            name for name in candidate_run_names
+            if all_runs_data[name]["hpms"].get(hpm_key) == user_selected_hpms[hpm_key]
+        ]
 
         if not candidate_run_names:
             print(
@@ -271,7 +261,7 @@ def select_run_group_interactively(all_runs_data):
         final_group_hpms = all_runs_data[selected_name]["hpms"]
         for k, v_actual in final_group_hpms.items():
             v_display = (
-                json.dumps(v_actual) if isinstance(v_actual, (list, dict)) else v_actual
+                json.dumps(v_actual) if isinstance(v_actual, list | dict) else v_actual
             )
             if k in user_selected_hpms:  # If user made a choice or it was auto-selected
                 print(f"  {k}: {v_display} (Selected/Fixed)")
@@ -382,7 +372,7 @@ def main():
 
         selected_run_details = all_runs_data[selected_run_name]
 
-        available_splits = sorted(list(selected_run_details["metrics"].keys()))
+        available_splits = sorted(selected_run_details["metrics"].keys())
         if not available_splits:
             print(f"No metric splits found for run group '{selected_run_name}'.")
             if (
@@ -404,7 +394,7 @@ def main():
             continue
 
         available_metrics = sorted(
-            list(selected_run_details["metrics"].get(selected_split, {}).keys())
+            selected_run_details["metrics"].get(selected_split, {}).keys()
         )
         if not available_metrics:
             print(

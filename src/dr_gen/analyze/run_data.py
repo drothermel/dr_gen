@@ -33,11 +33,11 @@ def get_train_time(train_time_json: dict[str, Any]) -> str | None:
 
 
 def get_logged_strings(jsonl_contents: list[dict[str, Any]]) -> list[str]:
-    all_strings = []
-    for jl in jsonl_contents:
-        if jl.get("type", None) == "str" and jl.get("value", "").strip() != "":
-            all_strings.append(jl["value"].strip())
-    return all_strings
+    return [
+        jl["value"].strip()
+        for jl in jsonl_contents
+        if jl.get("type", None) == "str" and jl.get("value", "").strip() != ""
+    ]
 
 
 def get_logged_metrics_infer_epoch(hpm: Any, jsonl_contents: list[dict[str, Any]]) -> dict[str, SplitMetrics]:

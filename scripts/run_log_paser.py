@@ -192,7 +192,7 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
     varying_config_keys = []
     # Sort super_keyset for consistent order of varying_config_keys and group names
-    for key in sorted(list(super_keyset)):
+    for key in sorted(super_keyset):
         # Exclude seed, and any blacklisted keys
         if (
             key == "seed"
@@ -313,10 +313,11 @@ def aggregate_metrics_for_groups(grouped_runs):
                 if min_epochs == 0:
                     continue
 
-                truncated_metrics_by_seed = []
-                for series in metrics_by_seed_for_current_setting:
-                    if len(series) >= min_epochs:
-                        truncated_metrics_by_seed.append(series[:min_epochs])
+                truncated_metrics_by_seed = [
+                    series[:min_epochs]
+                    for series in metrics_by_seed_for_current_setting
+                    if len(series) >= min_epochs
+                ]
 
                 if not truncated_metrics_by_seed:
                     continue
