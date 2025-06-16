@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -7,6 +8,7 @@ import torch
 import torchvision
 from timm.optim import create_optimizer
 from timm.scheduler.cosine_lr import CosineLRScheduler
+from torch.nn.parameter import Parameter
 
 import dr_gen.schemas as vu
 from dr_gen.schemas import (
@@ -41,7 +43,7 @@ CRITERION_DEFAULTS = {
 
 
 def create_optim(
-    name: str, model_params: Any, optim_params: dict[str, Any]
+    name: str, model_params: Iterator[Parameter], optim_params: dict[str, Any]
 ) -> torch.optim.Optimizer:
     assert "lr" in optim_params
     match name:

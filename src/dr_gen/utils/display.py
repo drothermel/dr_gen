@@ -1,3 +1,5 @@
+from typing import Any
+
 from prettytable import PrettyTable
 
 
@@ -37,7 +39,7 @@ def make_sort_key(table, sort_field_order):
     #   table.field_names.
     field_index = {field: i for i, field in enumerate(table.field_names)}
 
-    def sort_key(row):
+    def sort_key(row) -> tuple:
         # The first element is the "sortby" field repeated
         row = row[1:]
         # Build a tuple of values for the row according to sort_field_order.
@@ -78,7 +80,7 @@ def get_sortby_sort_key(table, sort_fields):
     return sortby, sort_key
 
 
-def get_filter_function(table, **kwargs):
+def get_filter_function(table, **kwargs: Any):  # noqa: ANN401
     """Create a filter function for table rows.
 
     Args:
@@ -125,7 +127,7 @@ def print_sorted(table, sort_fields):
     sortby, sort_key = get_sortby_sort_key(table, sort_fields)
 
 
-def print_filtered(table, **kwargs):
+def print_filtered(table, **kwargs: Any):  # noqa: ANN401
     """Print filtered table.
 
     Args:
@@ -135,7 +137,7 @@ def print_filtered(table, **kwargs):
     get_filter_function(table, **kwargs)
 
 
-def print_table(table, drop_cols=None, sort_cols=None, **filter_kwargs):
+def print_table(table, drop_cols=None, sort_cols=None, **filter_kwargs: Any):  # noqa: ANN401
     """Print table with optional column dropping, sorting, and filtering.
 
     Args:

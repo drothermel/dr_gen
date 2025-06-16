@@ -54,7 +54,7 @@ class DummyDataset(Dataset):
         """Return the length of the dataset."""
         return len(self.data)
 
-    def __getitem__(self, idx) -> Any:
+    def __getitem__(self, idx) -> Any:  # noqa: ANN401
         """Get item at the specified index."""
         return self.data[idx]
 

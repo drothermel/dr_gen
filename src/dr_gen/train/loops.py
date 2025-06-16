@@ -4,13 +4,15 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-from dr_util.metrics import BATCH_KEY
+from dr_util.metrics import BATCH_KEY, Metrics
+from torch.optim.lr_scheduler import LRScheduler
+from torch.utils.data import DataLoader
 
 import dr_gen.train.evaluate as eu
 import dr_gen.train.model as mu
 
 
-def log_metrics(md: Any, group_name: str, **kwargs: Any) -> None:
+def log_metrics(md: Metrics | None, group_name: str, **kwargs: Any) -> None:  # noqa: ANN401
     assert md is not None, "There should be a metrics obj"
 
     loss = kwargs.get("loss")
@@ -98,13 +100,13 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
 
 def train_loop(
     cfg: Any,  # noqa: ANN401
-    train_dl: Any,
+    train_dl: DataLoader[Any],
     model: torch.nn.Module,
     optim: torch.optim.Optimizer,
-    lr_sched: Any,
-    val_dl: Any = None,
-    eval_dl: Any = None,
-    md: Any = None,
+    lr_sched: LRScheduler | None,
+    val_dl: DataLoader[Any] | None = None,
+    eval_dl: DataLoader[Any] | None = None,
+    md: Metrics | None = None,
 ) -> None:
     assert md is not None  # Temporarily
     criterion = mu.get_criterion(cfg)
