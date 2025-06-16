@@ -332,7 +332,8 @@ def aggregate_metrics_for_groups(grouped_runs):
                         )
                     else:
                         print(
-                            f"Warning: Could not form valid S x E array for "{\n                            f"{run_group_name}/{split}/{metric}. "
+                            f"Warning: Could not form valid S x E array for "
+                           f"{run_group_name}/{split}/{metric}. "
                             f"Expected E={min_epochs}, got shape {aggregated_array.shape}. Skipping."
                         )
                 except Exception as e:

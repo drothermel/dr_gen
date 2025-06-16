@@ -101,6 +101,7 @@ def dummy_get_source(split, cfg):
 
 def dummy_get_split_source_config(cfg):
     """For our dummy configuration assume:
+
       - "train" uses source "source1" with 80% of the data (range: 0.0 to 0.8)
       - "val" uses the same source "source1" for the remaining 20% (range: 0.8 to 1.0)
       - "eval" uses source "eval" with full data (range: 0.0 to 1.0)
@@ -267,6 +268,7 @@ def test_full_pipeline(transform_cfg):
 
 def test_get_dataset_cifar10(tmp_path, monkeypatch):
     """Test that get_dataset returns a CIFAR10 dataset when requested.
+
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
@@ -281,6 +283,7 @@ def test_get_dataset_cifar10(tmp_path, monkeypatch):
 
 def test_get_dataset_cifar100(tmp_path, monkeypatch):
     """Test that get_dataset returns a CIFAR100 dataset.
+
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
@@ -305,6 +308,7 @@ def test_get_dataset_invalid():
 
 def test_get_dataloader_default_config():
     """Test get_dataloader with no custom configuration.
+
     It should use the default batch size and number of workers.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -321,6 +325,7 @@ def test_get_dataloader_default_config():
 
 def test_get_dataloader_custom_config():
     """Test get_dataloader when passing a custom OmegaConf configuration.
+
     The batch size and num_workers should be taken from the configuration.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -341,6 +346,7 @@ def test_get_dataloader_custom_config():
 
 def test_get_dataloader_invalid_split(monkeypatch):
     """Test that get_dataloader raises an assertion error when an invalid split is provided.
+
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -359,6 +365,7 @@ def test_get_dataloader_invalid_split(monkeypatch):
 def test_get_split_source_config_defaults():
     """When no configuration is provided, each split should use itself as the source
     with the default percentage.
+
     """
     sources, ranges = du.get_split_source_config(cfg=None)
 
@@ -376,6 +383,7 @@ def test_get_split_source_config_defaults():
 
 def test_get_split_source_config_custom():
     """Test when a custom configuration maps multiple splits to the same source.
+
     For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
     while 'eval' uses the default (its own name and 1.0).
     """
@@ -407,6 +415,7 @@ def test_get_split_source_config_custom():
 def test_get_split_source_config_over_usage():
     """Test that an assertion error is raised if the total allocated percentage
     for a shared source exceeds 100% (i.e. > 1.0).
+
     """
     cfg = OmegaConf.create(
         {
@@ -431,6 +440,7 @@ def test_get_split_source_config_over_usage():
 def test_get_dataloaders(monkeypatch):
     """This test constructs a dummy configuration (via OmegaConf) and then patches
     out helper functions so that get_dataloaders returns predictable DataLoaders.
+
     We then check that each returned DataLoader has the expected batch_size and
     that dataloaders are provided for the correct splits.
     """

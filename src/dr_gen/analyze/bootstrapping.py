@@ -11,6 +11,7 @@ _RNG = np.random.default_rng()
 
 def get_min_2D_data_shape(data_dict):
     """Takes { exp_name: list_of_lists }
+
     Finds the minimum lengths of outer (R) and inner (T) lists.
     Returns (min_R, min_T) or None if empty dict/lists found.
     """
