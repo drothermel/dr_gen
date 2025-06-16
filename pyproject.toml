@@ -30,7 +30,234 @@ dev = [
     "jupyterlab-vim>=4.1.4",
     "pytest>=8.3.4",
     "ruff>=0.9.6",
+    "mypy>=1.16.0",
+    "tomlkit>=0.12.0",
+]
+test = [
+    "pytest>=8.4.0",
+    "pytest-cov>=4.0",      # Coverage reports
+    "pytest-xdist>=3.0",    # Parallel execution
+    "pytest-timeout>=2.0",  # Timeout long-running tests
+    "pytest-mock>=3.0",     # Better mocking
+    "pytest-benchmark>=4.0", # Performance benchmarking
+]
+test-ml = [
+    "pytest-pytorch>=0.2",   # PyTorch test utilities
+    "pytest-randomly>=3.0",  # Randomize test order
+]
+all = [
+    {include-group = "dev"},
+    {include-group = "test"},
+    {include-group = "test-ml"},
 ]
 
 [tool.uv.sources]
 dr-util = { git = "https://github.com/drothermel/dr_util" }
+
+[tool.ruff]
+line-length = 88
+include = ["src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
+exclude = ["outputs/*", "notebooks/*"]
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = 72
+
+[tool.ruff.lint]
+extend-select = [
+    "A",    # flake8-builtins
+    "ANN",  # flake8-annotations (type hints)
+    "ARG",  # flake8-nused-arguments
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "COM",  # flake8-commas
+    "C4",   # flake8-comprehensions
+    "C90",  # mccabe compexity
+    "D",    # pydocstyle
+    "DTZ",  # flake8-datetimez (timezone-awareness)
+    "DOC",  # pydoclint (docstring validation)
+    "E",    # pycodestyle
+    "ERA",  # eradicate
+    "EXE",  # flake8-executable
+    "F",    # pyflakes
+    "FA",   # flake8-future-annotations
+    "FBT",  # flake8-boolean-trap
+    "FIX",  # flake8-fixme
+    "FLY",  # flynt
+    "I",    # isort
+    "ICN",  # flake8-import-conventions
+    "INP",  # flake8-no-pep420
+    "INT",  # flake8-gettext
+    "ISC",  # flake8-implicit-str-concat
+    "LOG",  # flake8-logging
+    "N",    # pep8-naming
+    "NPY",  # numpy
+    "PD",   # pandas-vet
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "PLW",  # pylint warnings
+    "PLE",  # pylint errors
+    "PLR0133",  # constant comparisons
+    "PLR1714",  # repeated comparisons
+    "PLR2004",  # magic values 
+    "PT",   # flake8-pytest-style
+    "PTH",  # flake8-use-pathlib
+    "PYI",  # flake8-pyi
+    "Q",    # flake8-quotes
+    "RET",  # flake8-return
+    "RSE",  # flake8-raise
+    "RUF",  # ruff specific
+    "S",    # flake8-bandit
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "T10",  # flake8-debugger
+    "T20",  # flake8-print
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "TD",   # flake8-todos
+    "TRY",  # tryceratops
+    "UP",   # pyupgrade
+    "W",    # pycodestyle warnings
+    "YTT",  # flake8-2020 (sys.version checks)
+]
+ignore = [
+    "COM812",   # ignoring both based on conflict
+    "ISC001",   #   ... see above comment
+    "TD002",    # include author name with todo
+    "TD003",    # link to issue after todo
+    "FIX002",   # throws on all TODOs
+    "S101",     # asserts are part of our coding style
+    "ANN001",   # Missing function argument annotations (for experimental functions)
+    "ANN101",   # Missing type annotation for self in method
+    "ANN102",   # Missing type annotation for cls in classmethod
+    "ANN201",   # Missing return type annotation (for experimental functions)
+    "D100",     # Missing module docstring (OK for experimental modules)
+    "D103",     # Missing docstring in public function (for WIP code)
+    "D104",     # Missing public package docstring
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG",      # unused arguments in fixtures
+    "PLR2004",  # Magic values are OK in tests
+]
+"src/models/**/*.py" = [
+    "PLR0913",  # Many arguments OK for model configs
+]
+"scripts/**/*.py" = [
+    "T201",     # print() is fine in scripts
+]
+
+[tool.ruff.lint.extend-ignore]
+"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15  # Higher threshold for ML
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"  # Accepts: "google", "numpy", or "pep257".
+ignore-decorators = ["typing.overload", "typing.override"]
+
+[tool.ruff.lint.pylint]
+max-args = 10           # More lenient for ML functions
+max-statements = 100    # Allow longer functions for training loops
+
+
+[tool.mypy]
+files = ["src/", "tests/"]
+mypy_path = "src"
+strict = true
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+no_implicit_reexport = true
+strict_equality = true
+explicit_package_bases = true
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# Ignore missing imports for libraries without type stubs
+ignore_missing_imports = true
+
+# Performance
+cache_dir = ".mypy_cache"
+show_error_codes = true
+
+
+[tool.pytest.ini_options]
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Logging (disabled by default for clean test output)
+# Enable with: pytest --log-cli-level=INFO
+log_cli = false
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Warnings
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--verbose",
+    "-ra",  # show all test outcome reasons
+    "-n", "auto",
+]
+
+# Fail on unregistered markers
+markers = [
+    "slow: marks tests as slow",
+    "serial: marks tests that must run serially",
+    "integration: marks integration tests",
+]
+
+# Coverage integration
+plugins = ["pytest-cov"]
+
+
+[tool.coverage.report]
+exclude_lines = [
+    # Standard exclusions
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@profile",  # Line profiler decorators
+    "if _debug:",  # Debug-only code
+    "if _profile:",  # Profiling-only code
+
+    # ML-specific exclusions
+    "if torch.cuda.is_available()",  # GPU-specific code
+    "@torch.no_grad()",  # Inference-only code
+    "if __name__ == .__main__.:",  # Script entry points
+    "def visualize",  # Visualization/debugging functions
+    "except KeyboardInterrupt:",  # User interruption handlers
+    "@torch.jit.script",  # JIT compiled code
+    "@torch.jit.export",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "tests/*",
+    "scripts/*",  # Standalone scripts
+    "notebooks/*",  # Jupyter notebooks
+    "*/__init__.py",  # Empty init files
+    "*/config.py",  # Configuration files
+]
