@@ -13,7 +13,7 @@ from dr_gen.schemas import (
 
 
 @pytest.mark.parametrize(
-    "optim_type, expected_class",
+    ("optim_type", "expected_class"),
     [
         (OptimizerTypes.SGD.value, torch.optim.SGD),
         (OptimizerTypes.RMSPROP.value, torch.optim.RMSprop),
@@ -31,7 +31,7 @@ def test_create_optim(optim_type, expected_class) -> None:
 
 
 @pytest.mark.parametrize(
-    "lrsched_type, expected_class",
+    ("lrsched_type", "expected_class"),
     [
         (None, type(None)),
         (LRSchedTypes.STEP_LR.value, torch.optim.lr_scheduler.StepLR),

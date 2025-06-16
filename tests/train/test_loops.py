@@ -71,8 +71,7 @@ def dummy_dataloader():
 @pytest.fixture
 def dummy_model():
     # Use a simple model (flatten + linear) for testing.
-    model = nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
-    return model
+    return nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
 
 
 @pytest.fixture
@@ -98,7 +97,6 @@ def dummy_cfg(tmp_path):
             "write_checkpoint": str(tmp_path / "checkpoints"),
         }
     )
-    return cfg
 
 
 # ----------------------
@@ -191,7 +189,7 @@ def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch) -> No
 
     # Verify that aggregation logs were recorded for "train" and "val".
     agg_logs = [entry for entry in logs if entry[0] == "agg_log"]
-    groups_logged = set(entry[1] for entry in agg_logs)
+    groups_logged = {entry[1] for entry in agg_logs}
     assert "train" in groups_logged
     assert "val" in groups_logged
 
