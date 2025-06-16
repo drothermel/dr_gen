@@ -75,7 +75,6 @@ extend-select = [
     "C90",  # mccabe compexity
     "D",    # pydocstyle
     "DTZ",  # flake8-datetimez (timezone-awareness)
-    "DOC",  # pydoclint (docstring validation)
     "E",    # pycodestyle
     "ERA",  # eradicate
     "EXE",  # flake8-executable
@@ -128,8 +127,6 @@ ignore = [
     "FIX002",   # throws on all TODOs
     "S101",     # asserts are part of our coding style
     "ANN001",   # Missing function argument annotations (for experimental functions)
-    "ANN101",   # Missing type annotation for self in method
-    "ANN102",   # Missing type annotation for cls in classmethod
     "ANN201",   # Missing return type annotation (for experimental functions)
     "D100",     # Missing module docstring (OK for experimental modules)
     "D103",     # Missing docstring in public function (for WIP code)
