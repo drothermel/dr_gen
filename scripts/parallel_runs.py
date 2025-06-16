@@ -89,7 +89,7 @@ def create_unique_job_name(param_dict: dict) -> str:
 def start_training_run(
     param_combination_dict: dict, job_name: str
 ) -> tuple[object, str] | tuple[None, str]:
-    """Constructs the command to run the Hydra script with a specific parameter combination.
+    """Constructs the command to run the Hydra script with parameters.
 
     Starts it as a subprocess.
     Returns a tuple (subprocess.Popen object, job_name).
@@ -121,16 +121,17 @@ def start_training_run(
     print_flush(f"  Command: {' '.join(command)}")
 
     # --- Define unique stdout and stderr log files for this subprocess ---
-    stdout_log_path = os.path.join(LAUNCHER_LOG_DIR, f"{job_name}_stdout.log")
-    stderr_log_path = os.path.join(LAUNCHER_LOG_DIR, f"{job_name}_stderr.log")
+    stdout_log_path = Path(LAUNCHER_LOG_DIR) / f"{job_name}_stdout.log"
+    stderr_log_path = Path(LAUNCHER_LOG_DIR) / f"{job_name}_stderr.log"
 
     # --- Start the Subprocess ---
     try:
         with (
-            open(stdout_log_path, "wb") as stdout_file,
-            open(stderr_log_path, "wb") as stderr_file,
+            stdout_log_path.open("wb") as stdout_file,
+            stderr_log_path.open("wb") as stderr_file,
         ):
-            process = subprocess.Popen(
+            # Command is constructed from controlled constants and validated parameters
+            process = subprocess.Popen(  # noqa: S603
                 command, env=current_env, stdout=stdout_file, stderr=stderr_file
             )
         print_flush(
@@ -143,17 +144,17 @@ def start_training_run(
             f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or "
             f"script '{TRAINING_SCRIPT_PATH}'. Please check paths."
         )
-        error_log_path = os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log")
-        with open(error_log_path, "a") as f_err:
+        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
+        with error_log_path.open("a") as f_err:
             f_err.write(
                 f"FileNotFoundError for job '{job_name}': "
                 f"Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n"
             )
         return None, job_name
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print_flush(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
-        error_log_path = os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log")
-        with open(error_log_path, "a") as f_err:
+        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
+        with error_log_path.open("a") as f_err:
             f_err.write(
                 f"Launch exception for job '{job_name}': {e}\n"
                 f"Command: {' '.join(command)}\n"
@@ -167,7 +168,12 @@ if __name__ == "__main__":
     )
 
     # Core launcher args
-    parser.add_argument("-p", "--max_parallel_jobs", type=int, default=DEFAULT_MAX_PARALLEL_JOBS, help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}")
+    parser.add_argument(
+        "-p", "--max_parallel_jobs", 
+        type=int, 
+        default=DEFAULT_MAX_PARALLEL_JOBS, 
+        help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}"
+    )
     parser.add_argument("-g", "--avail_gpus", type=str, default="")
     parser.add_argument("-s", "--start_seed", type=int, default=DEFAULT_START_SEED, help=f"Start seed for sequence (if --max_seed is used). Default: {DEFAULT_START_SEED}")
     parser.add_argument("-e", "--max_seed", type=int, default=None, help="Max seed for sequence. Overrides default seeds list.")
