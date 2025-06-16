@@ -25,10 +25,7 @@ def is_key_blacklisted(key, blacklist):
     """Checks if a key contains any of the substrings in the blacklist."""
     if key is None:
         return False
-    for pattern in blacklist:
-        if pattern in key:
-            return True
-    return False
+    return any(pattern in key for pattern in blacklist)
 
 
 def flatten_dict(d, parent_key="", sep="."):
@@ -126,7 +123,7 @@ def parse_log_file(filepath):
                 return None, metrics_data
 
             # Process rest of the lines for metrics
-            for line_num, line_content in enumerate(f, start=2):
+            for _line_num, line_content in enumerate(f, start=2):
                 if not line_content.strip():
                     continue
                 try:

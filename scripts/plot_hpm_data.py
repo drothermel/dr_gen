@@ -32,8 +32,8 @@ def load_data(pkl_filepath):
                 f"Error: Data in {pkl_filepath} does not have the expected "
                 f"structure ('hpms' and 'metrics' keys in sub-dictionaries)."
             )
-            return None
-        return data
+        else:
+            return data
     except pickle.UnpicklingError:
         print(
             f"Error: Could not unpickle data from {pkl_filepath}. "
@@ -291,22 +291,23 @@ def plot_metrics(run_name, run_details, split_name, metric_name):
         )
         return
 
-    metric_data_SxE = run_details["metrics"][split_name][metric_name]  # S x E array
+    metric_data_sxe = run_details["metrics"][split_name][metric_name]  # S x E array
 
-    if not isinstance(metric_data_SxE, np.ndarray) or metric_data_SxE.ndim != 2:
+    expected_ndim = 2
+    if not isinstance(metric_data_sxe, np.ndarray) or metric_data_sxe.ndim != expected_ndim:
         print(
             f"Error: Metric data for {metric_name} in {split_name} "
             f"is not a 2D NumPy array."
         )
         return
-    if metric_data_SxE.size == 0:  # Empty array
+    if metric_data_sxe.size == 0:  # Empty array
         print(
             f"Warning: Metric data for {metric_name} in {split_name} "
             f"is empty. Cannot plot."
         )
         return
 
-    num_seeds, num_epochs = metric_data_SxE.shape
+    num_seeds, num_epochs = metric_data_sxe.shape
     if num_epochs == 0:
         print(
             f"Warning: Metric data for {metric_name} in {split_name} "
@@ -318,7 +319,7 @@ def plot_metrics(run_name, run_details, split_name, metric_name):
 
     plt.figure(figsize=(12, 7))
     for i in range(num_seeds):
-        plt.plot(epochs_axis, metric_data_SxE[i, :], label=f"Seed {i + 1}")
+        plt.plot(epochs_axis, metric_data_sxe[i, :], label=f"Seed {i + 1}")
 
     plt.xlabel("Epoch")
     plt.ylabel(metric_name.capitalize())
@@ -335,7 +336,7 @@ def plot_metrics(run_name, run_details, split_name, metric_name):
     )
 
     plt.legend()
-    plt.grid(True)
+    plt.grid()
     plt.tight_layout()
     print("Displaying plot... Close the plot window to continue.")
     plt.show()

@@ -119,27 +119,27 @@ def get_schema(config_type: str) -> type | None:
 @lenient_validate
 @dataclass
 class DataConfig:
-    name: str = field(default=cast(str, MISSING))
+    name: str = field(default=cast("str", MISSING))
 
 
 @lenient_validate
 @dataclass
 class ModelConfig:
-    name: str = field(default=cast(str, MISSING))
+    name: str = field(default=cast("str", MISSING))
 
 
 @lenient_validate
 @dataclass
 class OptimConfig:
-    name: str = field(default=cast(str, MISSING))
-    loss: str = field(default=cast(str, MISSING))
-    lr: float = field(default=cast(float, MISSING))
+    name: str = field(default=cast("str", MISSING))
+    loss: str = field(default=cast("str", MISSING))
+    lr: float = field(default=cast("float", MISSING))
 
 
 @lenient_validate
 @dataclass
 class RunConfig:
-    run: bool = field(default=cast(bool, MISSING))
+    run: bool = field(default=cast("bool", MISSING))
 
 
 #########################################################
@@ -175,14 +175,14 @@ class UsingDataConfig:
 @lenient_validate
 @dataclass
 class UsingModelConfig:
-    device: str = field(default=cast(str, MISSING))
+    device: str = field(default=cast("str", MISSING))
     model: type = ModelConfig
 
 
 @lenient_validate
 @dataclass
 class UsingOptimConfig:
-    device: str = field(default=cast(str, MISSING))
+    device: str = field(default=cast("str", MISSING))
     model: type = ModelConfig
     optim: type = OptimConfig
 
@@ -192,5 +192,5 @@ class UsingOptimConfig:
 class PerformingRun:
     train: RunConfig
     val: RunConfig
-    seed: int = field(default=cast(int, MISSING))
-    epochs: int = field(default=cast(int, MISSING))
+    seed: int = field(default=cast("int", MISSING))
+    epochs: int = field(default=cast("int", MISSING))

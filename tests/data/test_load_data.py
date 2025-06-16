@@ -71,7 +71,7 @@ def fake_cifar100_init(self, root, train, transform, target_transform, download)
 # Dummy implementations to override various helpers used in get_dataloaders
 
 
-def dummy_get_dataset(dataset_name, source_split, root, transform=None, download=False):
+def dummy_get_dataset(dataset_name, source_split, root, transform=None, *, download=False):
     # Always return a DummyDataset of length 20
     return DummyDataset(list(range(20)))
 
@@ -100,7 +100,7 @@ def dummy_get_source(split, cfg):
 
 
 def dummy_get_split_source_config(cfg):
-    """For our dummy configuration assume:
+    """For our dummy configuration assume.
 
       - "train" uses source "source1" with 80% of the data (range: 0.0 to 0.8)
       - "val" uses the same source "source1" for the remaining 20% (range: 0.8 to 1.0)
@@ -140,7 +140,7 @@ def dummy_validate_split(split):
 
 
 @pytest.mark.parametrize(
-    "split, cfg, expected",
+    ("split", "cfg", "expected"),
     [
         # No configuration provided: should return the split.
         ("train", None, "train"),
@@ -167,7 +167,7 @@ def test_get_source(split, cfg, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "split, cfg, expected",
+    ("split", "cfg", "expected"),
     [
         # If no config is provided, default is returned.
         (None, None, du.DEFAULT_SOURCE_PERCENT),
@@ -297,8 +297,7 @@ def test_get_dataset_cifar100(tmp_path, monkeypatch) -> None:
 
 
 def test_get_dataset_invalid() -> None:
-    """Test that an invalid dataset name raises an assertion error.
-    """
+    """Test that an invalid dataset name raises an assertion error."""
     with pytest.raises(AssertionError):
         du.get_dataset("unknown_dataset", "train")
 
@@ -373,9 +372,7 @@ def test_get_split_source_config_defaults() -> None:
     # Each split uses itself as the source.
     expected_sources = list(vu.SPLIT_NAMES)
     # For each split, the range is (0, du.DEFAULT_SOURCE_PERCENT) i.e. (0, 1.0)
-    expected_ranges = {
-        split: (0, du.DEFAULT_SOURCE_PERCENT) for split in vu.SPLIT_NAMES
-    }
+    expected_ranges = dict.fromkeys(vu.SPLIT_NAMES, (0, du.DEFAULT_SOURCE_PERCENT))
 
     # Order may depend on SPLIT_NAMES; we compare sorted lists for safety.
     assert sorted(sources) == sorted(expected_sources)
