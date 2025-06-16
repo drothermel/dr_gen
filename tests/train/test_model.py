@@ -4,11 +4,10 @@ from omegaconf import OmegaConf
 
 import dr_gen.train.model as mu
 from dr_gen.schemas import (
-    OptimizerTypes,
-    LRSchedTypes,
     CriterionTypes,
+    LRSchedTypes,
+    OptimizerTypes,
 )
-
 
 # --------- Tests for create_optim and create_lrsched ---------
 

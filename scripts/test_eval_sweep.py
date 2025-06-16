@@ -1,22 +1,23 @@
-import dr_gen.analyze.result_plotting as rplt
-from dr_gen.analyze.run_group import RunGroup
-import numpy as np
-import pandas as pd
 import os
-import math
 import pickle as pkl
 from copy import deepcopy
 
+import numpy as np
+import pandas as pd
+
+import dr_gen.analyze.result_plotting as rplt
+from dr_gen.analyze.run_group import RunGroup
+
 # === Configuration ===
-RUN_DATA_PATH = '/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0'
+RUN_DATA_PATH = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
 # T_STEP = 50  # Step size for sweeping through timesteps - REMOVED
 # N_STEP = 5  # Step size for sweeping through runs - REMOVED
 N_START = 3
 T_START = 1
 NUM_N_POINTS = 17 # Number of points to test along the N axis (runs)
 NUM_T_POINTS = 270 # Number of points to test along the T axis (timesteps)
-OUTPUT_CSV_PATH = f'/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.csv'
-OUTPUT_PKL_PATH = f'/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.pkl'
+OUTPUT_CSV_PATH = f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.csv"
+OUTPUT_PKL_PATH = f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.pkl"
 
 # HPMs for selecting runs (same as test_eval.py)
 hpm_specs_hpm_select = {
@@ -33,8 +34,7 @@ NUM_PERMUTATIONS = 1000
 # === Helper Function ===
 
 def trim_hpm_data(hpm_data_dict, n_runs, t_length):
-    """
-    Trims the data within a dictionary {hpm_name: [[run1_metrics], [run2_metrics], ...]}
+    """Trims the data within a dictionary {hpm_name: [[run1_metrics], [run2_metrics], ...]}
     to the specified number of runs and timesteps.
 
     Args:
@@ -83,7 +83,7 @@ def trim_hpm_data(hpm_data_dict, n_runs, t_length):
 print(f"Loading run data from: {RUN_DATA_PATH}")
 rg = RunGroup()
 rg.load_runs_from_base_dir(RUN_DATA_PATH)
-print(f"Loaded runs.")
+print("Loaded runs.")
 
 # --- Select Run Groups (Initial Selection) ---
 print("Selecting runs for pretrained vs. random initialization comparison...")
@@ -185,23 +185,23 @@ for n in n_values:
 
             # Prepare data row for CSV (adapted from test_eval.py)
             csv_data = {
-                'sweep_n': n,
-                'sweep_t': t,
-                'group_A_name': 'Pretrained',
-                'group_B_name': 'Random Init',
-                'best_hpm_A': best_hpm_A,
-                'best_val_timestep_A': best_ts_A,
-                'best_hpm_B': best_hpm_B,
-                'best_val_timestep_B': best_ts_B,
+                "sweep_n": n,
+                "sweep_t": t,
+                "group_A_name": "Pretrained",
+                "group_B_name": "Random Init",
+                "best_hpm_A": best_hpm_A,
+                "best_val_timestep_A": best_ts_A,
+                "best_hpm_B": best_hpm_B,
+                "best_val_timestep_B": best_ts_B,
             }
 
             # Flatten summary, difference, and test statistics
             stats_to_flatten = {
-                'summary_A_': comparison_results.get('summary_A', {}),
-                'summary_B_': comparison_results.get('summary_B', {}),
-                'diff_': comparison_results.get('difference_stats', {}),
-                'ks_ci_': comparison_results.get('ks_ci_test', {}),
-                'ks_perm_': comparison_results.get('ks_permutation_test', {})
+                "summary_A_": comparison_results.get("summary_A", {}),
+                "summary_B_": comparison_results.get("summary_B", {}),
+                "diff_": comparison_results.get("difference_stats", {}),
+                "ks_ci_": comparison_results.get("ks_ci_test", {}),
+                "ks_perm_": comparison_results.get("ks_permutation_test", {})
             }
 
             for prefix, stats_dict in stats_to_flatten.items():
@@ -246,7 +246,7 @@ if all_results:
 
     # Save to CSV
     results_df.to_csv(OUTPUT_CSV_PATH, index=False)
-    pkl.dump(all_results, open(OUTPUT_PKL_PATH, 'wb'))
+    pkl.dump(all_results, open(OUTPUT_PKL_PATH, "wb"))
     print(f"Results saved successfully to {OUTPUT_CSV_PATH}")
 else:
     print("No results generated during the sweep.")

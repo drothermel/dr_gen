@@ -1,9 +1,8 @@
 # from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 # from torchvision import tv_tensors
+import matplotlib.pyplot as plt
 import torch
 from torchvision.transforms.v2 import functional as F
-
-import matplotlib.pyplot as plt
 
 
 def plot_first_from_dl(dl):

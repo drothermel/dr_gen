@@ -1,9 +1,8 @@
-from datetime import timedelta
 import time
+from datetime import timedelta
 
 import torch
 import torch.nn as nn
-
 from dr_util.metrics import BATCH_KEY
 
 import dr_gen.train.evaluate as eu
@@ -13,11 +12,11 @@ import dr_gen.train.model as mu
 def log_metrics(md, group_name, **kwargs):
     assert md is not None, "There should be a metrics obj"
 
-    loss = kwargs.get("loss", None)
-    output = kwargs.get("output", None)
-    target = kwargs.get("target", None)
-    mean_grad_norm = kwargs.get("mean_grad_norm", None)
-    lr = kwargs.get("lr", None)
+    loss = kwargs.get("loss")
+    output = kwargs.get("output")
+    target = kwargs.get("target")
+    mean_grad_norm = kwargs.get("mean_grad_norm")
+    lr = kwargs.get("lr")
 
 
     if output is not None:
@@ -74,7 +73,7 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
             output=output,
             target=target,
             grad_norm=mean_grad_norm,
-            lr=optimizer.param_groups[0]['lr'],
+            lr=optimizer.param_groups[0]["lr"],
         )
 
 

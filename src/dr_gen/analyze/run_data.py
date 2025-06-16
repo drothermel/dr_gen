@@ -1,6 +1,6 @@
+from collections import defaultdict
 from collections.abc import MutableMapping
 from datetime import datetime
-from collections import defaultdict
 
 import dr_util.file_utils as fu
 
@@ -178,7 +178,7 @@ class RunData:
         if contents is None:
             self.parse_errors.append(f">> Unable to load file: {self.file_path}")
             return
-        elif len(contents) <= 2:
+        if len(contents) <= 2:
             self.parse_errors.append(">> File two lines or less, unable to parse")
             return
 

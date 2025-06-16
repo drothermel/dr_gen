@@ -1,8 +1,10 @@
+import re
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
-import re
+
 import dr_gen.analyze.bootstrapping as bu
-from collections import defaultdict
 
 # === Helpers to Select Relevant Run Groups === #
 
@@ -12,8 +14,7 @@ def make_hpm_specs(
     wd=1e-4,
     epochs=270,
 ):
-    """
-    Create hyperparameter specifications dictionary.
+    """Create hyperparameter specifications dictionary.
 
     Args:
         lr: Learning rate
@@ -37,8 +38,7 @@ def get_pretrained_vs_random_init_runs(
     metric="acc1",
     one_per=True,
 ):
-    """
-    Get runs comparing pretrained vs random initialization.
+    """Get runs comparing pretrained vs random initialization.
 
     Args:
         rg: Run group containing experiment data
@@ -134,8 +134,7 @@ def get_compare_runs_pretrain_vs_random(
 
 
 def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
-    """
-    Finds the best hyperparameter set and timestep for a given group
+    """Finds the best hyperparameter set and timestep for a given group
     based on validation data.
     tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
     """
@@ -205,8 +204,8 @@ def run_comparison_eval(
 def print_results_report(
     best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results
 ):
-    """
-    Prints a formatted report summarizing the analysis results.
+    """Prints a formatted report summarizing the analysis results.
+
     Args:
         best_hpm_A (str): Name of the best HPM for Group A.
         best_ts_A (int): Best validation timestep for Group A.
@@ -312,8 +311,7 @@ def parse_group_name(group_name_str):
 
 # Helper
 def add_hpm_columns(df):
-    """
-    Parses the 'group_name' column and adds HPMs as separate columns.
+    """Parses the 'group_name' column and adds HPMs as separate columns.
 
     Args:
         df (pd.DataFrame): The initial DataFrame with a 'group_name' column.
@@ -337,8 +335,7 @@ def add_hpm_columns(df):
 
 
 def run_groups_to_df(valid_groups, min_steps):
-    """
-    Builds intermediate NumPy arrays for columns based on valid groups and min_steps,
+    """Builds intermediate NumPy arrays for columns based on valid groups and min_steps,
     then concatenates them and creates the initial Pandas DataFrame.
 
     Args:

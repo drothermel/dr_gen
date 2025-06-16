@@ -13,15 +13,13 @@ def make_list_of_lists(in_val, dim=0):
 
     if dim == 0:
         return [in_val]
-    else:
-        return [[iv] for iv in in_val]
+    return [[iv] for iv in in_val]
 
 
 def add_dim(inlist, dim=0):
     if dim == 0:
         return [inlist]
-    else:
-        return [[v] for v in inlist]
+    return [[v] for v in inlist]
 
 
 def make_list_of_lols(in_val, dim=0):
@@ -41,10 +39,9 @@ def make_list_of_lols(in_val, dim=0):
     if not isinstance(in_val[0][0], list):
         if dim == 0:
             return [in_val]
-        elif dim == 1:
+        if dim == 1:
             return [[vs] for vs in in_val]
-        else:
-            return [[[v] for v in vs] for vs in in_val]
+        return [[[v] for v in vs] for vs in in_val]
 
 
 def flatten_dict_tuple_keys(d, parent_key=()):

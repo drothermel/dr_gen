@@ -1,9 +1,10 @@
-import os
-import json
-import pickle
 import argparse
+import json
+import os
+import pickle
+from collections import OrderedDict, defaultdict
+
 import numpy as np
-from collections import defaultdict, OrderedDict
 
 # A unique object to represent missing keys in configs for comparison during grouping
 _NotPresent = object()
@@ -26,9 +27,8 @@ def is_key_blacklisted(key, blacklist):
             return True
     return False
 
-def flatten_dict(d, parent_key='', sep='.'):
-    """
-    Flattens a nested dictionary.
+def flatten_dict(d, parent_key="", sep="."):
+    """Flattens a nested dictionary.
     E.g., {"a": 1, "b": {"c": 2}} becomes {"a": 1, "b.c": 2}.
     Preserves order if input is OrderedDict.
     """
@@ -44,8 +44,7 @@ def flatten_dict(d, parent_key='', sep='.'):
 
 
 def parse_log_file(filepath):
-    """
-    Parses a single .jsonl log file.
+    """Parses a single .jsonl log file.
     The first line is expected to be the JSON config.
     It handles potentially nested configs like {"type": "dict_config", "value": {...actual_config...}}.
     The parsed config is then flattened.
@@ -63,16 +62,16 @@ def parse_log_file(filepath):
     """
     raw_config = None
     metrics_data = defaultdict(lambda: defaultdict(list))
-    
+
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             # First line is config
             try:
                 first_line = f.readline()
                 if not first_line.strip():
                     print(f"Warning: File {filepath} is empty or first line is blank.")
                     return None, metrics_data
-                
+
                 parsed_json_config = json.loads(first_line)
 
                 if isinstance(parsed_json_config, dict) and \
@@ -81,12 +80,12 @@ def parse_log_file(filepath):
                    isinstance(parsed_json_config["value"], dict):
                     raw_config = parsed_json_config["value"]
                 else:
-                    raw_config = parsed_json_config 
+                    raw_config = parsed_json_config
 
             except json.JSONDecodeError as e:
                 print(f"Warning: Could not parse config from first line of {filepath}: {e}. Skipping this file.")
                 return None, metrics_data
-            except Exception as e: 
+            except Exception as e:
                 print(f"Warning: Error processing config from {filepath}: {e}. Skipping this file.")
                 return None, metrics_data
 
@@ -110,33 +109,34 @@ def parse_log_file(filepath):
                     if log_entry.get("title") and log_entry.get("data_name") and isinstance(log_entry.get("agg_stats"), dict):
                         split_name = log_entry["data_name"]
                         agg_stats = log_entry["agg_stats"]
-                        
+
                         if "loss" in agg_stats:
                             metrics_data[split_name]["loss"].append(agg_stats["loss"])
                         if "acc1" in agg_stats:
                             metrics_data[split_name]["acc1"].append(agg_stats["acc1"])
-                            
+
                 except json.JSONDecodeError:
-                    pass 
+                    pass
                 except Exception:
                     pass
-                    
-    except IOError as e:
+
+    except OSError as e:
         print(f"Error: Could not read file {filepath}: {e}")
         return None, metrics_data
-    
+
     return config, metrics_data
 
 
 def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
-    """
-    Identifies varying FLATTENED config parameters (excluding 'seed' and blacklisted keys) and groups runs.
+    """Identifies varying FLATTENED config parameters (excluding 'seed' and blacklisted keys) and groups runs.
+
     Args:
         all_runs_data (list): A list of dictionaries, where each dict has 
                               {'config': FLATTENED_actual_config_dict, 
                                'metrics': metrics_dict, 
                                'filepath': str}.
         key_blacklist (list): List of substrings. Keys containing these will be ignored.
+
     Returns:
         tuple: (grouped_runs_dict, varying_keys_list, group_to_hpms_map_dict)
                grouped_runs_dict maps run_group_name to a list of run_data dicts.
@@ -146,11 +146,11 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
     if not all_runs_data:
         return defaultdict(list), [], {}
 
-    valid_runs_data = [run for run in all_runs_data if run['config'] is not None and isinstance(run['config'], dict)]
+    valid_runs_data = [run for run in all_runs_data if run["config"] is not None and isinstance(run["config"], dict)]
     if not valid_runs_data:
         return defaultdict(list), [], {}
-        
-    all_flattened_configs = [run['config'] for run in valid_runs_data]
+
+    all_flattened_configs = [run["config"] for run in valid_runs_data]
 
     super_keyset = set()
     for cfg in all_flattened_configs:
@@ -158,16 +158,16 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
     varying_config_keys = []
     # Sort super_keyset for consistent order of varying_config_keys and group names
-    for key in sorted(list(super_keyset)): 
+    for key in sorted(list(super_keyset)):
         # Exclude seed, and any blacklisted keys
-        if key == 'seed' or key.endswith('.seed') or is_key_blacklisted(key, key_blacklist):
+        if key == "seed" or key.endswith(".seed") or is_key_blacklisted(key, key_blacklist):
             continue
-        
+
         values_for_key = set()
         for config_item in all_flattened_configs:
             value = config_item.get(key, _NotPresent)
             if value is _NotPresent:
-                 values_for_key.add(str(_NotPresent)) 
+                 values_for_key.add(str(_NotPresent))
             else:
                 try: # Use JSON dumps for complex types to ensure hashability and correct comparison
                     values_for_key.add(json.dumps(value, sort_keys=True))
@@ -176,94 +176,94 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
         if len(values_for_key) > 1:
             varying_config_keys.append(key)
-            
+
     grouped_runs = defaultdict(list)
     group_to_hpms_map = {}
 
     for run_data in valid_runs_data:
-        config = run_data['config'] # This is the flattened config
+        config = run_data["config"] # This is the flattened config
         group_name_parts = []
         # Use the already sorted varying_config_keys for consistent group naming
         # These keys are already filtered against the blacklist.
-        for key in varying_config_keys: 
-            value = config.get(key) 
+        for key in varying_config_keys:
+            value = config.get(key)
             if value is None and key not in config:
                 value_str = "MISSING"
             else:
                 try:
-                    value_str = json.dumps(value, sort_keys=True, separators=(',', ':'))
+                    value_str = json.dumps(value, sort_keys=True, separators=(",", ":"))
                 except TypeError:
                     value_str = str(value)
-            
+
             # Sanitize key and value_str for file/group naming
-            sane_key = key.replace('/', '_').replace('\\', '_').replace('"', '').replace('\'', '')
-            sane_value_str = value_str.replace('/', '_').replace('\\', '_').replace('"', '').replace('\'', '')
+            sane_key = key.replace("/", "_").replace("\\", "_").replace('"', "").replace("'", "")
+            sane_value_str = value_str.replace("/", "_").replace("\\", "_").replace('"', "").replace("'", "")
             group_name_parts.append(f"{sane_key}={sane_value_str}")
 
         run_group_name = "_".join(group_name_parts) if group_name_parts else "default_group"
         grouped_runs[run_group_name].append(run_data)
-        
+
         if run_group_name not in group_to_hpms_map:
             # Store the (flattened) config of the first run encountered for this group
             # Exclude 'seed' and blacklisted keys from the stored HPMs for the group
             hpms_for_group = {
-                k: v for k, v in config.items() 
-                if k != 'seed' and not k.endswith('.seed') and not is_key_blacklisted(k, key_blacklist)
+                k: v for k, v in config.items()
+                if k != "seed" and not k.endswith(".seed") and not is_key_blacklisted(k, key_blacklist)
             }
             group_to_hpms_map[run_group_name] = hpms_for_group
-            
+
     return grouped_runs, varying_config_keys, group_to_hpms_map
 
 
 def aggregate_metrics_for_groups(grouped_runs):
-    """
-    Aggregates metrics for each run group into S x E NumPy arrays.
+    """Aggregates metrics for each run group into S x E NumPy arrays.
     This function's core logic for metrics aggregation remains the same.
 
     Args:
         grouped_runs (dict): Maps run_group_name to a list of run_data dicts.
                              Each run_data['config'] is a FLATTENED config.
+
     Returns:
         dict: group_metrics_results of the structure:
               {run_group_name: {split: {metric: np.array(shape=(S, E))}}}
     """
     group_metrics_results = {}
-    target_splits = ['train', 'val', 'eval'] 
-    target_metrics = ['loss', 'acc1']
+    target_splits = ["train", "val", "eval"]
+    target_metrics = ["loss", "acc1"]
 
     for run_group_name, runs_in_group in grouped_runs.items():
         current_group_split_metric_results = defaultdict(dict)
-        
+
         for split in target_splits:
             for metric in target_metrics:
-                metrics_by_seed_for_current_setting = [] 
+                metrics_by_seed_for_current_setting = []
                 num_epochs_per_seed = []
-                
+
                 # Sort runs by seed to ensure consistent ordering in the S dimension
                 # Access 'seed' from the flattened config.
                 sorted_runs_in_group = sorted(
-                    runs_in_group, 
-                    key=lambda r: r['config'].get('seed', float('inf'))
+                    runs_in_group,
+                    key=lambda r: r["config"].get("seed", float("inf"))
                 )
 
                 for run_data in sorted_runs_in_group:
-                    seed_metric_values = run_data['metrics'][split][metric]
-                    if seed_metric_values: 
+                    seed_metric_values = run_data["metrics"][split][metric]
+                    if seed_metric_values:
                         metrics_by_seed_for_current_setting.append(seed_metric_values)
                         num_epochs_per_seed.append(len(seed_metric_values))
-                
+
                 if not metrics_by_seed_for_current_setting:
                     continue
 
                 min_epochs = min(num_epochs_per_seed) if num_epochs_per_seed else 0
-                if min_epochs == 0: 
+                if min_epochs == 0:
                     continue
-                
+
                 truncated_metrics_by_seed = []
                 for series in metrics_by_seed_for_current_setting:
                     if len(series) >= min_epochs:
                         truncated_metrics_by_seed.append(series[:min_epochs])
-                
+
                 if not truncated_metrics_by_seed:
                     continue
 
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--log_dir", type=str, default=".", help="Directory containing .jsonl log files.")
     parser.add_argument("--output_pkl", type=str, default=".",help="Path to save the output .pkl file (e.g., results.pkl).")
-    
+
     args = parser.parse_args()
     args.log_dir = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0_t2/"
     args.output_pkl = "/Users/daniellerothermel/drotherm/data/dr_gen/run_data_v1/lr_wd_init_v0_t2.pkl"
@@ -310,14 +310,14 @@ if __name__ == "__main__":
         if filename.endswith(".jsonl"):
             filepath = os.path.join(args.log_dir, filename)
             # parse_log_file now returns flattened_config
-            flattened_config, metrics = parse_log_file(filepath) 
-            if flattened_config is not None: 
+            flattened_config, metrics = parse_log_file(filepath)
+            if flattened_config is not None:
                 all_runs_data_with_flattened_configs.append({
-                    'config': flattened_config, 
-                    'metrics': metrics, 
-                    'filepath': filepath
+                    "config": flattened_config,
+                    "metrics": metrics,
+                    "filepath": filepath
                 })
-    
+
     if not all_runs_data_with_flattened_configs:
         print("No valid log files with parsable and flattenable configurations found. Exiting.")
         exit(0)
@@ -329,13 +329,13 @@ if __name__ == "__main__":
         all_runs_data_with_flattened_configs,
         CONFIG_KEY_BLACKLIST
     )
-    
+
     if not grouped_runs:
         print("No run groups could be formed.")
         if not any(all_runs_data_with_flattened_configs):
              print("No run data was loaded initially.")
         exit(0)
-        
+
     print(f"Identified {len(varying_keys)} varying config parameters (excluding 'seed', blacklisted keys, dot-separated): {varying_keys if varying_keys else 'None'}")
     print(f"Formed {len(grouped_runs)} run groups: {list(grouped_runs.keys())}")
 
@@ -385,10 +385,10 @@ if __name__ == "__main__":
 
     print(f"\nSaving aggregated results to: {args.output_pkl}")
     try:
-        with open(args.output_pkl, 'wb') as f_out:
+        with open(args.output_pkl, "wb") as f_out:
             pickle.dump(final_output_to_pickle, f_out)
         print("Successfully saved results.")
-    except IOError as e:
+    except OSError as e:
         print(f"Error: Could not write to output file {args.output_pkl}: {e}")
     except pickle.PicklingError as e:
         print(f"Error: Could not pickle the results: {e}")

@@ -173,14 +173,14 @@ class MetricCurve:
         assert len(xs) == len(vals), ">> xs and vals must be same length"
         self.x_vals = xs
         self.metric_vals = vals
-        self.x2met = {x: m for x, m in zip(xs, vals)}
+        self.x2met = {x: m for x, m in zip(xs, vals, strict=False)}
 
     def sort_curve_by_x(self):
         assert len(self.x_vals) != 0, ">> there are no x vals"
         assert len(self.metric_vals) == len(self.x_vals), (
             ">> xs and vals must be same length"
         )
-        combined = [(x, m) for x, m in zip(self.x_vals, self.metric_vals)]
+        combined = [(x, m) for x, m in zip(self.x_vals, self.metric_vals, strict=False)]
         after_sort = sorted(combined)
         self.x_vals = [x for x, _ in after_sort]
         self.metric_vals = [m for _, m in after_sort]

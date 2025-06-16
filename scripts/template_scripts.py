@@ -1,8 +1,7 @@
 import hydra
-from omegaconf import DictConfig
-
 from dr_util.config_verification import validate_cfg
 from dr_util.schemas import get_schema
+from omegaconf import DictConfig
 
 from dr_gen.utils.metrics import GenMetrics
 

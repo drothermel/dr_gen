@@ -1,12 +1,11 @@
+import pytest
 import torch
 import torch.nn as nn
-import pytest
+from dr_util.metrics import BATCH_KEY
 from omegaconf import OmegaConf
 
-from dr_util.metrics import BATCH_KEY
-
-import dr_gen.train.loops as te
 import dr_gen.train.evaluate as eu
+import dr_gen.train.loops as te
 import dr_gen.train.model as mu
 
 

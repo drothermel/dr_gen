@@ -1,6 +1,6 @@
-from omegaconf import OmegaConf
 import matplotlib.pyplot as plt
 import numpy as np
+from omegaconf import OmegaConf
 
 from dr_gen.utils.utils import make_list, make_list_of_lists
 
@@ -201,8 +201,8 @@ def add_std_shade_to_plot(
     for i, dl in enumerate(data_list):
         dstats = data_stats[i]
         x = dstats["x_vals"]
-        std_low = [m - s for m, s in zip(dstats["mean"], dstats["std"])]
-        std_high = [m + s for m, s in zip(dstats["mean"], dstats["std"])]
+        std_low = [m - s for m, s in zip(dstats["mean"], dstats["std"], strict=False)]
+        std_high = [m + s for m, s in zip(dstats["mean"], dstats["std"], strict=False)]
         ax.fill_between(x, std_low, std_high, color=colors[i], alpha=0.3)
         if std_min_line:
             ax.plot(x, std_low, color=colors[i], alpha=0.6)
@@ -228,8 +228,8 @@ def add_sem_shade_to_plot(
     for i, dl in enumerate(data_list):
         dstats = data_stats[i]
         x = dstats["x_vals"]
-        sem_low = [m - s for m, s in zip(dstats["mean"], dstats["sem"])]
-        sem_high = [m + s for m, s in zip(dstats["mean"], dstats["sem"])]
+        sem_low = [m - s for m, s in zip(dstats["mean"], dstats["sem"], strict=False)]
+        sem_high = [m + s for m, s in zip(dstats["mean"], dstats["sem"], strict=False)]
         ax.fill_between(x, sem_low, sem_high, color=colors[i], alpha=0.3)
         if sem_min_line:
             ax.plot(x, sem_low, color=colors[i], alpha=0.6)
@@ -288,11 +288,11 @@ def make_line_plot(curve_or_curves, ax=None, **kwargs):
     plc = kwargs.get("plc", get_plt_cfg(**kwargs))
 
     # Make figure, add lines, format plot
-    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     add_lines_to_plot(plc, ax, curve_or_curves)
     format_plot_element(plc, ax)
     if plt_show:
-        plt.show()  # noqa E701
+        plt.show()
 
 
 def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
@@ -304,12 +304,12 @@ def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
     plc = kwargs.get("plc", get_plt_cfg(**kwargs))
 
     # Make figure, add lines, format plot
-    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     means = get_multi_curve_summary_stats(vals_or_vals_list, axis=1)["mean"]
     add_histograms_to_plot(plc, ax, vals_or_vals_list, means)
     format_plot_element(plc, ax)
     if plt_show:
-        plt.show()  # noqa E701
+        plt.show()
 
 
 def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
@@ -318,11 +318,11 @@ def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
     plc = kwargs.get("plc", get_plt_cfg(**kwargs))
 
     # Make figure, add lines, format plot
-    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     add_cdfs_to_plot(plc, ax, vals, cdfs)
     format_plot_element(plc, ax)
     if plt_show:
-        plt.show()  # noqa E701
+        plt.show()
 
 
 def make_summary_plot(data_lists, ax=None, **kwargs):
@@ -333,7 +333,7 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
     else:
         plc = get_plt_cfg(**kwargs)
 
-    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     data_stats = [get_multi_curve_summary_stats(dl) for dl in data_lists]
 
     # Mean Line
@@ -387,7 +387,7 @@ def make_summary_plot(data_lists, ax=None, **kwargs):
 
     format_plot_element(plc, ax)
     if plt_show:
-        plt.show()  # noqa E701
+        plt.show()
 
 
 # ----------------- Grid Utils------------------------

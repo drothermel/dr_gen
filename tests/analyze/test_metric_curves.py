@@ -1,4 +1,5 @@
 import pytest
+
 from dr_gen.analyze.metric_curves import (
     DEFAULT_XNAME,
     MetricCurve,
@@ -52,7 +53,7 @@ def test_add_curve():
     assert mc.x_vals == xs
     assert mc.metric_vals == vals
     # Verify mapping
-    for x, val in zip(xs, vals):
+    for x, val in zip(xs, vals, strict=False):
         assert mc.x2met[x] == val
 
 

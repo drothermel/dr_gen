@@ -27,12 +27,12 @@ def run(cfg: DictConfig):
 
     print(">> All xs:")
     for k, v in lfd.get_all_xs_flat().items():
-        print(f"  - {str(k):50} | {v[:3]}")
+        print(f"  - {k!s:50} | {v[:3]}")
     print()
 
     print(">> All vals:")
     for k, v in lfd.get_all_vals_flat().items():
-        print(f"  - {str(k):50} | {v[:3]}")
+        print(f"  - {k!s:50} | {v[:3]}")
     print()
 
     print(">> End run!")

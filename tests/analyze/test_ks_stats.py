@@ -1,5 +1,6 @@
 import numpy as np
-from dr_gen.analyze.ks_stats import find_max_diff_point, calculate_ks_for_run_sets
+
+from dr_gen.analyze.ks_stats import calculate_ks_for_run_sets, find_max_diff_point
 
 
 def test_find_max_diff_point_basic():

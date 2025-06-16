@@ -1,18 +1,19 @@
 import pytest
-from omegaconf import OmegaConf
 from dr_util.metrics import (
     BATCH_KEY,
-    add_sum,
     add_list,
-    agg_passthrough,
-    agg_none,
+    add_sum,
     agg_batch_weighted_list_avg,
+    agg_none,
+    agg_passthrough,
 )
+from omegaconf import OmegaConf
+
 from dr_gen.utils.metrics import (
+    GenMetrics,
+    GenMetricsSubgroup,
     GenMetricType,
     agg_avg_list,
-    GenMetricsSubgroup,
-    GenMetrics,
 )
 
 # ---------------------------------------------------

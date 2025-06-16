@@ -1,17 +1,16 @@
+import dr_util.determinism_utils as dtu
 import hydra
+from dr_util.config_verification import validate_cfg
 from omegaconf import DictConfig
 from torch.utils.data import (
     RandomSampler,
 )
 
-import dr_util.determinism_utils as dtu
-from dr_util.config_verification import validate_cfg
-
-from dr_gen.schemas import get_schema
-from dr_gen.utils.metrics import GenMetrics
 from dr_gen.data.load_data import get_dataloaders_refactored
+from dr_gen.schemas import get_schema
 from dr_gen.train.loops import train_loop
 from dr_gen.train.model import get_model_optim_lrsched
+from dr_gen.utils.metrics import GenMetrics
 
 
 def validate_run_cfg(cfg):

@@ -1,14 +1,12 @@
-from pathlib import Path
 import json
-import shutil
-
-from dr_gen.utils.utils import hash_string_to_length
 import re
-import os
+import shutil
+from pathlib import Path
+
 
 def parse_sweep2_path_hyperparameters(path_string: str):
-    normalized_path = path_string.strip('/')
-    parts = normalized_path.split('/')
+    normalized_path = path_string.strip("/")
+    parts = normalized_path.split("/")
     hpm_dict = {}
     run_label_parts = []
     dataset_marker = "cifar10"
@@ -53,8 +51,7 @@ def parse_sweep2_path_hyperparameters(path_string: str):
 
 
 def file_path_to_name(fpath):
-    """
-     /scratch/ddr8143/logs/cifar10/bs500/lr0.25/wd0.0001/s18/pretrained/2025-03-01-17-39-1740868772/json_out.jsonl
+    """/scratch/ddr8143/logs/cifar10/bs500/lr0.25/wd0.0001/s18/pretrained/2025-03-01-17-39-1740868772/json_out.jsonl
     fl = fpath.parts
     bs = fl[5]
     lr = fl[6]
@@ -79,7 +76,7 @@ for file in root_dir.rglob("*.jsonl"):
     if file.is_file():
         fpath = file.resolve()
         hpm_dict, fname = file_path_to_name(fpath)
-        all_json.append((fpath, {"run_name": fname, "seed": hpm_dict['s'], "hpms": hpm_dict}))
+        all_json.append((fpath, {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict}))
 dest_dir.mkdir(parents=True, exist_ok=True)
 
 # Dump the metadata into a file
@@ -95,8 +92,8 @@ with metadata_path.open("w") as f:
 print(">> Copying files to destination")
 for source_path, new_info_dict in all_json:
     src_path = Path(source_path)
-    run_name = new_info_dict['run_name']
-    seed = new_info_dict['seed']
+    run_name = new_info_dict["run_name"]
+    seed = new_info_dict["seed"]
     hpm_dest_dir = dest_dir / run_name
     hpm_dest_dir.mkdir(parents=True, exist_ok=True)
     dest_path = hpm_dest_dir / f"s{seed}.jsonl"
