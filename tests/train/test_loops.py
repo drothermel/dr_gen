@@ -13,7 +13,7 @@ import dr_gen.train.model as mu
 # Dummy Metrics Logger
 # ----------------------
 class DummyMetrics:
-    def __init__(self):
+    def __init__(self) -> None:
         self.logs = []  # collect all log calls for inspection
 
     def log_data(self, data, group_name, ns=None):
@@ -77,7 +77,7 @@ def dummy_model():
 @pytest.fixture
 def dummy_cfg(tmp_path):
     # Create a dummy OmegaConf configuration.
-    cfg = OmegaConf.create(
+    return OmegaConf.create(
         {
             "device": "cpu",
             "epochs": 2,

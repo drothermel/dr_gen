@@ -177,65 +177,65 @@ if __name__ == "__main__":
     )
     parser.add_argument("-g", "--avail_gpus", type=str, default="")
     parser.add_argument(
-        "-s", "--start_seed", 
-        type=int, 
-        default=DEFAULT_START_SEED, 
+        "-s", "--start_seed",
+        type=int,
+        default=DEFAULT_START_SEED,
         help=f"Start seed for sequence (if --max_seed is used). Default: {DEFAULT_START_SEED}"
     )
     parser.add_argument(
-        "-e", "--max_seed", 
-        type=int, 
-        default=None, 
+        "-e", "--max_seed",
+        type=int,
+        default=None,
         help="Max seed for sequence. Overrides default seeds list."
     )
     parser.add_argument(
-        "--seeds_list", 
-        type=str, 
-        default=",".join(map(str, DEFAULT_SEEDS_TO_RUN)), 
+        "--seeds_list",
+        type=str,
+        default=",".join(map(str, DEFAULT_SEEDS_TO_RUN)),
         help=f"Comma-separated list of seeds if not using start/max_seed. Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}"
     )
 
     # Hydra parameter sweep args
     parser.add_argument(
-        "--val_bs", 
-        type=str, 
-        default=DEFAULT_VAL_BS, 
+        "--val_bs",
+        type=str,
+        default=DEFAULT_VAL_BS,
         help=f"Validation/Evaluation batch size(s), comma-separated. Default: {DEFAULT_VAL_BS}"
     )
     parser.add_argument(
-        "--proj_name", 
-        type=str, 
-        default=DEFAULT_PROJ_DIR_NAME, 
+        "--proj_name",
+        type=str,
+        default=DEFAULT_PROJ_DIR_NAME,
         help=f"Project directory name(s) for 'paths.proj_dir_name', comma-separated. Default: {DEFAULT_PROJ_DIR_NAME}"
     )
     parser.add_argument(
-        "--epochs", 
-        type=str, 
-        default=DEFAULT_EPOCHS, 
+        "--epochs",
+        type=str,
+        default=DEFAULT_EPOCHS,
         help=f"Number of epoch(s), comma-separated. Default: {DEFAULT_EPOCHS}"
     )
     parser.add_argument(
-        "--bs", 
-        type=str, 
-        default=DEFAULT_BATCH_SIZE, 
+        "--bs",
+        type=str,
+        default=DEFAULT_BATCH_SIZE,
         help=f"Training batch size(s), comma-separated. Default: {DEFAULT_BATCH_SIZE}"
     )
     parser.add_argument(
-        "--lr", 
-        type=str, 
-        default=DEFAULT_LR, 
+        "--lr",
+        type=str,
+        default=DEFAULT_LR,
         help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}"
     )
     parser.add_argument(
-        "--wd", 
-        type=str, 
-        default=DEFAULT_WEIGHT_DECAY, 
+        "--wd",
+        type=str,
+        default=DEFAULT_WEIGHT_DECAY,
         help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}"
     )
     parser.add_argument(
-        "--wtype", 
-        type=str, 
-        default=DEFAULT_WEIGHT_TYPE, 
+        "--wtype",
+        type=str,
+        default=DEFAULT_WEIGHT_TYPE,
         help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}"
     )
     parser.add_argument("--wn", type=str, default="DEFAULT")
@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     AVAILABLE_GPUS = (
-        None if args.avail_gpus == "" 
+        None if args.avail_gpus == ""
         else parse_value_list(args.avail_gpus, target_type=int)
     )
     MAX_PARALLEL_JOBS = args.max_parallel_jobs
@@ -262,7 +262,7 @@ if __name__ == "__main__":
         actual_seeds_to_run = parse_value_list(args.seeds_list, int)
         print_flush(f"Using provided seeds list: {actual_seeds_to_run}")
 
-    if not os.path.isfile(TRAINING_SCRIPT_PATH):
+    if not Path(TRAINING_SCRIPT_PATH).is_file():
         print_flush(f"[ERROR] Training script not found at '{TRAINING_SCRIPT_PATH}'. Please check the path. Exiting.")
         exit(1)
 
@@ -310,9 +310,10 @@ if __name__ == "__main__":
     # Generate all combinations
     all_combinations_values = list(itertools.product(*value_lists_for_product))
 
-    all_param_dicts_to_run = []
-    for combo_values in all_combinations_values:
-        all_param_dicts_to_run.append(dict(zip(param_names_for_product, combo_values, strict=False)))
+    all_param_dicts_to_run = [
+        dict(zip(param_names_for_product, combo_values, strict=False))
+        for combo_values in all_combinations_values
+    ]
 
     total_jobs = len(all_param_dicts_to_run)
     print_flush(f"\nTotal number of unique parameter combinations to run: {total_jobs}")
