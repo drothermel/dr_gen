@@ -69,6 +69,7 @@ def test_seed_worker() -> None:
     random.seed(worker_seed)
     expected_rand = random.random()  # noqa: S311
 
-    # The values produced after seed_worker should match those when re-seeded with worker_seed.
+    # The values produced after seed_worker should match those when
+    # re-seeded with worker_seed.
     assert np.isclose(np_val, expected_np)
     assert rand_val == expected_rand

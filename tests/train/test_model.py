@@ -124,7 +124,7 @@ def test_get_model_optim_lrsched() -> None:
     # it might be None if create_lrsched returns None.
     # We simply check that lr_scheduler is either None or an instance of a scheduler.
     if lr_scheduler is not None:
-        assert isinstance(lr_scheduler, torch.optim.lr_scheduler._LRScheduler)
+        assert isinstance(lr_scheduler, torch.optim.lr_scheduler._LRScheduler)  # noqa: SLF001
 
 
 # --------- Test for get_criterion ---------

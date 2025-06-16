@@ -91,7 +91,8 @@ def dummy_cfg(tmp_path):
                 "loss": "cross_entropy",
             },
             "model": {
-                "name": "resnet18",  # Not used because we override model creation in tests.
+                "name": "resnet18",
+                # Not used because we override model creation in tests.
                 "weights": None,
             },
             "write_checkpoint": str(tmp_path / "checkpoints"),
@@ -166,7 +167,8 @@ def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model) -> None:
 # ----------------------
 def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch) -> None:
     md = DummyMetrics()
-    # Override model utility functions so that no real file I/O or complex behavior occurs.
+    # Override model utility functions so that no real file I/O or
+    # complex behavior occurs.
     monkeyatch_set = [
         (mu, "checkpoint_model", dummy_checkpoint_model),
     ]

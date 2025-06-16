@@ -35,7 +35,7 @@ def print_flush(in_val: object) -> None:
 
 def parse_value_list(value_str: object, target_type: type = str) -> list:
     """Parses a command-line string. If it contains commas, splits it into a list.
-    
+
     Converts elements to the target_type.
     If already a list (e.g., for seeds), returns it after type conversion.
     """
@@ -72,7 +72,7 @@ def get_next_gpu_id() -> int | None:
 
 def create_unique_job_name(param_dict: dict) -> str:
     """Creates a unique and descriptive name from parameter dictionary.
-    
+
     Used for logging and directories.
     """
     name_parts = []
@@ -86,9 +86,11 @@ def create_unique_job_name(param_dict: dict) -> str:
         name_parts.append(f"{sanitized_key}_{value}")
     return "-".join(name_parts)
 
-def start_training_run(param_combination_dict: dict, job_name: str) -> tuple[object, str] | tuple[None, str]:
+def start_training_run(
+    param_combination_dict: dict, job_name: str
+) -> tuple[object, str] | tuple[None, str]:
     """Constructs the command to run the Hydra script with a specific parameter combination.
-    
+
     Starts it as a subprocess.
     Returns a tuple (subprocess.Popen object, job_name).
     """
