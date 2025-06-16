@@ -33,6 +33,7 @@ def is_key_blacklisted(key, blacklist):
 
 def flatten_dict(d, parent_key="", sep="."):
     """Flattens a nested dictionary.
+    
     E.g., {"a": 1, "b": {"c": 2}} becomes {"a": 1, "b.c": 2}.
     Preserves order if input is OrderedDict.
     """
@@ -51,6 +52,7 @@ def flatten_dict(d, parent_key="", sep="."):
 
 def parse_log_file(filepath):
     """Parses a single .jsonl log file.
+    
     The first line is expected to be the JSON config.
     It handles potentially nested configs like
     {"type": "dict_config", "value": {...actual_config...}}.
@@ -334,12 +336,14 @@ def aggregate_metrics_for_groups(grouped_runs):
                     else:
                         print(
                             f"Warning: Could not form valid S x E array for "
-                           f"{run_group_name}/{split}/{metric}. "
-                            f"Expected E={min_epochs}, got shape {aggregated_array.shape}. Skipping."
+                            f"{run_group_name}/{split}/{metric}. "
+                            f"Expected E={min_epochs}, got shape "
+                            f"{aggregated_array.shape}. Skipping."
                         )
                 except (ValueError, TypeError, AttributeError) as e:
                     print(
-                        f"Error: Failed to convert to NumPy array for {run_group_name}/{split}/{metric}: {e}. Skipping."
+                        f"Error: Failed to convert to NumPy array for "
+                        f"{run_group_name}/{split}/{metric}: {e}. Skipping."
                     )
 
         if current_group_split_metric_results:

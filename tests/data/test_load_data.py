@@ -363,9 +363,10 @@ def test_get_dataloader_invalid_split(monkeypatch) -> None:
 
 
 def test_get_split_source_config_defaults() -> None:
-    """When no configuration is provided, each split should use itself as the source
+    """Test default split source configuration.
+    
+    When no configuration is provided, each split should use itself as the source
     with the default percentage.
-
     """
     sources, ranges = du.get_split_source_config(cfg=None)
 
@@ -414,9 +415,10 @@ def test_get_split_source_config_custom() -> None:
 
 
 def test_get_split_source_config_over_usage() -> None:
-    """Test that an assertion error is raised if the total allocated percentage
+    """Test over-allocation error for shared sources.
+    
+    Test that an assertion error is raised if the total allocated percentage
     for a shared source exceeds 100% (i.e. > 1.0).
-
     """
     cfg = OmegaConf.create(
         {
@@ -440,7 +442,9 @@ def test_get_split_source_config_over_usage() -> None:
 
 # Test for get_dataloaders
 def test_get_dataloaders(monkeypatch) -> None:
-    """This test constructs a dummy configuration (via OmegaConf) and then patches
+    """Test get_dataloaders with mocked dependencies.
+    
+    This test constructs a dummy configuration (via OmegaConf) and then patches
     out helper functions so that get_dataloaders returns predictable DataLoaders.
 
     We then check that each returned DataLoader has the expected batch_size and

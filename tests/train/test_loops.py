@@ -13,19 +13,26 @@ import dr_gen.train.model as mu
 # Dummy Metrics Logger
 # ----------------------
 class DummyMetrics:
+    """Dummy metrics logger for testing purposes."""
+
     def __init__(self) -> None:
+        """Initialize the dummy metrics logger."""
         self.logs = []  # collect all log calls for inspection
 
     def log_data(self, data, group_name, ns=None):
+        """Log data entry."""
         self.logs.append(("log_data", data))
 
     def log(self, msg):
+        """Log a message."""
         self.logs.append(("log", msg))
 
     def agg_log(self, group):
+        """Log aggregated data for a group."""
         self.logs.append(("agg_log", group))
 
     def clear_data(self):
+        """Clear logged data."""
         self.logs.append(("clear_data", None))
 
 
@@ -49,14 +56,19 @@ def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None):
 
 # A dummy dataset that returns a fixed tensor and target.
 class DummyDataset(torch.utils.data.Dataset):
+    """Dummy dataset for testing purposes."""
+
     def __init__(self, num_samples: int = 4) -> None:
+        """Initialize dummy dataset with specified number of samples."""
         self.num_samples = num_samples
         self.classes = [0, 1, 2, 4, 5]
 
     def __len__(self) -> int:
+        """Return the number of samples in the dataset."""
         return self.num_samples
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """Get a sample from the dataset."""
         # Return a dummy "image" (e.g. 3x32x32) and a target label (0)
         return torch.randn(3, 32, 32), torch.tensor(0)
 

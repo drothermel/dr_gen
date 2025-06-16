@@ -98,6 +98,7 @@ def get_user_choice(prompt, options, *, allow_skip=False, allow_done=False):
 
 def select_run_group_interactively(all_runs_data):
     """Allows the user to interactively select HPM values to narrow down to a run group.
+    
     Returns the name of the selected run group, or None if aborted/failed.
     """
     if not all_runs_data:
