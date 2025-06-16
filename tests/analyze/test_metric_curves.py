@@ -148,8 +148,10 @@ def test_metriccurves_get_all_xs_and_vals() -> None:
     all_vals = mc.get_all_vals()
 
     # Both x_names should appear in the aggregated dictionaries.
-    assert DEFAULT_XNAME in all_xs and DEFAULT_XNAME in all_vals
-    assert custom_xname in all_xs and custom_xname in all_vals
+    assert DEFAULT_XNAME in all_xs
+    assert DEFAULT_XNAME in all_vals
+    assert custom_xname in all_xs
+    assert custom_xname in all_vals
     # Verify the lists are correct.
     assert all_xs[DEFAULT_XNAME] == [1]
     assert all_vals[DEFAULT_XNAME] == [0.9]

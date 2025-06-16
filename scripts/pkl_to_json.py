@@ -15,6 +15,7 @@ def convert_numpy_to_list(item: object) -> object:
         return item.tolist()
     return item
 
+
 def convert_pkl_to_json(pkl_filepath: str, json_filepath: str) -> None:
     """Converts a .pkl file (with potential numpy arrays) to a .json file."""
     try:
@@ -36,6 +37,7 @@ def convert_pkl_to_json(pkl_filepath: str, json_filepath: str) -> None:
         )
     except (OSError, ValueError, TypeError) as e:
         print(f"An error occurred during conversion: {e}")
+
 
 if __name__ == "__main__":
     convert_pkl_to_json(

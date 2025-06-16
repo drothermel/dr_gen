@@ -40,7 +40,9 @@ def get_logged_strings(jsonl_contents: list[dict[str, Any]]) -> list[str]:
     ]
 
 
-def get_logged_metrics_infer_epoch(hpm: Any, jsonl_contents: list[dict[str, Any]]) -> dict[str, SplitMetrics]:
+def get_logged_metrics_infer_epoch(
+    hpm: Any, jsonl_contents: list[dict[str, Any]]
+) -> dict[str, SplitMetrics]:
     metrics_by_split = {}
 
     epochs: dict[str, int] = defaultdict(int)
@@ -66,7 +68,9 @@ def get_logged_metrics_infer_epoch(hpm: Any, jsonl_contents: list[dict[str, Any]
     return metrics_by_split
 
 
-def validate_metrics(expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]) -> list[str]:
+def validate_metrics(
+    expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]
+) -> list[str]:
     if expected_epochs is None or len(metrics_by_split) == 0:
         return [f"invalid input: {expected_epochs}, {len(metrics_by_split)}"]
 
@@ -88,8 +92,10 @@ def validate_metrics(expected_epochs: list[int], metrics_by_split: dict[str, Spl
 class Hpm(MutableMapping):
     def __init__(
         self,
-        all_vals={},
-    ):
+        all_vals=None,
+    ) -> None:
+        if all_vals is None:
+            all_vals = {}
         self._all_values = gu.flatten_dict(all_vals)
         self.important_values = {}
         self.reset_important()
@@ -97,17 +103,17 @@ class Hpm(MutableMapping):
     def __getitem__(self, key):
         return self._all_values[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         self._all_values[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key) -> None:
         del self._all_values[key]
         self.exclude_from_important([key])
 
     def __iter__(self):
         return iter(self.important_values)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.important_values)
 
     def __eq__(self, other):
@@ -118,14 +124,14 @@ class Hpm(MutableMapping):
     def __hash__(self):
         return hash(self.as_tupledict())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " ".join(self.as_strings())
 
     def get_from_all(self, key):
         return self._all_values.get(key, None)
 
     def reset_important(self):
-        self.important_values = {k: v for k, v in self._all_values.items()}
+        self.important_values = dict(self._all_values.items())
 
     def exclude_from_important(self, excludes):
         self.important_values = {
@@ -155,7 +161,9 @@ class Hpm(MutableMapping):
         # Use as_tupledict to get consistent sort order
         return [f"{k}={v}" for k, v in self.as_tupledict()]
 
-    def as_valstrings(self, remap_kvs={}):
+    def as_valstrings(self, remap_kvs=None):
+        if remap_kvs is None:
+            remap_kvs = {}
         vs = []
         for k, v in self.as_tupledict():
             vstr = str(v)
@@ -164,7 +172,7 @@ class Hpm(MutableMapping):
 
 
 class RunData:
-    def __init__(self, file_path, rid=None):
+    def __init__(self, file_path, rid=None) -> None:
         self.file_path = file_path
         self.id = rid
         self.hpms = None

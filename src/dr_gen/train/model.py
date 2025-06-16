@@ -40,7 +40,9 @@ CRITERION_DEFAULTS = {
 # ================== cfg free ==================
 
 
-def create_optim(name: str, model_params: Any, optim_params: dict[str, Any]) -> torch.optim.Optimizer:
+def create_optim(
+    name: str, model_params: Any, optim_params: dict[str, Any]
+) -> torch.optim.Optimizer:
     assert "lr" in optim_params
     match name:
         case "timm_sgd":
@@ -148,7 +150,6 @@ def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:
         else:
             model_name = cfg.model.name
             pretrained = False
-        print(f">> Model: {model_name} pretrained: {pretrained}")
         model = timm.create_model(
             model_name,
             num_classes=num_classes,
@@ -160,9 +161,11 @@ def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:
 
 
 # Config Req: cfg.optim.name, cfg.optim.lr
-def create_optim_lrsched(cfg: Any, model: torch.nn.Module) -> tuple[torch.optim.Optimizer, Any]:
-    #vu.validate_optimizer(cfg.optim.name)
-    #vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
+def create_optim_lrsched(
+    cfg: Any, model: torch.nn.Module
+) -> tuple[torch.optim.Optimizer, Any]:
+    # vu.validate_optimizer(cfg.optim.name)
+    # vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
     model_params = model.parameters()
 
     # ---------- Optim -----------
@@ -178,7 +181,9 @@ def create_optim_lrsched(cfg: Any, model: torch.nn.Module) -> tuple[torch.optim.
     return optimizer, lr_scheduler
 
 
-def get_model_optim_lrsched(cfg: Any, num_classes: int, md: Any = None) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
+def get_model_optim_lrsched(
+    cfg: Any, num_classes: int, md: Any = None
+) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
     model = create_model(cfg, num_classes)
     optimizer = None
     lr_scheduler = None
@@ -216,14 +221,9 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None, md=N
     chpt_dir = Path(cfg.write_checkpoint)
     chpt_dir.mkdir(parents=True, exist_ok=True)
     chpt_path = chpt_dir / f"{checkpoint_name}.pt"
-    chpt = {
-        k: v
-        for k, v in [
-            ("model", model.state_dict()),
-            ("optimizer", optim),
-            ("lr_scheduler", lrsched),
-        ]
-    }
+    chpt = {"model": model.state_dict(),
+            "optimizer": optim,
+            "lr_scheduler": lrsched}
     torch.save(chpt, chpt_path)
     if md is not None:
         md.log(f">> Saved checkpoint to: {chpt_path}")

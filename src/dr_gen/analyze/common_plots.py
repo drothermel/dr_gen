@@ -311,7 +311,7 @@ def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwarg
     # kwargs_list = pu.get_kwargs_lists_for_grid(kwargs, n_grid)
 
     # Plot Grid
-    for grid_ind, ax in enumerate(axes.flatten()):
+    for _grid_ind, ax in enumerate(axes.flatten()):
         plot_func(
             curves,
             ax=ax,

@@ -39,10 +39,10 @@ def transform_cfg():
 
 
 class DummyDataset(Dataset):
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         self.data = data
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
@@ -71,7 +71,9 @@ def fake_cifar100_init(self, root, train, transform, target_transform, download)
 # Dummy implementations to override various helpers used in get_dataloaders
 
 
-def dummy_get_dataset(dataset_name, source_split, root, transform=None, *, download=False):
+def dummy_get_dataset(
+    dataset_name, source_split, root, transform=None, *, download=False
+):
     # Always return a DummyDataset of length 20
     return DummyDataset(list(range(20)))
 

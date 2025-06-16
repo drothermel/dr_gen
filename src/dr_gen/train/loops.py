@@ -19,7 +19,6 @@ def log_metrics(md: Any, group_name: str, **kwargs: Any) -> None:
     mean_grad_norm = kwargs.get("mean_grad_norm")
     lr = kwargs.get("lr")
 
-
     if output is not None:
         md.log_data((BATCH_KEY, output.shape[0]), group_name)
 
@@ -40,7 +39,7 @@ def log_metrics(md: Any, group_name: str, **kwargs: Any) -> None:
 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
     model.train()
-    for i, (image, target) in enumerate(dataloader):
+    for _i, (image, target) in enumerate(dataloader):
         # if i % 10 == 0:
         #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")
         image, target = image.to(cfg.device), target.to(cfg.device)
@@ -59,12 +58,14 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
             num_parameters = 0
             for p in model.parameters():
                 if p.grad is not None:
-                    param_norm = p.grad.data.norm(2) # L2 norm
-                    total_norm += param_norm.item() ** 2 # Sum of squares
+                    param_norm = p.grad.data.norm(2)  # L2 norm
+                    total_norm += param_norm.item() ** 2  # Sum of squares
                     num_parameters += 1
 
             if num_parameters > 0:
-                mean_grad_norm = (total_norm / num_parameters) ** 0.5 # Root of mean of squares
+                mean_grad_norm = (
+                    total_norm / num_parameters
+                ) ** 0.5  # Root of mean of squares
 
         optimizer.step()
         log_metrics(
@@ -95,7 +96,16 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
             )
 
 
-def train_loop(cfg: Any, train_dl: Any, model: torch.nn.Module, optim: torch.optim.Optimizer, lr_sched: Any, val_dl: Any = None, eval_dl: Any = None, md: Any = None) -> None:
+def train_loop(
+    cfg: Any,
+    train_dl: Any,
+    model: torch.nn.Module,
+    optim: torch.optim.Optimizer,
+    lr_sched: Any,
+    val_dl: Any = None,
+    eval_dl: Any = None,
+    md: Any = None,
+) -> None:
     assert md is not None  # Temporarily
     criterion = mu.get_criterion(cfg)
     mu.checkpoint_model(cfg, model, "init_model", md=md)
@@ -108,7 +118,7 @@ def train_loop(cfg: Any, train_dl: Any, model: torch.nn.Module, optim: torch.opt
         # Train
         train_epoch(cfg, epoch, model, train_dl, criterion, optim, md=md)
         if lr_sched is not None:
-            lr_sched.step(epoch=epoch+1)
+            lr_sched.step(epoch=epoch + 1)
         md.agg_log("train")
 
         # Val

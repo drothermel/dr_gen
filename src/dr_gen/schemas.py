@@ -156,7 +156,7 @@ class UsingDataConfig:
 """
 ## Using Data is setup to also use the following (optionally)
 #
-# split.batch_size 
+# split.batch_size
 #
 # paths.dataset_cache_root
 #

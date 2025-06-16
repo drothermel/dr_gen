@@ -9,16 +9,16 @@ from typing import Any
 
 # --- Default Configuration for the Launcher ---
 DEFAULT_MAX_PARALLEL_JOBS = 7
-DEFAULT_SEEDS_TO_RUN = [42, 123] # Shortened for brevity in help text
+DEFAULT_SEEDS_TO_RUN = [42, 123]  # Shortened for brevity in help text
 DEFAULT_START_SEED = 1
 
 # --- Hydra Parameter Defaults (can be overridden by CLI args) ---
-DEFAULT_VAL_BS = "64" # String, to be parsed
+DEFAULT_VAL_BS = "64"  # String, to be parsed
 DEFAULT_PROJ_DIR_NAME = "cifar10_test"
-DEFAULT_EPOCHS = "20" # String
-DEFAULT_BATCH_SIZE = "500" # String
-DEFAULT_LR = "0.01" # String
-DEFAULT_WEIGHT_DECAY = "2.5e-4" # String
+DEFAULT_EPOCHS = "20"  # String
+DEFAULT_BATCH_SIZE = "500"  # String
+DEFAULT_LR = "0.01"  # String
+DEFAULT_WEIGHT_DECAY = "2.5e-4"  # String
 DEFAULT_WEIGHT_TYPE = "scratch"
 
 # --- Static Configuration ---
@@ -31,8 +31,10 @@ _current_gpu_idx = 0
 
 LAUNCHER_LOG_DIR = "launcher_run_logs_combinations"
 
+
 def print_flush(in_val: object) -> None:
     print(in_val, flush=True)
+
 
 def parse_value_list(value_str: object, target_type: type = str) -> list[Any]:
     """Parses a command-line string. If it contains commas, splits it into a list.
@@ -54,6 +56,7 @@ def parse_value_list(value_str: object, target_type: type = str) -> list[Any]:
         return [s.lower() == "true" for s in items]
     return [target_type(item) for item in items]
 
+
 def setup_launcher_logging() -> None:
     """Creates or cleans the launcher log directory."""
     log_dir = Path(LAUNCHER_LOG_DIR)
@@ -61,6 +64,7 @@ def setup_launcher_logging() -> None:
         print_flush(f"Launcher log directory '{LAUNCHER_LOG_DIR}' already exists.")
     log_dir.mkdir(parents=True, exist_ok=True)
     print_flush(f"Launcher stdout/stderr logs will be stored in: {log_dir.resolve()}")
+
 
 def get_next_gpu_id() -> int | None:
     """Cycles through available GPUs if specified."""
@@ -70,6 +74,7 @@ def get_next_gpu_id() -> int | None:
         _current_gpu_idx += 1
         return gpu_id
     return None
+
 
 def create_unique_job_name(param_dict: dict[str, Any]) -> str:
     """Creates a unique and descriptive name from parameter dictionary.
@@ -87,6 +92,7 @@ def create_unique_job_name(param_dict: dict[str, Any]) -> str:
         name_parts.append(f"{sanitized_key}_{value}")
     return "-".join(name_parts)
 
+
 def start_training_run(
     param_combination_dict: dict[str, Any], job_name: str
 ) -> tuple[subprocess.Popen[bytes], str] | tuple[None, str]:
@@ -100,7 +106,7 @@ def start_training_run(
     # Add Hydra overrides from the parameter combination dictionary
     for hydra_path, value in param_combination_dict.items():
         # Special handling for val_bs to apply to two Hydra paths
-        if hydra_path == "val_bs_shared": # Internal key used for val_batch_size arg
+        if hydra_path == "val_bs_shared":  # Internal key used for val_batch_size arg
             command.append(f"val.batch_size={value}")
             command.append(f"eval.batch_size={value}")
         else:
@@ -111,9 +117,7 @@ def start_training_run(
     current_env["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     assigned_gpu_id = get_next_gpu_id()
     launch_message_gpu = (
-        f"on GPU {assigned_gpu_id}"
-        if assigned_gpu_id is not None
-        else "(default GPU)"
+        f"on GPU {assigned_gpu_id}" if assigned_gpu_id is not None else "(default GPU)"
     )
     print_flush(f"Attempting to launch job '{job_name}' {launch_message_gpu}...")
     if assigned_gpu_id is not None:
@@ -163,6 +167,7 @@ def start_training_run(
         )
         return process, job_name
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Launch multiple Hydra training runs by sweeping through "
@@ -171,26 +176,29 @@ if __name__ == "__main__":
 
     # Core launcher args
     parser.add_argument(
-        "-p", "--max_parallel_jobs",
+        "-p",
+        "--max_parallel_jobs",
         type=int,
         default=DEFAULT_MAX_PARALLEL_JOBS,
-        help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}"
+        help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}",
     )
     parser.add_argument("-g", "--avail_gpus", type=str, default="")
     parser.add_argument(
-        "-s", "--start_seed",
+        "-s",
+        "--start_seed",
         type=int,
         default=DEFAULT_START_SEED,
         help=(
             f"Start seed for sequence (if --max_seed is used). "
             f"Default: {DEFAULT_START_SEED}"
-        )
+        ),
     )
     parser.add_argument(
-        "-e", "--max_seed",
+        "-e",
+        "--max_seed",
         type=int,
         default=None,
-        help="Max seed for sequence. Overrides default seeds list."
+        help="Max seed for sequence. Overrides default seeds list.",
     )
     parser.add_argument(
         "--seeds_list",
@@ -199,7 +207,7 @@ if __name__ == "__main__":
         help=(
             "Comma-separated list of seeds if not using start/max_seed. "
             f"Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}"
-        )
+        ),
     )
 
     # Hydra parameter sweep args
@@ -210,7 +218,7 @@ if __name__ == "__main__":
         help=(
             "Validation/Evaluation batch size(s), comma-separated. "
             f"Default: {DEFAULT_VAL_BS}"
-        )
+        ),
     )
     parser.add_argument(
         "--proj_name",
@@ -219,25 +227,25 @@ if __name__ == "__main__":
         help=(
             "Project directory name(s) for 'paths.proj_dir_name', comma-separated. "
             f"Default: {DEFAULT_PROJ_DIR_NAME}"
-        )
+        ),
     )
     parser.add_argument(
         "--epochs",
         type=str,
         default=DEFAULT_EPOCHS,
-        help=f"Number of epoch(s), comma-separated. Default: {DEFAULT_EPOCHS}"
+        help=f"Number of epoch(s), comma-separated. Default: {DEFAULT_EPOCHS}",
     )
     parser.add_argument(
         "--bs",
         type=str,
         default=DEFAULT_BATCH_SIZE,
-        help=f"Training batch size(s), comma-separated. Default: {DEFAULT_BATCH_SIZE}"
+        help=f"Training batch size(s), comma-separated. Default: {DEFAULT_BATCH_SIZE}",
     )
     parser.add_argument(
         "--lr",
         type=str,
         default=DEFAULT_LR,
-        help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}"
+        help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}",
     )
     parser.add_argument(
         "--wd",
@@ -246,7 +254,7 @@ if __name__ == "__main__":
         help=(
             "Weight decay(s) for 'optim.weight_decay', comma-separated. "
             f"Default: {DEFAULT_WEIGHT_DECAY}"
-        )
+        ),
     )
     parser.add_argument(
         "--wtype",
@@ -255,7 +263,7 @@ if __name__ == "__main__":
         help=(
             "Weight type(s) for 'weight_type', comma-separated. "
             f"Default: {DEFAULT_WEIGHT_TYPE}"
-        )
+        ),
     )
     parser.add_argument("--wn", type=str, default="DEFAULT")
     parser.add_argument("--ws", type=str, default="torchvision")
@@ -264,7 +272,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     AVAILABLE_GPUS = (
-        None if args.avail_gpus == ""
+        None
+        if args.avail_gpus == ""
         else parse_value_list(args.avail_gpus, target_type=int)
     )
     MAX_PARALLEL_JOBS = args.max_parallel_jobs
@@ -294,7 +303,7 @@ if __name__ == "__main__":
     # Prepare lists of parameter values for itertools.product
     param_map = {
         # Argparse dest name : (Hydra path / internal key, type converter)
-        "val_bs_shared": ("val_bs_shared", int), # Special key for val_bs
+        "val_bs_shared": ("val_bs_shared", int),  # Special key for val_bs
         "paths.proj_dir_name": (args.proj_name, str),
         "epochs": (args.epochs, int),
         "train.batch_size": (args.bs, int),
@@ -316,7 +325,7 @@ if __name__ == "__main__":
     # and value_lists_for_product in sync
     hydra_param_cli_map = {
         # Hydra Path : (argparse_value_string, target_type)
-        "val_bs_shared": (args.val_bs, int), # Use internal key
+        "val_bs_shared": (args.val_bs, int),  # Use internal key
         "paths.proj_dir_name": (args.proj_name, str),
         "epochs": (args.epochs, int),
         "train.batch_size": (args.bs, int),
@@ -374,8 +383,7 @@ if __name__ == "__main__":
                     rc = process.returncode
                     status = "successfully" if rc == 0 else f"with error code {rc}"
                     print_flush(
-                        f"  Job '{p_job_name}' (PID: {process.pid}) "
-                        f"completed {status}."
+                        f"  Job '{p_job_name}' (PID: {process.pid}) completed {status}."
                     )
                     if rc != 0:
                         print_flush(
@@ -387,7 +395,7 @@ if __name__ == "__main__":
                 time.sleep(15)
 
         print_flush(
-            f"\n[{i+1}/{total_jobs}] Launching job with params: "
+            f"\n[{i + 1}/{total_jobs}] Launching job with params: "
             f"{current_run_param_dict}"
         )
         process_obj, launched_job_name = start_training_run(
@@ -404,7 +412,7 @@ if __name__ == "__main__":
                 "It will be skipped."
             )
 
-        time.sleep(2) # Brief pause between launches
+        time.sleep(2)  # Brief pause between launches
 
     print_flush("\nAll jobs launched. Waiting for remaining to complete...")
     while active_processes:
@@ -432,4 +440,3 @@ if __name__ == "__main__":
         f"{Path(LAUNCHER_LOG_DIR).resolve()}"
     )
     print_flush("--- Launcher script finished. ---")
-

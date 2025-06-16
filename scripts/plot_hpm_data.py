@@ -184,7 +184,8 @@ def select_run_group_interactively(all_runs_data):
                 hpm_key
             ]  # Could be from this auto-select or prior user choice
             candidate_run_names = [
-                name for name in candidate_run_names
+                name
+                for name in candidate_run_names
                 if all_runs_data[name]["hpms"].get(hpm_key) == current_selection_for_key
             ]
 
@@ -225,7 +226,8 @@ def select_run_group_interactively(all_runs_data):
 
         # Filter candidate_run_names based on the new selection
         candidate_run_names = [
-            name for name in candidate_run_names
+            name
+            for name in candidate_run_names
             if all_runs_data[name]["hpms"].get(hpm_key) == user_selected_hpms[hpm_key]
         ]
 
@@ -294,7 +296,10 @@ def plot_metrics(run_name, run_details, split_name, metric_name):
     metric_data_sxe = run_details["metrics"][split_name][metric_name]  # S x E array
 
     expected_ndim = 2
-    if not isinstance(metric_data_sxe, np.ndarray) or metric_data_sxe.ndim != expected_ndim:
+    if (
+        not isinstance(metric_data_sxe, np.ndarray)
+        or metric_data_sxe.ndim != expected_ndim
+    ):
         print(
             f"Error: Metric data for {metric_name} in {split_name} "
             f"is not a 2D NumPy array."

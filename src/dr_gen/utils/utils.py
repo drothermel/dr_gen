@@ -48,10 +48,12 @@ def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:
     return in_val  # type: ignore[no-any-return]
 
 
-def flatten_dict_tuple_keys(d: dict[Any, Any], parent_key: tuple[Any, ...] = ()) -> dict[tuple[Any, ...], Any]:
+def flatten_dict_tuple_keys(
+    d: dict[Any, Any], parent_key: tuple[Any, ...] = ()
+) -> dict[tuple[Any, ...], Any]:
     items = {}
     for k, v in d.items():
-        new_key = parent_key + (k,)
+        new_key = (*parent_key, k)
         if isinstance(v, dict):
             items.update(flatten_dict_tuple_keys(v, new_key))
         else:
@@ -78,15 +80,12 @@ def hash_from_time(length: int) -> str:
 
 
 def dict_to_tupledict(in_dict: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
-    return tuple(sorted(list(in_dict.items())))
+    return tuple(sorted(in_dict.items()))
 
 
 def tupledict_to_dict(in_tupledict: tuple[tuple[Any, Any], ...]) -> dict[Any, Any]:
-    return {k: v for k, v in in_tupledict}
+    return dict(in_tupledict)
 
 
 def check_prefix_exclude(check_string: str, excluded_prefixes: list[str]) -> bool:
-    for pre in excluded_prefixes:
-        if check_string.startswith(pre):
-            return True
-    return False
+    return any(check_string.startswith(pre) for pre in excluded_prefixes)

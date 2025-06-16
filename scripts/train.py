@@ -63,7 +63,9 @@ def run(cfg: DictConfig):
         md.log(f"  Shuffle: {isinstance(loader.sampler, RandomSampler)}")
         # Test iterating through one batch
         data_batch, label_batch = next(iter(loader))
-        md.log(f"  First batch data shape: {data_batch.shape}, label shape: {label_batch.shape}")
+        md.log(
+            f"  First batch data shape: {data_batch.shape}, label shape: {label_batch.shape}"
+        )
 
     # Run Train
     train_loop(

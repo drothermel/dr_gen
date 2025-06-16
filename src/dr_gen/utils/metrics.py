@@ -29,11 +29,11 @@ def agg_avg_list(data, key):
 
 
 class GenMetricsSubgroup(MetricsSubgroup):
-    def _init_data(self):
+    def _init_data(self) -> None:
         self._init_data_values()
         self._init_data_fxns()
 
-    def _init_data_values(self):
+    def _init_data_values(self) -> None:
         if self.data_structure is None:
             return
 
@@ -48,7 +48,7 @@ class GenMetricsSubgroup(MetricsSubgroup):
                 case GenMetricType.AVG_LIST.value:
                     self.data[key] = []
 
-    def _init_data_fxns(self):
+    def _init_data_fxns(self) -> None:
         if self.data_structure is None:
             return
 
@@ -76,14 +76,14 @@ class GenMetricsSubgroup(MetricsSubgroup):
         assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
-    def _(self, data, ns=None):
+    def _(self, data, ns=None) -> None:
         assert len(data) == len(("key", "val"))
         self._add_tuple(*data)
         if ns is not None:
             self._add_tuple(BATCH_KEY, ns)
 
     @add.register(dict)
-    def _(self, data, ns=None):
+    def _(self, data, ns=None) -> None:
         for key, val in data.items():
             self._add_tuple(key, val)
         if ns is not None:
@@ -91,7 +91,7 @@ class GenMetricsSubgroup(MetricsSubgroup):
 
 
 class GenMetrics(Metrics):
-    def __init__(self, cfg):
+    def __init__(self, cfg) -> None:
         self.cfg = cfg
         self.group_names = [s for s in SPLIT_NAMES if cfg.get(s, {}).get("run", False)]
 

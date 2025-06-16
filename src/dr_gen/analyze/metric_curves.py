@@ -44,7 +44,9 @@ class SplitMetrics:
             x_val_hashable=x_val_hashable,
         )
 
-    def get_xs(self, metric_name: str = DEFAULT_METRIC_NAME, x_name: str = DEFAULT_XNAME) -> list[Any]:
+    def get_xs(
+        self, metric_name: str = DEFAULT_METRIC_NAME, x_name: str = DEFAULT_XNAME
+    ) -> list[Any]:
         assert metric_name in self.curves, f">> {metric_name} not in curves"
         metric_curves_obj = self.curves[metric_name]
         return metric_curves_obj.get_xs(x_name=x_name)
@@ -183,7 +185,7 @@ class MetricCurve:
         assert len(xs) == len(vals), ">> xs and vals must be same length"
         self.x_vals = xs
         self.metric_vals = vals
-        self.x2met = {x: m for x, m in zip(xs, vals, strict=False)}
+        self.x2met = dict(zip(xs, vals, strict=False))
 
     def sort_curve_by_x(self) -> None:
         assert len(self.x_vals) != 0, ">> there are no x vals"

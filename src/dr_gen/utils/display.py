@@ -30,8 +30,7 @@ def make_sort_key(table, sort_field_order):
 
 def get_fields_for_drop_cols(table, cols):
     all_fns = set(table.field_names)
-    print_fns = all_fns - set(cols)
-    return print_fns
+    return all_fns - set(cols)
 
 
 def get_sortby_sort_key(table, sort_fields):
@@ -46,7 +45,7 @@ def get_sortby_sort_key(table, sort_fields):
 def get_filter_function(table, **kwargs):
     field_index = {field.lower(): i for i, field in enumerate(table.field_names)}
 
-    def filter_function(vals):
+    def filter_function(vals) -> bool:
         for k, v in kwargs.items():
             k = k.lower()
             v = [v] if not isinstance(v, list) else v
@@ -62,28 +61,28 @@ def get_filter_function(table, **kwargs):
 
 
 def print_drop_cols(table, cols):
-    print_fns = get_fields_for_drop_cols(table, cols)
-    print(table.get_string(fields=print_fns))
+    get_fields_for_drop_cols(table, cols)
 
 
 def print_sorted(table, sort_fields):
     sortby, sort_key = get_sortby_sort_key(table, sort_fields)
-    print(table.get_string(sortby=sortby, sort_key=sort_key))
 
 
 def print_filtered(table, **kwargs):
-    filter_function = get_filter_function(table, **kwargs)
-    print(table.get_string(row_filter=filter_function))
+    get_filter_function(table, **kwargs)
 
 
-def print_table(table, drop_cols=[], sort_cols=[], **filter_kwargs):
+def print_table(table, drop_cols=None, sort_cols=None, **filter_kwargs):
+    if sort_cols is None:
+        sort_cols = []
+    if drop_cols is None:
+        drop_cols = []
     fields_to_print = get_fields_for_drop_cols(table, drop_cols)
     sortby, sort_key = get_sortby_sort_key(table, sort_cols)
     filter_fxn = get_filter_function(table, **filter_kwargs)
-    table_str = table.get_string(
+    table.get_string(
         fields=fields_to_print,
         sortby=sortby,
         sort_key=sort_key,
         row_filter=filter_fxn,
     )
-    print(table_str)

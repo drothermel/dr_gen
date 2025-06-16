@@ -5,9 +5,6 @@ from torchvision.transforms.v2 import functional as f
 
 def plot_first_from_dl(dl):
     feats, labels = next(iter(dl))
-    print(
-        f"Label: {labels[0]}, Batch Shape: {feats.shape}, Total DS Len: {len(dl.dataset)}"
-    )
     plot([feats[0].squeeze()])
 
 

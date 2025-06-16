@@ -7,7 +7,9 @@ import dr_gen.analyze.result_plotting as rplt
 from dr_gen.analyze.run_group import RunGroup
 
 # Define the path to the run data
-RUN_DATA_PATH = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
+RUN_DATA_PATH = (
+    "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
+)
 # Define the output path for the results CSV
 OUTPUT_CSV_PATH = "/Users/daniellerothermel/Desktop/comparison_summary_v0.csv"
 
@@ -27,9 +29,11 @@ print("Loaded runs.")
 
 # --- Select Run Groups ---
 print("Selecting runs for pretrained vs. random initialization comparison...")
-(hpms_val_pre, hpms_eval_pre), (hpms_val_rand, hpms_eval_rand) = rplt.get_compare_runs_pretrain_vs_random(
-    rg,
-    hpm_select_dict=hpm_specs_hpm_select,
+(hpms_val_pre, hpms_eval_pre), (hpms_val_rand, hpms_eval_rand) = (
+    rplt.get_compare_runs_pretrain_vs_random(
+        rg,
+        hpm_select_dict=hpm_specs_hpm_select,
+    )
 )
 
 print(f"Found {len(hpms_val_pre)} matching HPM sets for Pretrained.")
@@ -59,9 +63,9 @@ group_b_data = (hpms_val_rand, hpms_eval_rand)
     group_b_data=group_b_data,
     group_a_name="Pretrained",
     group_b_name="Random Init",
-    val_num_bootstraps=500, # Reduced for faster testing
-    eval_num_bootstraps=500, # Reduced for faster testing
-    num_permutations=500,   # Reduced for faster testing
+    val_num_bootstraps=500,  # Reduced for faster testing
+    eval_num_bootstraps=500,  # Reduced for faster testing
+    num_permutations=500,  # Reduced for faster testing
 )
 
 # --- Print Report ---
@@ -96,7 +100,7 @@ stats_to_flatten = {
     "summary_B_": comparison_results.get("summary_B", {}),
     "diff_": comparison_results.get("difference_stats", {}),
     "ks_ci_": comparison_results.get("ks_ci_test", {}),
-    "ks_perm_": comparison_results.get("ks_permutation_test", {})
+    "ks_perm_": comparison_results.get("ks_permutation_test", {}),
 }
 
 for prefix, stats_dict in stats_to_flatten.items():
@@ -113,9 +117,9 @@ for prefix, stats_dict in stats_to_flatten.items():
             # Store other primitive types directly
             csv_data[f"{prefix}{key}"] = value
 
-#print(csv_data['bootstraps_A'])
-#print(csv_data['bootstraps_A'].tolist())
-#print(str(csv_data['bootstraps_A'].tolist()))
+# print(csv_data['bootstraps_A'])
+# print(csv_data['bootstraps_A'].tolist())
+# print(str(csv_data['bootstraps_A'].tolist()))
 for key in ["bootstraps", "original"]:
     b_a = comparison_results[f"{key}_A"]
     if isinstance(b_a, np.ndarray):

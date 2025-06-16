@@ -28,7 +28,7 @@ def get_min_2D_data_shape(data_dict):
                 return None  # Check timesteps list
             min_second = min(min_second, len(inner_list))
     # Safeguard: Ensure minimums were actually found
-    if min_first == math.inf or min_second == math.inf:
+    if math.inf in (min_first, min_second):
         return None
     return (int(min_first), int(min_second))  # (min_R, min_T)
 
@@ -36,7 +36,10 @@ def get_min_2D_data_shape(data_dict):
 def make_uniform_2D_data_arrays_pair(data_a, data_b):
     """Make numpy arrays, determine min common dimensions and crop."""
     arr_a, arr_b = np.array(data_a, dtype=float), np.array(data_b, dtype=float)
-    assert arr_a.ndim == 2 and arr_b.ndim == 2 and arr_a.size != 0 and arr_b.size != 0
+    assert arr_a.ndim == 2
+    assert arr_b.ndim == 2
+    assert arr_a.size != 0
+    assert arr_b.size != 0
     R = min(arr_a.shape[0], arr_b.shape[0])
     T = min(arr_a.shape[1], arr_b.shape[1])
     return arr_a[:R, :T], arr_b[:R, :T], R, T
@@ -66,7 +69,7 @@ def bootstrap_samples_batched(dataset, b=None):
     """Generates bootstrap samples for each row of a 2D array (the batch dimension).
     Samples elements with replacement from the second dimension (the data dimension).
     Input shape: (batch_dim, data_dim)
-    Output shape: (batch_dim, num_samples_b, data_dim)
+    Output shape: (batch_dim, num_samples_b, data_dim).
     """
     assert isinstance(dataset, np.ndarray)
     if len(dataset.shape) == 1:
@@ -77,8 +80,7 @@ def bootstrap_samples_batched(dataset, b=None):
     B, L = dataset.shape  # Batch Size, Data Length
     indices = _RNG.integers(0, L, size=(B, b, L))
     batch_indices = np.arange(B)[:, np.newaxis, np.newaxis]
-    bootstrap_result = dataset[batch_indices, indices]
-    return bootstrap_result
+    return dataset[batch_indices, indices]
 
 
 def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
@@ -208,7 +210,7 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
           'median_point_estimate': ...,
           'median_spread': ...,
           # ... etc. for all base statistics ...
-      }
+      }.
     """
     final_results = {}
     for exp_name, exp_data in bootstrapped_data.items():
@@ -239,7 +241,6 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
             timestep_results_list.append(t_result)
         final_results[exp_name] = timestep_results_list
     return final_results
-
 
 
 def select_best_hpms(summary_stats_data):
@@ -273,9 +274,7 @@ def select_best_hpms(summary_stats_data):
 
 
 # Calculates point differences and bootstrap CIs for the differences.
-def calc_diff_stats_and_ci(
-    summary_stats_a, summary_stats_b
-):
+def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
     """Calculates point differences and bootstrap CIs for the difference between statistics.
     The inputs are lists of timestep summary dicts for each exp.
     """
@@ -301,9 +300,7 @@ def calc_diff_stats_and_ci(
         diff[f"{stat_name}_diff_ci_95"] = (ci_lower, ci_upper)
 
         # Null hypothesis: difference is zero. Reject if 0 is outside CI.
-        diff[f"{stat_name}_diff_reject_null_ci_95"] = not (
-            ci_lower <= 0 <= ci_upper
-        )
+        diff[f"{stat_name}_diff_reject_null_ci_95"] = not (ci_lower <= 0 <= ci_upper)
     return diff
 
 
@@ -341,7 +338,7 @@ def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
     Returns:
         dict: Containing the observed KS, p-value, and null hypothesis rejection decision.
     """
-        # Calculate the observed KS statistic on the original data
+    # Calculate the observed KS statistic on the original data
     observed_ks, _ = ks_2samp(arr_a, arr_b)
 
     # Combine original data for permutation and generate null dist
@@ -374,11 +371,10 @@ def compare_experiments_bootstrap(
     num_bootstraps=1000,
     num_permutations=1000,
 ):
-
     # Make data uniform and select best timestep
     arr_a, arr_b, R, T = make_uniform_2D_data_arrays_pair(data_a_raw, data_b_raw)
-    arr_a = arr_a[:, timestep_a:timestep_a + 1]
-    arr_b = arr_b[:, timestep_b:timestep_b + 1]
+    arr_a = arr_a[:, timestep_a : timestep_a + 1]
+    arr_b = arr_b[:, timestep_b : timestep_b + 1]
 
     # Bootstrap samples
     bdata_a = bootstrap_samples_batched(arr_a.T, b=num_bootstraps)  # Shape (T, B, R)
@@ -391,7 +387,6 @@ def compare_experiments_bootstrap(
     summary_a = summary_a_list[0]
     summary_b = summary_b_list[0]
 
-    print(">> Compare setting A to setting B")
     exp_a_name = f"{hpm_a}_t{timestep_a}"
     exp_b_name = f"{hpm_b}_t{timestep_b}"
     print_bootstrap_summary_exp_results(
@@ -406,7 +401,9 @@ def compare_experiments_bootstrap(
     # Calculate difference results
     diff_results = calc_diff_stats_and_ci(summary_a, summary_b)
     ks_stat_results = calc_ks_stat_and_summary(
-        bdata_a.squeeze(), bdata_b.squeeze(), num_bootstraps=num_bootstraps,
+        bdata_a.squeeze(),
+        bdata_b.squeeze(),
+        num_bootstraps=num_bootstraps,
     )
     ks_permutation_test_results = perform_ks_permutation_test(
         arr_a.squeeze(), arr_b.squeeze(), R=R, num_permutations=num_permutations
@@ -435,19 +432,17 @@ def print_bootstrap_summary_exp_results(
     exp_result,
     max_list_print_len=3,
 ):
-    print(f"--- Experiment: {exp_name} ---")
     for key, value in exp_result.items():
-        if key == "timestep": # Already printed
+        if key == "timestep":  # Already printed
             continue
 
-        if isinstance(value, np.ndarray) or isinstance(value, list):
+        if isinstance(value, np.ndarray | list):
             continue
         if isinstance(value, tuple):
-            print(f"    {key}: {value}", end="")
-        elif isinstance(value, (int, float, bool, str)) or value is None:
+            pass
+        elif isinstance(value, int | float | bool | str) or value is None:
             # Print primitive types directly
             if isinstance(value, float):
-                    print(f"    {key}: {value:.4f}") # Format floats
+                pass  # Format floats
             else:
-                    print(f"    {key}: {value}")
-    print("\n") # Add space between experiments
+                pass
