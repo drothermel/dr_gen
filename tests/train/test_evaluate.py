@@ -9,7 +9,8 @@ def test_accuracy_top1_top5() -> None:
 
     Sample breakdown:
       - Sample 0: highest score at index 3, target=3 → correct for both top1 and top5.
-      - Sample 1: highest score at index 0, but target=5 appears in top5 (second highest) → incorrect top1, correct top5.
+      - Sample 1: highest score at index 0, but target=5 appears in top5
+        (second highest) → incorrect top1, correct top5.
       - Sample 2: highest score at index 8, target=8 → correct for both.
       - Sample 3: highest score at index 0, target=9 not in top5 → incorrect.
 
@@ -55,8 +56,10 @@ def test_accuracy_with_onehot_target() -> None:
     The function should extract the index of the maximum value along dim=1.
 
     Sample breakdown:
-      - Sample 0: one-hot target corresponds to label 2; highest score at index 2 → correct.
-      - Sample 1: one-hot target corresponds to label 0; highest score is at index 1 → incorrect.
+      - Sample 0: one-hot target corresponds to label 2;
+        highest score at index 2 → correct.
+      - Sample 1: one-hot target corresponds to label 0;
+        highest score is at index 1 → incorrect.
 
     Expected top1 accuracy: 50%
     """

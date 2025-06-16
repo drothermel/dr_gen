@@ -405,7 +405,8 @@ def test_get_split_source_config_custom() -> None:
         "val": (0.8, 1.0),
         "eval": (0, du.DEFAULT_SOURCE_PERCENT),
     }
-    # Since 'train' and 'val' share the same source, sources used should be ["official_train", "eval"].
+    # Since 'train' and 'val' share the same source, sources used
+    # should be ["official_train", "eval"].
     expected_sources = ["official_train", "eval"]
 
     assert sorted(sources) == sorted(expected_sources)
@@ -426,7 +427,8 @@ def test_get_split_source_config_over_usage() -> None:
             }
         }
     )
-    # Since train (0.6) and val (0.6) sum to 1.2 (> 1.0), an AssertionError should be raised.
+    # Since train (0.6) and val (0.6) sum to 1.2 (> 1.0),
+    # an AssertionError should be raised.
     with pytest.raises(
         AssertionError, match=">> Using more than 100% of official_train"
     ):
@@ -468,7 +470,8 @@ def test_get_dataloaders(monkeypatch) -> None:
             "eval": {"batch_size": 2},
             "data": {
                 "name": "dummy",  # Dummy dataset name
-                # For "train" and "val" we use the same source "source1" but different percentages.
+                # For "train" and "val" we use the same source "source1"
+                # but different percentages.
                 "train": {"source_percent": 0.8, "source": "source1"},
                 "val": {"source_percent": 0.2, "source": "source1"},
                 # For "eval" use a separate source and default full percent.
@@ -486,7 +489,8 @@ def test_get_dataloaders(monkeypatch) -> None:
     # Check that we have DataLoaders for each expected split.
     assert set(dls.keys()) == {"train", "val", "eval"}
 
-    # For each split, check that the DataLoader is an instance of torch.utils.data.DataLoader
+    # For each split, check that the DataLoader is an instance of
+    # torch.utils.data.DataLoader
     # and that its batch_size matches what is specified in the configuration.
     for split, dl in dls.items():
         assert isinstance(dl, DataLoader)
@@ -499,15 +503,18 @@ def test_get_dataloaders(monkeypatch) -> None:
 
     # Optionally, verify that the dataset lengths (after subsetting) are as expected.
     # For "train" and "val", the dummy dataset length is 20 so:
-    #   "train" should use approximately 80% (i.e. 16 samples) and "val" the remaining 20% (i.e. 4 samples).
+    #   "train" should use approximately 80% (i.e. 16 samples) and
+    #   "val" the remaining 20% (i.e. 4 samples).
     # For "eval", since the full dataset is used, length should be 20.
     # Note that due to floor rounding, you may have minor differences.
     train_dl = dls["train"]
     val_dl = dls["val"]
     eval_dl = dls["eval"]
 
-    # Access the sampler length by checking the length of the dataset that the sampler iterates over.
-    # For "train" and "val", our dummy_get_dataloader calls get_dataloader with a subset.
+    # Access the sampler length by checking the length of the dataset
+    # that the sampler iterates over.
+    # For "train" and "val", our dummy_get_dataloader calls
+    # get_dataloader with a subset.
     train_indices = list(train_dl.sampler)
     val_indices = list(val_dl.sampler)
     eval_indices = list(eval_dl.sampler)  # full dataset sampler

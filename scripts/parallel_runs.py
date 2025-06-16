@@ -181,7 +181,10 @@ if __name__ == "__main__":
         "-s", "--start_seed",
         type=int,
         default=DEFAULT_START_SEED,
-        help=f"Start seed for sequence (if --max_seed is used). Default: {DEFAULT_START_SEED}"
+        help=(
+            f"Start seed for sequence (if --max_seed is used). "
+            f"Default: {DEFAULT_START_SEED}"
+        )
     )
     parser.add_argument(
         "-e", "--max_seed",
@@ -193,7 +196,10 @@ if __name__ == "__main__":
         "--seeds_list",
         type=str,
         default=",".join(map(str, DEFAULT_SEEDS_TO_RUN)),
-        help=f"Comma-separated list of seeds if not using start/max_seed. Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}"
+        help=(
+            "Comma-separated list of seeds if not using start/max_seed. "
+            f"Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}"
+        )
     )
 
     # Hydra parameter sweep args
@@ -201,13 +207,19 @@ if __name__ == "__main__":
         "--val_bs",
         type=str,
         default=DEFAULT_VAL_BS,
-        help=f"Validation/Evaluation batch size(s), comma-separated. Default: {DEFAULT_VAL_BS}"
+        help=(
+            "Validation/Evaluation batch size(s), comma-separated. "
+            f"Default: {DEFAULT_VAL_BS}"
+        )
     )
     parser.add_argument(
         "--proj_name",
         type=str,
         default=DEFAULT_PROJ_DIR_NAME,
-        help=f"Project directory name(s) for 'paths.proj_dir_name', comma-separated. Default: {DEFAULT_PROJ_DIR_NAME}"
+        help=(
+            "Project directory name(s) for 'paths.proj_dir_name', comma-separated. "
+            f"Default: {DEFAULT_PROJ_DIR_NAME}"
+        )
     )
     parser.add_argument(
         "--epochs",
@@ -231,13 +243,19 @@ if __name__ == "__main__":
         "--wd",
         type=str,
         default=DEFAULT_WEIGHT_DECAY,
-        help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}"
+        help=(
+            "Weight decay(s) for 'optim.weight_decay', comma-separated. "
+            f"Default: {DEFAULT_WEIGHT_DECAY}"
+        )
     )
     parser.add_argument(
         "--wtype",
         type=str,
         default=DEFAULT_WEIGHT_TYPE,
-        help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}"
+        help=(
+            "Weight type(s) for 'weight_type', comma-separated. "
+            f"Default: {DEFAULT_WEIGHT_TYPE}"
+        )
     )
     parser.add_argument("--wn", type=str, default="DEFAULT")
     parser.add_argument("--ws", type=str, default="torchvision")
@@ -255,7 +273,10 @@ if __name__ == "__main__":
     # Determine seeds to run
     if args.max_seed is not None:
         if args.max_seed < args.start_seed:
-            print_flush(f"[ERROR] --max_seed ({args.max_seed}) must be >= --start_seed ({args.start_seed}). Exiting.")
+            print_flush(
+                f"[ERROR] --max_seed ({args.max_seed}) must be >= "
+                f"--start_seed ({args.start_seed}). Exiting."
+            )
             exit(1)
         actual_seeds_to_run = list(range(args.start_seed, args.max_seed + 1))
         print_flush(f"Using generated seeds from {args.start_seed} to {args.max_seed}.")
@@ -264,7 +285,10 @@ if __name__ == "__main__":
         print_flush(f"Using provided seeds list: {actual_seeds_to_run}")
 
     if not Path(TRAINING_SCRIPT_PATH).is_file():
-        print_flush(f"[ERROR] Training script not found at '{TRAINING_SCRIPT_PATH}'. Please check the path. Exiting.")
+        print_flush(
+            f"[ERROR] Training script not found at '{TRAINING_SCRIPT_PATH}'. "
+            "Please check the path. Exiting."
+        )
         exit(1)
 
     # Prepare lists of parameter values for itertools.product
@@ -288,7 +312,8 @@ if __name__ == "__main__":
     value_lists_for_product = [actual_seeds_to_run]
 
     # Add other sweepable parameters
-    # Order matters for zip later, so build param_names_for_product and value_lists_for_product in sync
+    # Order matters for zip later, so build param_names_for_product
+    # and value_lists_for_product in sync
     hydra_param_cli_map = {
         # Hydra Path : (argparse_value_string, target_type)
         "val_bs_shared": (args.val_bs, int), # Use internal key
@@ -323,7 +348,8 @@ if __name__ == "__main__":
         exit(0)
 
     setup_launcher_logging()
-    active_processes: list[tuple[subprocess.Popen[bytes], str]] = []  # List of (process_object, job_name)
+    # List of (process_object, job_name)
+    active_processes: list[tuple[subprocess.Popen[bytes], str]] = []
     launched_job_names = set()
 
     for i, current_run_param_dict in enumerate(all_param_dicts_to_run):
@@ -331,32 +357,51 @@ if __name__ == "__main__":
         current_job_name = create_unique_job_name(current_run_param_dict)
 
         if current_job_name in launched_job_names:
-            print_flush(f"Job '{current_job_name}' seems to be a duplicate (already launched). Skipping.")
+            print_flush(
+                f"Job '{current_job_name}' seems to be a duplicate "
+                "(already launched). Skipping."
+            )
             continue
 
         while len(active_processes) >= MAX_PARALLEL_JOBS:
-            print_flush(f"Max parallel jobs ({MAX_PARALLEL_JOBS}) reached. Waiting ({len(active_processes)} active)...")
+            print_flush(
+                f"Max parallel jobs ({MAX_PARALLEL_JOBS}) reached. "
+                f"Waiting ({len(active_processes)} active)..."
+            )
             for proc_info in active_processes[:]:
                 process, p_job_name = proc_info
                 if process.poll() is not None:
                     rc = process.returncode
                     status = "successfully" if rc == 0 else f"with error code {rc}"
-                    print_flush(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status}.")
+                    print_flush(
+                        f"  Job '{p_job_name}' (PID: {process.pid}) "
+                        f"completed {status}."
+                    )
                     if rc != 0:
-                        print_flush(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
+                        print_flush(
+                            f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log"
+                        )
                     active_processes.remove(proc_info)
             if len(active_processes) >= MAX_PARALLEL_JOBS:
                 time.sleep(15)
 
-        print_flush(f"\n[{i+1}/{total_jobs}] Launching job with params: {current_run_param_dict}")
-        process_obj, launched_job_name = start_training_run(current_run_param_dict, current_job_name)
+        print_flush(
+            f"\n[{i+1}/{total_jobs}] Launching job with params: "
+            f"{current_run_param_dict}"
+        )
+        process_obj, launched_job_name = start_training_run(
+            current_run_param_dict, current_job_name
+        )
 
         if process_obj:
             active_processes.append((process_obj, launched_job_name))
             launched_job_names.add(launched_job_name)
             print_flush(f"  Active jobs: {len(active_processes)}/{MAX_PARALLEL_JOBS}")
         else:
-            print_flush(f"[WARNING] Failed to launch job '{current_job_name}'. It will be skipped.")
+            print_flush(
+                f"[WARNING] Failed to launch job '{current_job_name}'. "
+                "It will be skipped."
+            )
 
         time.sleep(2) # Brief pause between launches
 
@@ -368,12 +413,21 @@ if __name__ == "__main__":
             if process.poll() is not None:
                 rc = process.returncode
                 status = "successfully" if rc == 0 else f"with error code {rc}"
-                print_flush(f"  Job '{p_job_name}' (PID: {process.pid}) completed {status} (final check).")
-                if rc != 0: print_flush(f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log")
+                print_flush(
+                    f"  Job '{p_job_name}' (PID: {process.pid}) "
+                    f"completed {status} (final check)."
+                )
+                if rc != 0:
+                    print_flush(
+                        f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log"
+                    )
                 active_processes.remove(proc_info)
         if active_processes: time.sleep(20)
 
     print_flush("\n--- All training runs initiated by the launcher have completed. ---")
-    print_flush(f"Launcher's per-job stdout/stderr logs are in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
+    print_flush(
+        f"Launcher's per-job stdout/stderr logs are in: "
+        f"{os.path.abspath(LAUNCHER_LOG_DIR)}"
+    )
     print_flush("--- Launcher script finished. ---")
 
