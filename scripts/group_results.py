@@ -21,7 +21,9 @@ def parse_sweep2_path_hyperparameters(path_string: str):
     hpm_segments = parts[hpm_start_idx_in_parts:-2] # Ignores datetime and filename
     datetime_str = parts[-2] # Second to last part is datetime
     hpm_dict["datetime"] = datetime_str
-    key_num_regex = re.compile(r"^([a-zA-Z_]+)((?:[-+]?\d*\.\d+|[-+]?\d+)(?:[eE][-+]?\d+)?)$")
+    key_num_regex = re.compile(
+        r"^([a-zA-Z_]+)((?:[-+]?\d*\.\d+|[-+]?\d+)(?:[eE][-+]?\d+)?)$"
+    )
     for idx, segment in enumerate(hpm_segments):
         processed_as_key_num = False
         is_seed_segment = False
@@ -39,8 +41,9 @@ def parse_sweep2_path_hyperparameters(path_string: str):
                 if key_part == "s": # Check if it's a seed parameter (e.g., "s0", "s1")
                     is_seed_segment = True
             except ValueError:
-                # If num_part_str is not a valid number (e.g. "resnet8.a1_in1k" where "8.a1_in1k" is not numeric)
-                # This segment does not fit the key-numeric pattern. processed_as_key_num remains False.
+                # If num_part_str is not a valid number (e.g. "resnet8.a1_in1k" where
+                # "8.a1_in1k" is not numeric) this segment does not fit the key-numeric
+                # pattern. processed_as_key_num remains False.
                 pass
         if not processed_as_key_num:
             if idx == XFT_SEGMENT_INDEX:
@@ -56,7 +59,10 @@ def parse_sweep2_path_hyperparameters(path_string: str):
 
 
 def file_path_to_name(fpath):
-    """/scratch/ddr8143/logs/cifar10/bs500/lr0.25/wd0.0001/s18/pretrained/2025-03-01-17-39-1740868772/json_out.jsonl
+    """Extract experiment name from file path.
+
+    Example path structure:
+    /scratch/ddr8143/logs/cifar10/bs500/lr0.25/wd0.0001/s18/pretrained/2025-03-01-17-39-1740868772/json_out.jsonl
     fl = fpath.parts
     bs = fl[5]
     lr = fl[6]
@@ -81,7 +87,10 @@ for file in root_dir.rglob("*.jsonl"):
     if file.is_file():
         fpath = file.resolve()
         hpm_dict, fname = file_path_to_name(fpath)
-        all_json.append((fpath, {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict}))
+        all_json.append((
+            fpath, 
+            {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict}
+        ))
 dest_dir.mkdir(parents=True, exist_ok=True)
 
 # Dump the metadata into a file

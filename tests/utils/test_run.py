@@ -59,7 +59,7 @@ def test_seed_worker():
     ru.seed_worker(0)
 
     # Get a random number from NumPy and random.
-    # Note: Testing legacy random API behavior for seeding compatibility 
+    # Note: Testing legacy random API behavior for seeding compatibility
     np_val = np.random.rand()  # noqa: NPY002
     rand_val = random.random()  # noqa: S311
 
