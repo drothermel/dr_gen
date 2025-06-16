@@ -19,7 +19,7 @@ _RNG = np.random.default_rng()
 # --- Helpers for prepping data for bootstrapping ---
 
 
-def get_min_2D_data_shape(data_dict):
+def get_min_2d_data_shape(data_dict):
     """Takes { exp_name: list_of_lists }.
 
     Finds the minimum lengths of outer (R) and inner (T) lists.
@@ -43,27 +43,27 @@ def get_min_2D_data_shape(data_dict):
     return (int(min_first), int(min_second))  # (min_R, min_T)
 
 
-def make_uniform_2D_data_arrays_pair(data_a, data_b):
+def make_uniform_2d_data_arrays_pair(data_a, data_b):
     """Make numpy arrays, determine min common dimensions and crop."""
     arr_a, arr_b = np.array(data_a, dtype=float), np.array(data_b, dtype=float)
     assert arr_a.ndim == EXPECTED_2D_DIMENSIONS
     assert arr_b.ndim == EXPECTED_2D_DIMENSIONS
     assert arr_a.size != 0
     assert arr_b.size != 0
-    R = min(arr_a.shape[0], arr_b.shape[0])
-    T = min(arr_a.shape[1], arr_b.shape[1])
+    R = min(arr_a.shape[0], arr_b.shape[0])  # noqa: N806
+    T = min(arr_a.shape[1], arr_b.shape[1])  # noqa: N806
     return arr_a[:R, :T], arr_b[:R, :T], R, T
 
 
-def make_uniform_2D_data_arrays_dict(data_dict):
+def make_uniform_2d_data_arrays_dict(data_dict):
     """Converts dict of lists of lists to dict of numpy arrays with uniform
     shape (min_R, min_T). Returns None if input is empty or contains empty lists.
     """
-    min_dims = get_min_2D_data_shape(data_dict)
+    min_dims = get_min_2d_data_shape(data_dict)
     if min_dims is None:
         return None
 
-    R, L = min_dims  # Num runs, Length Runs
+    R, L = min_dims  # Num runs, Length Runs  # noqa: N806
     result_arrays = {}
     for key, outer_list in data_dict.items():
         truncated_data = [inner[:L] for inner in outer_list[:R]]
@@ -87,7 +87,7 @@ def bootstrap_samples_batched(dataset, b=None):
     if b is None:
         return dataset[:, np.newaxis]  # Shape (B, 1, L)
 
-    B, L = dataset.shape  # Batch Size, Data Length
+    B, L = dataset.shape  # Batch Size, Data Length  # noqa: N806
     indices = _RNG.integers(0, L, size=(B, b, L))
     batch_indices = np.arange(B)[:, np.newaxis, np.newaxis]
     return dataset[batch_indices, indices]
@@ -116,14 +116,14 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
                       (e.g., empty lists).
     """
     # Produces: { exp_name: np.ndarray(min_R, min_T) } or None
-    uniform_arrays = make_uniform_2D_data_arrays_dict(data_dict)
+    uniform_arrays = make_uniform_2d_data_arrays_dict(data_dict)
     if uniform_arrays is None or not uniform_arrays:
         return None
-    R, T = next(iter(uniform_arrays.values())).shape
+    R, T = next(iter(uniform_arrays.values())).shape  # noqa: N806
 
     # === Reshape to make one batched bootstrap samples call ===
     experiment_names = list(uniform_arrays.keys())
-    E = len(experiment_names)  # Number of experiments
+    E = len(experiment_names)  # Number of experiments  # noqa: N806
 
     # Consider that we have R sampled metrics for each timestep T
     #   Transpose each array from (min_R, min_T) to (min_T, min_R)
@@ -159,7 +159,7 @@ def calc_stats_across_bootstrap_samples(timestep_data):
     Takes a np array for a single timestep shape (B, R).
     Returns dict mapping stat names to 1D arrays (shape B,).
     """
-    B, R = timestep_data.shape  # Num bootstrap samples, Num Runs
+    B, R = timestep_data.shape  # Num bootstrap samples, Num Runs  # noqa: N806
     stats = {}
     # Use errstate to handle potential warnings (e.g., std dev of single value if R=1)
     std = np.std(timestep_data, axis=1, ddof=1)
@@ -188,7 +188,7 @@ def summarize_distribution(dist):
     Takes: 1D array of data values
     Returns dict: 'point_estimate', 'spread', 'ci_95_lower', 'ci_95_upper'.
     """
-    B = len(dist)
+    B = len(dist)  # noqa: N806
     # Handle cases where stats are undefined or unreliable
     if B <= 1:
         summary = {
@@ -237,7 +237,7 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
             or exp_data.ndim != EXPECTED_3D_DIMENSIONS
         ):
             continue
-        T, B, R = exp_data.shape  # Timesteps, Bootstrap samples, Runs/Replicates
+        T, B, R = exp_data.shape  # Timesteps, Bootstrap samples, Runs/Replicates  # noqa: N806
         if B <= 1 or R == 0:
             continue
 
@@ -348,7 +348,7 @@ def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
     }
 
 
-def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
+def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):  # noqa: N803
     """Performs a bootstrap permutation test using the KS statistic.
 
     Args:
@@ -397,7 +397,7 @@ def compare_experiments_bootstrap(
     num_permutations=1000,
 ):
     # Make data uniform and select best timestep
-    arr_a, arr_b, R, T = make_uniform_2D_data_arrays_pair(data_a_raw, data_b_raw)
+    arr_a, arr_b, R, T = make_uniform_2d_data_arrays_pair(data_a_raw, data_b_raw)  # noqa: N806
     arr_a = arr_a[:, timestep_a : timestep_a + 1]
     arr_b = arr_b[:, timestep_b : timestep_b + 1]
 

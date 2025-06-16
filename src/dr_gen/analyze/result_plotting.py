@@ -73,8 +73,8 @@ def get_pretrained_vs_random_init_runs(
 
 
 def select_matching_hpms(
-    hpms_A,
-    hpms_B,
+    hpms_a,
+    hpms_b,
     hpm_whitelist=None,
     ignore_key="model.weights",
 ):
@@ -82,7 +82,7 @@ def select_matching_hpms(
 
     # Group hpms by hash
     hpms_by_hash = defaultdict(list)
-    for hpm in [*hpms_A, *hpms_B]:
+    for hpm in [*hpms_a, *hpms_b]:
         # Verify hpm in whitelist
         if hpm_whitelist is not None and hpm not in hpm_whitelist:
             continue
@@ -125,8 +125,8 @@ def get_compare_runs_pretrain_vs_random(
 
     # Filter to only hpms that exist both splits of both settings
     hpms_to_use = select_matching_hpms(
-        hpms_A=hpms_val_pre.keys(),
-        hpms_B=hpms_val_rand.keys(),
+        hpms_a=hpms_val_pre.keys(),
+        hpms_b=hpms_val_rand.keys(),
         hpm_whitelist=[*hpms_eval_pre.keys(), *hpms_eval_rand.keys()],
         ignore_key="model.weights",  # the hpm we're comparing between
     )
@@ -166,50 +166,50 @@ def run_comparison_eval(
 ):
     val_a, eval_a = group_a_data
     val_b, eval_b = group_b_data
-    best_hpm_A, best_ts_A = find_best_hpm_for_group(
+    best_hpm_a, best_ts_a = find_best_hpm_for_group(
         val_a, group_a_name, val_num_bootstraps
     )
-    best_hpm_B, best_ts_B = find_best_hpm_for_group(
+    best_hpm_b, best_ts_b = find_best_hpm_for_group(
         val_b, group_b_name, val_num_bootstraps
     )
 
     # Check if best HPMs were found
-    if best_hpm_A is None or best_hpm_B is None:
+    if best_hpm_a is None or best_hpm_b is None:
         # Return indicating failure but providing partial results if available
-        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
 
     # --- Perform comparison on evaluation data using ONLY the best HPMs found ---
     # Get the evaluation data for the *specific* best HPMs and timesteps
-    eval_data_A = eval_a.get(best_hpm_A)
-    eval_data_B = eval_b.get(best_hpm_B)
+    eval_data_a = eval_a.get(best_hpm_a)
+    eval_data_b = eval_b.get(best_hpm_b)
 
     # Ensure we have data for the best HPMs in the evaluation set
-    if eval_data_A is None or eval_data_B is None:
-        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+    if eval_data_a is None or eval_data_b is None:
+        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
 
     comparison_results = bu.compare_experiments_bootstrap(
-        eval_data_A,  # just the best hpm data, all timesteps
-        eval_data_B,  # just the best hpm data, all timesteps
-        hpm_a=best_hpm_A,  # for naming
-        hpm_b=best_hpm_B,  # for naming
-        timestep_a=best_ts_A,  # to select best timestep from eval data
-        timestep_b=best_ts_B,  # to select best timestep from eval data
+        eval_data_a,  # just the best hpm data, all timesteps
+        eval_data_b,  # just the best hpm data, all timesteps
+        hpm_a=best_hpm_a,  # for naming
+        hpm_b=best_hpm_b,  # for naming
+        timestep_a=best_ts_a,  # to select best timestep from eval data
+        timestep_b=best_ts_b,  # to select best timestep from eval data
         num_bootstraps=eval_num_bootstraps,
         num_permutations=num_permutations,
     )
-    return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results)
+    return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results)
 
 
 def print_results_report(
-    best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results
+    best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results
 ):
     """Prints a formatted report summarizing the analysis results.
 
     Args:
-        best_hpm_A (str): Name of the best HPM for Group A.
-        best_ts_A (int): Best validation timestep for Group A.
-        best_hpm_B (str): Name of the best HPM for Group B.
-        best_ts_B (int): Best validation timestep for Group B.
+        best_hpm_a (str): Name of the best HPM for Group A.
+        best_ts_a (int): Best validation timestep for Group A.
+        best_hpm_b (str): Name of the best HPM for Group B.
+        best_ts_b (int): Best validation timestep for Group B.
         comparison_results (dict): Results from the evaluation comparison.
     """
     # Report Difference Statistics
