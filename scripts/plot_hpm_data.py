@@ -14,8 +14,9 @@ def load_data(pkl_filepath):
         print(f"Error: File not found: {pkl_filepath}")
         return None
     try:
-        with open(pkl_filepath, "rb") as f:
-            data = pickle.load(f)
+        with Path(pkl_filepath).open("rb") as f:
+            # Security note: Loading trusted pickle files from our own framework
+            data = pickle.load(f)  # noqa: S301
         if not isinstance(data, dict):
             print(
                 f"Error: Expected a dictionary in {pkl_filepath}, "
@@ -39,7 +40,7 @@ def load_data(pkl_filepath):
             f"File might be corrupted or not a pickle file."
         )
         return None
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:
         print(f"An unexpected error occurred while loading {pkl_filepath}: {e}")
         return None
 

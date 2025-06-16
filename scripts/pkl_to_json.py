@@ -19,7 +19,8 @@ def convert_pkl_to_json(pkl_filepath: str, json_filepath: str) -> None:
     """Converts a .pkl file (with potential numpy arrays) to a .json file."""
     try:
         with Path(pkl_filepath).open("rb") as f_pkl:
-            data = pickle.load(f_pkl)
+            # Security note: Loading trusted pickle files from our own framework
+            data = pickle.load(f_pkl)  # noqa: S301
 
         json_compatible_data = convert_numpy_to_list(data)
 

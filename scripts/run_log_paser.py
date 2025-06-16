@@ -71,7 +71,7 @@ def parse_log_file(filepath):
     metrics_data = defaultdict(lambda: defaultdict(list))
 
     try:
-        with open(filepath) as f:
+        with Path(filepath).open() as f:
             # First line is config
             try:
                 first_line = f.readline()
@@ -97,7 +97,7 @@ def parse_log_file(filepath):
                     f"{filepath}: {e}. Skipping this file."
                 )
                 return None, metrics_data
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError) as e:
                 print(
                     f"Warning: Error processing config from {filepath}: "
                     f"{e}. Skipping this file."
@@ -116,7 +116,7 @@ def parse_log_file(filepath):
             # Flatten the configuration
             try:
                 config = flatten_dict(raw_config)
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 print(
                     f"Warning: Could not flatten config for {filepath}: "
                     f"{e}. Skipping this file."
@@ -144,7 +144,7 @@ def parse_log_file(filepath):
 
                 except json.JSONDecodeError:
                     pass
-                except Exception:
+                except (KeyError, TypeError, ValueError):
                     pass
 
     except OSError as e:
@@ -336,7 +336,7 @@ def aggregate_metrics_for_groups(grouped_runs):
                            f"{run_group_name}/{split}/{metric}. "
                             f"Expected E={min_epochs}, got shape {aggregated_array.shape}. Skipping."
                         )
-                except Exception as e:
+                except (ValueError, TypeError, AttributeError) as e:
                     print(
                         f"Error: Failed to convert to NumPy array for {run_group_name}/{split}/{metric}: {e}. Skipping."
                     )
@@ -484,14 +484,14 @@ if __name__ == "__main__":
 
     print(f"\nSaving aggregated results to: {args.output_pkl}")
     try:
-        with open(args.output_pkl, "wb") as f_out:
+        with Path(args.output_pkl).open("wb") as f_out:
             pickle.dump(final_output_to_pickle, f_out)
         print("Successfully saved results.")
     except OSError as e:
         print(f"Error: Could not write to output file {args.output_pkl}: {e}")
     except pickle.PicklingError as e:
         print(f"Error: Could not pickle the results: {e}")
-    except Exception as e:
+    except (ValueError, TypeError, AttributeError) as e:
         print(f"An unexpected error occurred during saving: {e}")
 
     print("\nScript finished.")

@@ -227,7 +227,7 @@ for n in n_values:
 
             all_results.append(csv_data)
 
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
             print(f"    Error during analysis for n={n}, t={t}: {e}")
             # Optionally add a row indicating error or just skip
             # error_row = {'sweep_n': n, 'sweep_t': t, 'error': str(e)}
@@ -246,7 +246,7 @@ if all_results:
 
     # Save to CSV
     results_df.to_csv(OUTPUT_CSV_PATH, index=False)
-    pkl.dump(all_results, open(OUTPUT_PKL_PATH, "wb"))
+    pkl.dump(all_results, Path(OUTPUT_PKL_PATH).open("wb"))
     print(f"Results saved successfully to {OUTPUT_CSV_PATH}")
 else:
     print("No results generated during the sweep.")
