@@ -2,6 +2,7 @@ import argparse
 import json  # Added missing import
 import os
 import pickle
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +10,8 @@ import numpy as np
 
 def load_data(pkl_filepath):
     """Loads the data from the specified .pkl file."""
-    if not os.path.exists(pkl_filepath):
+    pkl_path = Path(pkl_filepath)
+    if not pkl_path.exists():
         print(f"Error: File not found: {pkl_filepath}")
         return None
     try:

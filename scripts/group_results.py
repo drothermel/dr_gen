@@ -88,7 +88,7 @@ for file in root_dir.rglob("*.jsonl"):
         fpath = file.resolve()
         hpm_dict, fname = file_path_to_name(fpath)
         all_json.append((
-            fpath, 
+            fpath,
             {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict}
         ))
 dest_dir.mkdir(parents=True, exist_ok=True)

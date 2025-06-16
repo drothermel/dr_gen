@@ -1,6 +1,7 @@
 import os
 import pickle as pkl
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -242,7 +243,7 @@ if all_results:
     results_df = pd.DataFrame(all_results)
 
     # Ensure directory exists
-    os.makedirs(os.path.dirname(OUTPUT_CSV_PATH), exist_ok=True)
+    Path(OUTPUT_CSV_PATH).parent.mkdir(parents=True, exist_ok=True)
 
     # Save to CSV
     results_df.to_csv(OUTPUT_CSV_PATH, index=False)

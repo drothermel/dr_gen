@@ -3,6 +3,7 @@ import json
 import os
 import pickle
 from collections import OrderedDict, defaultdict
+from pathlib import Path
 
 import numpy as np
 
@@ -300,7 +301,8 @@ if __name__ == "__main__":
     args.log_dir = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0_t2/"
     args.output_pkl = "/Users/daniellerothermel/drotherm/data/dr_gen/run_data_v1/lr_wd_init_v0_t2.pkl"
 
-    if not os.path.isdir(args.log_dir):
+    log_dir_path = Path(args.log_dir)
+    if not log_dir_path.is_dir():
         print(f"Error: Directory not found: {args.log_dir}")
         exit(1)
 
@@ -308,7 +310,7 @@ if __name__ == "__main__":
     print(f"Scanning directory: {args.log_dir}")
     for filename in os.listdir(args.log_dir):
         if filename.endswith(".jsonl"):
-            filepath = os.path.join(args.log_dir, filename)
+            filepath = log_dir_path / filename
             # parse_log_file now returns flattened_config
             flattened_config, metrics = parse_log_file(filepath)
             if flattened_config is not None:

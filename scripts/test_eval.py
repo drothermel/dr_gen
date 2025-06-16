@@ -1,4 +1,5 @@
 import os  # For path joining
+from pathlib import Path
 
 import numpy as np  # Needed for potential NaN comparisons if runs fail
 import pandas as pd  # For CSV export
@@ -128,7 +129,7 @@ for key in ["bootstraps", "original"]:
 results_df = pd.DataFrame([csv_data])
 
 # Ensure directory exists
-os.makedirs(os.path.dirname(OUTPUT_CSV_PATH), exist_ok=True)
+Path(OUTPUT_CSV_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 # Save to CSV
 results_df.to_csv(OUTPUT_CSV_PATH, index=False)

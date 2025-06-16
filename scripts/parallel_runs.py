@@ -4,6 +4,7 @@ import itertools  # For generating parameter combinations
 import os
 import subprocess
 import time
+from pathlib import Path
 
 # --- Default Configuration for the Launcher ---
 DEFAULT_MAX_PARALLEL_JOBS = 7
@@ -52,10 +53,11 @@ def parse_value_list(value_str, target_type=str):
 
 def setup_launcher_logging():
     """Creates or cleans the launcher log directory."""
-    if os.path.exists(LAUNCHER_LOG_DIR):
+    log_dir = Path(LAUNCHER_LOG_DIR)
+    if log_dir.exists():
         print_flush(f"Launcher log directory '{LAUNCHER_LOG_DIR}' already exists.")
-    os.makedirs(LAUNCHER_LOG_DIR, exist_ok=True)
-    print_flush(f"Launcher stdout/stderr logs will be stored in: {os.path.abspath(LAUNCHER_LOG_DIR)}")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    print_flush(f"Launcher stdout/stderr logs will be stored in: {log_dir.resolve()}")
 
 def get_next_gpu_id():
     """Cycles through available GPUs if specified."""
