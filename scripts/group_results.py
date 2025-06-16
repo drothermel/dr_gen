@@ -9,7 +9,7 @@ INIT_TYPE_SEGMENT_INDEX = 6  # 7th hyperparameter segment (0-indexed)
 INIT_NAME_SEGMENT_INDEX = 7  # 8th hyperparameter segment (0-indexed)
 
 
-def parse_sweep2_path_hyperparameters(path_string: str):
+def parse_sweep2_path_hyperparameters(path_string: str) -> tuple[dict, str]:
     normalized_path = path_string.strip("/")
     parts = normalized_path.split("/")
     hpm_dict = {}
@@ -58,7 +58,7 @@ def parse_sweep2_path_hyperparameters(path_string: str):
     return hpm_dict, run_label
 
 
-def file_path_to_name(fpath):
+def file_path_to_name(fpath: Path) -> tuple[dict, str]:
     """Extract experiment name from file path.
 
     Example path structure:

@@ -4,7 +4,7 @@ import pickle
 import numpy  # Make sure numpy is installed
 
 
-def convert_numpy_to_list(item):
+def convert_numpy_to_list(item: object) -> object:
     """Recursively converts numpy arrays in a data structure to lists."""
     if isinstance(item, dict):
         return {k: convert_numpy_to_list(v) for k, v in item.items()}
@@ -14,7 +14,7 @@ def convert_numpy_to_list(item):
         return item.tolist()
     return item
 
-def convert_pkl_to_json(pkl_filepath, json_filepath):
+def convert_pkl_to_json(pkl_filepath: str, json_filepath: str) -> None:
     """Converts a .pkl file (with potential numpy arrays) to a .json file."""
     try:
         with open(pkl_filepath, "rb") as f_pkl:

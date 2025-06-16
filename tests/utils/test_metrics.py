@@ -79,7 +79,7 @@ def subgroup_with_fake_add(dummy_cfg):
 # ---------------------------------------------------
 
 
-def test_init_data_values(dummy_cfg):
+def test_init_data_values(dummy_cfg) -> None:
     # Create an instance and manually set its data_structure
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
     subgroup._init_data()  # This calls _init_data_values and _init_data_fxns
@@ -91,7 +91,7 @@ def test_init_data_values(dummy_cfg):
     assert subgroup.data["metric_avg"] == []
 
 
-def test_init_data_fxns(dummy_cfg):
+def test_init_data_fxns(dummy_cfg) -> None:
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
     subgroup._init_data_fxns()
 
@@ -110,7 +110,7 @@ def test_init_data_fxns(dummy_cfg):
     assert subgroup.agg_fxns["metric_avg"] == agg_avg_list
 
 
-def test_clear_data(dummy_cfg):
+def test_clear_data(dummy_cfg) -> None:
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
     subgroup.data_structure = {
         "metric_int": GenMetricType.INT.value,
@@ -133,7 +133,7 @@ def test_clear_data(dummy_cfg):
 # ---------------------------------------------------
 
 
-def test_add_tuple_dispatch(subgroup_with_fake_add):
+def test_add_tuple_dispatch(subgroup_with_fake_add) -> None:
     # Call add with a tuple; expected behavior:
     #   - The tuple version asserts that the input has exactly 2 items.
     #   - It calls _add_tuple(key, val) and, if ns is provided, also _add_tuple(BATCH_KEY, ns).
@@ -143,7 +143,7 @@ def test_add_tuple_dispatch(subgroup_with_fake_add):
     assert (BATCH_KEY, 10) in subgroup_with_fake_add._recorded_calls
 
 
-def test_add_dict_dispatch(subgroup_with_fake_add):
+def test_add_dict_dispatch(subgroup_with_fake_add) -> None:
     # Call add with a dict. It should iterate over the key-value pairs.
     subgroup_with_fake_add.add({"metric_list": 3, "metric_int": 2}, ns=20)
     # Check that both key-value pairs were passed to _add_tuple,
@@ -159,7 +159,7 @@ def test_add_dict_dispatch(subgroup_with_fake_add):
 # ---------------------------------------------------
 
 
-def test_gen_metrics_log_data(dummy_cfg):
+def test_gen_metrics_log_data(dummy_cfg) -> None:
     # Create a dummy config that includes two groups: train and val.
     metrics = GenMetrics(dummy_cfg)
     # Log some data to the "train" group.
@@ -171,14 +171,14 @@ def test_gen_metrics_log_data(dummy_cfg):
     assert group_data.get(BATCH_KEY) == [10]
 
 
-def test_gen_metrics_log_data_invalid_group(dummy_cfg):
+def test_gen_metrics_log_data_invalid_group(dummy_cfg) -> None:
     metrics = GenMetrics(dummy_cfg)
     # Log data to an invalid group should raise an assertion.
     with pytest.raises(AssertionError, match=">> Invalid group name:"):
         metrics.log_data({"metric_int": 5}, "invalid_group")
 
 
-def test_gen_metrics_clear_data(dummy_cfg):
+def test_gen_metrics_clear_data(dummy_cfg) -> None:
     metrics = GenMetrics(dummy_cfg)
     metrics.log_data({"metric_list": 2}, "val", ns=None)
     metrics.log_data({"metric_list": 4}, "train", ns=10)

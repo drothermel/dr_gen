@@ -30,10 +30,10 @@ _current_gpu_idx = 0
 
 LAUNCHER_LOG_DIR = "launcher_run_logs_combinations"
 
-def print_flush(in_val):
+def print_flush(in_val: object) -> None:
     print(in_val, flush=True)
 
-def parse_value_list(value_str, target_type=str):
+def parse_value_list(value_str: object, target_type: type = str) -> list:
     """Parses a command-line string. If it contains commas, splits it into a list.
     
     Converts elements to the target_type.
@@ -53,7 +53,7 @@ def parse_value_list(value_str, target_type=str):
         return [s.lower() == "true" for s in items]
     return [target_type(item) for item in items]
 
-def setup_launcher_logging():
+def setup_launcher_logging() -> None:
     """Creates or cleans the launcher log directory."""
     log_dir = Path(LAUNCHER_LOG_DIR)
     if log_dir.exists():
@@ -61,7 +61,7 @@ def setup_launcher_logging():
     log_dir.mkdir(parents=True, exist_ok=True)
     print_flush(f"Launcher stdout/stderr logs will be stored in: {log_dir.resolve()}")
 
-def get_next_gpu_id():
+def get_next_gpu_id() -> int | None:
     """Cycles through available GPUs if specified."""
     global _current_gpu_idx  # noqa: PLW0603
     if AVAILABLE_GPUS and len(AVAILABLE_GPUS) > 0:
@@ -70,7 +70,7 @@ def get_next_gpu_id():
         return gpu_id
     return None
 
-def create_unique_job_name(param_dict):
+def create_unique_job_name(param_dict: dict) -> str:
     """Creates a unique and descriptive name from parameter dictionary.
     
     Used for logging and directories.
@@ -86,7 +86,7 @@ def create_unique_job_name(param_dict):
         name_parts.append(f"{sanitized_key}_{value}")
     return "-".join(name_parts)
 
-def start_training_run(param_combination_dict, job_name):
+def start_training_run(param_combination_dict: dict, job_name: str) -> tuple[object, str] | tuple[None, str]:
     """Constructs the command to run the Hydra script with a specific parameter combination.
     
     Starts it as a subprocess.

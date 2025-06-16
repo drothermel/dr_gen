@@ -103,7 +103,7 @@ def dummy_cfg(tmp_path):
 # ----------------------
 # Tests for log_metrics
 # ----------------------
-def test_log_metrics(dummy_cfg):
+def test_log_metrics(dummy_cfg) -> None:
     md = DummyMetrics()
     # Monkey-patch the accuracy function used in log_metrics.
     original_accuracy = eu.accuracy
@@ -130,7 +130,7 @@ def test_log_metrics(dummy_cfg):
 # ----------------------
 # Tests for train_epoch
 # ----------------------
-def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
+def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model) -> None:
     md = DummyMetrics()
     # Use a simple criterion and optimizer.
     criterion = nn.CrossEntropyLoss()
@@ -152,7 +152,7 @@ def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
 # ----------------------
 # Tests for eval_model
 # ----------------------
-def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model):
+def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model) -> None:
     md = DummyMetrics()
     criterion = nn.CrossEntropyLoss()
     # Run evaluation and get back the metrics object.
@@ -164,7 +164,7 @@ def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model):
 # ----------------------
 # Test for train_loop
 # ----------------------
-def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch):
+def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch) -> None:
     md = DummyMetrics()
     # Override model utility functions so that no real file I/O or complex behavior occurs.
     monkeyatch_set = [

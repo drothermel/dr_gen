@@ -11,7 +11,7 @@ from dr_gen.analyze.metric_curves import (
 DUMMY_CONFIG = {}
 
 
-def test_metriccurve_initialization():
+def test_metriccurve_initialization() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="train", metric_name="accuracy")
     assert mc.config == DUMMY_CONFIG
     assert mc.split == "train"
@@ -21,7 +21,7 @@ def test_metriccurve_initialization():
     assert mc.x2met == {}
 
 
-def test_add_x_v_and_properties():
+def test_add_x_v_and_properties() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="val", metric_name="loss")
     # Add a point
     mc.add_x_v(1, 0.5)
@@ -37,14 +37,14 @@ def test_add_x_v_and_properties():
     assert mc.x2met[2] == 0.4
 
 
-def test_add_x_v_duplicate_error():
+def test_add_x_v_duplicate_error() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="train", metric_name="acc")
     mc.add_x_v(1, 0.8)
     with pytest.raises(AssertionError, match=">> 1 already exists"):
         mc.add_x_v(1, 0.85)
 
 
-def test_add_curve():
+def test_add_curve() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="test", metric_name="f1")
     xs = [3, 1, 2]
     vals = [0.3, 0.1, 0.2]
@@ -57,7 +57,7 @@ def test_add_curve():
         assert mc.x2met[x] == val
 
 
-def test_add_curve_when_not_empty_error():
+def test_add_curve_when_not_empty_error() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="test", metric_name="f1")
     # Add one point first.
     mc.add_x_v(1, 0.5)
@@ -65,7 +65,7 @@ def test_add_curve_when_not_empty_error():
         mc.add_curve([2, 3], [0.6, 0.7])
 
 
-def test_sort_curve_by_x():
+def test_sort_curve_by_x() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="train", metric_name="loss")
     # Add points in unsorted order.
     mc.add_x_v(5, 0.55)
@@ -78,7 +78,7 @@ def test_sort_curve_by_x():
     assert mc.metric_vals == [0.22, 0.55, 0.88]
 
 
-def test_metriccurve_get_by_xval():
+def test_metriccurve_get_by_xval() -> None:
     mc = MetricCurve(DUMMY_CONFIG, split="val", metric_name="accuracy")
     mc.add_x_v(10, 0.9)
     mc.add_x_v(20, 0.95)
@@ -90,7 +90,7 @@ def test_metriccurve_get_by_xval():
         mc.get_by_xval(30)
 
 
-def test_non_hashable_x_conversion():
+def test_non_hashable_x_conversion() -> None:
     # Test that when x_val_hashable is False, x values are converted to strings.
     mc = MetricCurve(
         DUMMY_CONFIG, split="train", metric_name="loss", x_val_hashable=False
@@ -106,13 +106,13 @@ def test_non_hashable_x_conversion():
     assert mc.get_by_xval(x_val) == 0.75
 
 
-def test_metriccurves_initialization():
+def test_metriccurves_initialization() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="train", metric_name="accuracy")
     # Initially, no curves should be present.
     assert mc.curves == {}
 
 
-def test_add_x_v_default_curve():
+def test_add_x_v_default_curve() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="train", metric_name="accuracy")
     # Add a point using the default x_name.
     mc.add_x_v(1, 0.8)
@@ -123,7 +123,7 @@ def test_add_x_v_default_curve():
     assert mc.get_vals() == [0.8]
 
 
-def test_add_x_v_custom_curve():
+def test_add_x_v_custom_curve() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="train", metric_name="loss")
     custom_xname = "step"
     # Add two points under a custom x_name.
@@ -136,7 +136,7 @@ def test_add_x_v_custom_curve():
     assert mc.get_vals(x_name=custom_xname) == [0.5, 0.45]
 
 
-def test_metriccurves_get_all_xs_and_vals():
+def test_metriccurves_get_all_xs_and_vals() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="val", metric_name="f1")
     # Add a point to the default curve.
     mc.add_x_v(1, 0.9)
@@ -157,7 +157,7 @@ def test_metriccurves_get_all_xs_and_vals():
     assert all_vals[custom_xname] == [0.75]
 
 
-def test_get_by_xval_success():
+def test_get_by_xval_success() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="test", metric_name="precision")
     # Add two points to the default curve.
     mc.add_x_v(3, 0.85)
@@ -167,20 +167,20 @@ def test_get_by_xval_success():
     assert val == 0.90
 
 
-def test_get_by_xval_nonexistent_curve():
+def test_get_by_xval_nonexistent_curve() -> None:
     mc = MetricCurves(DUMMY_CONFIG, split="test", metric_name="recall")
     # Attempting to retrieve from a non-existent curve should raise an assertion error.
     with pytest.raises(AssertionError, match=">> .* not in curves"):
         mc.get_by_xval(1, x_name="nonexistent")
 
 
-def test_splitmetrics_initialization():
+def test_splitmetrics_initialization() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "train")
     # Initially, curves should be empty.
     assert sm.curves == {}
 
 
-def test_add_x_v_default_metric():
+def test_add_x_v_default_metric() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "train")
     # Add a point for the "loss" metric using the default x_name ("epoch").
     sm.add_x_v(1, 0.8, metric_name="loss")
@@ -190,7 +190,7 @@ def test_add_x_v_default_metric():
     assert vals == [0.8]
 
 
-def test_add_x_v_custom_xname():
+def test_add_x_v_custom_xname() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "train")
     custom_xname = "step"
     # Add a point for the "accuracy" metric using a custom x_name.
@@ -201,7 +201,7 @@ def test_add_x_v_custom_xname():
     assert vals == [0.95]
 
 
-def test_splitmetrics_get_all_xs_and_vals():
+def test_splitmetrics_get_all_xs_and_vals() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "val")
     # Add a point for metric "loss" (default x_name "epoch")
     sm.add_x_v(1, 0.8, metric_name="loss")
@@ -221,7 +221,7 @@ def test_splitmetrics_get_all_xs_and_vals():
     assert all_vals["accuracy"].get("step") == [0.95]
 
 
-def test_get_all_xs_flat():
+def test_get_all_xs_flat() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "test")
     # Add multiple points to "loss" and one point for "accuracy" on a custom x_name.
     sm.add_x_v(1, 0.8, metric_name="loss")
@@ -236,7 +236,7 @@ def test_get_all_xs_flat():
     assert flat_xs[("accuracy", "step")] == [10]
 
 
-def test_get_all_vals_flat():
+def test_get_all_vals_flat() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "test")
     # Add points similarly.
     sm.add_x_v(1, 0.8, metric_name="loss")
@@ -251,7 +251,7 @@ def test_get_all_vals_flat():
     assert flat_vals[("accuracy", "step")] == [0.95]
 
 
-def test_splitmetrics_get_by_xval():
+def test_splitmetrics_get_by_xval() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "test")
     # Add two points for the "loss" metric.
     sm.add_x_v(3, 0.85, metric_name="loss")
@@ -261,7 +261,7 @@ def test_splitmetrics_get_by_xval():
     assert val == 0.90
 
 
-def test_get_by_xval_invalid_metric():
+def test_get_by_xval_invalid_metric() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "test")
     # Attempting to get a value for a non-existent metric should raise an assertion error.
     with pytest.raises(AssertionError, match=">> .* not in curves"):

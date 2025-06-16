@@ -20,7 +20,7 @@ from dr_gen.schemas import (
         (OptimizerTypes.ADAMW.value, torch.optim.AdamW),
     ],
 )
-def test_create_optim(optim_type, expected_class):
+def test_create_optim(optim_type, expected_class) -> None:
     # Create a dummy model with one parameter
     model = torch.nn.Linear(10, 1)
     model_params = model.parameters()
@@ -38,7 +38,7 @@ def test_create_optim(optim_type, expected_class):
         (LRSchedTypes.EXPONENTIAL_LR.value, torch.optim.lr_scheduler.ExponentialLR),
     ],
 )
-def test_create_lrsched(lrsched_type, expected_class):
+def test_create_lrsched(lrsched_type, expected_class) -> None:
     # Use a dummy optimizer
     model = torch.nn.Linear(10, 1)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -53,7 +53,7 @@ def test_create_lrsched(lrsched_type, expected_class):
 # --------- Test for create_model ---------
 
 
-def test_create_model():
+def test_create_model() -> None:
     cfg = OmegaConf.create(
         {
             "model": {"name": "resnet18", "weights": None},
@@ -72,7 +72,7 @@ def test_create_model():
 # --------- Test for create_optim_lrsched ---------
 
 
-def test_create_optim_lrsched():
+def test_create_optim_lrsched() -> None:
     cfg = OmegaConf.create(
         {
             "model": {"name": "resnet18", "weights": None},
@@ -102,7 +102,7 @@ def test_create_optim_lrsched():
 # --------- Test for get_model_optim_lrsched ---------
 
 
-def test_get_model_optim_lrsched():
+def test_get_model_optim_lrsched() -> None:
     cfg = OmegaConf.create(
         {
             "model": {"name": "resnet18", "weights": None},
@@ -130,7 +130,7 @@ def test_get_model_optim_lrsched():
 # --------- Test for get_criterion ---------
 
 
-def test_get_criterion():
+def test_get_criterion() -> None:
     cfg = OmegaConf.create(
         {
             "optim": {
@@ -148,7 +148,7 @@ def test_get_criterion():
 # --------- Test for checkpoint_model ---------
 
 
-def test_checkpoint_model(tmp_path):
+def test_checkpoint_model(tmp_path) -> None:
     # Create dummy model, optimizer, and lr_scheduler.
     model = torch.nn.Linear(10, 2)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)

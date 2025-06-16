@@ -5,7 +5,7 @@ from dr_gen.analyze.log_file_data import LogFileData
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="analyze")
-def run(cfg: DictConfig):
+def run(cfg: DictConfig) -> None:
     print()
     print(f">> Analyze: {cfg.log_file}")
     print()

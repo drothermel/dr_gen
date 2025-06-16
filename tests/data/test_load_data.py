@@ -162,7 +162,7 @@ def dummy_validate_split(split):
         ),
     ],
 )
-def test_get_source(split, cfg, expected):
+def test_get_source(split, cfg, expected) -> None:
     assert du.get_source(split, cfg) == expected
 
 
@@ -195,7 +195,7 @@ def test_get_source(split, cfg, expected):
         ("eval", OmegaConf.create({"data": {"eval": {"source_percent": 1.0}}}), 1.0),
     ],
 )
-def test_get_source_percent(split, cfg, expected):
+def test_get_source_percent(split, cfg, expected) -> None:
     result = du.get_source_percent(split, cfg)
     assert result == expected
 
@@ -203,7 +203,7 @@ def test_get_source_percent(split, cfg, expected):
 # ---------------------- Test Transforms -----------------------------
 
 
-def test_basic_transforms(transform_cfg):
+def test_basic_transforms(transform_cfg) -> None:
     """Test if base transforms (ToImage and ToDtype) are always included."""
     transforms = du.build_transforms(transform_cfg)
     assert isinstance(transforms, transforms_v2.Compose)
@@ -211,14 +211,14 @@ def test_basic_transforms(transform_cfg):
     assert isinstance(transforms.transforms[1], transforms_v2.ToDtype)
 
 
-def test_random_crop(transform_cfg):
+def test_random_crop(transform_cfg) -> None:
     """Test if RandomCrop is included when enabled."""
     transform_cfg.random_crop = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.RandomCrop) for t in transforms.transforms)
 
 
-def test_random_horizontal_flip(transform_cfg):
+def test_random_horizontal_flip(transform_cfg) -> None:
     """Test if RandomHorizontalFlip is included when enabled."""
     transform_cfg.random_horizontal_flip = True
     transforms = du.build_transforms(transform_cfg)
@@ -227,21 +227,21 @@ def test_random_horizontal_flip(transform_cfg):
     )
 
 
-def test_color_jitter(transform_cfg):
+def test_color_jitter(transform_cfg) -> None:
     """Test if ColorJitter is included when enabled."""
     transform_cfg.color_jitter = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.ColorJitter) for t in transforms.transforms)
 
 
-def test_normalize(transform_cfg):
+def test_normalize(transform_cfg) -> None:
     """Test if Normalize is included when enabled."""
     transform_cfg.normalize = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.Normalize) for t in transforms.transforms)
 
 
-def test_full_pipeline(transform_cfg):
+def test_full_pipeline(transform_cfg) -> None:
     """Test if all transformations are included when enabled."""
     transform_cfg.random_crop = True
     transform_cfg.random_horizontal_flip = True
@@ -266,7 +266,7 @@ def test_full_pipeline(transform_cfg):
 # ------------ Test Simple Dataset and Dataloader Creation -------------
 
 
-def test_get_dataset_cifar10(tmp_path, monkeypatch):
+def test_get_dataset_cifar10(tmp_path, monkeypatch) -> None:
     """Test that get_dataset returns a CIFAR10 dataset when requested.
 
     We override the __init__ to bypass data validation.
@@ -281,7 +281,7 @@ def test_get_dataset_cifar10(tmp_path, monkeypatch):
     assert dataset.train is True
 
 
-def test_get_dataset_cifar100(tmp_path, monkeypatch):
+def test_get_dataset_cifar100(tmp_path, monkeypatch) -> None:
     """Test that get_dataset returns a CIFAR100 dataset.
 
     We override the __init__ to bypass data validation.
@@ -296,7 +296,7 @@ def test_get_dataset_cifar100(tmp_path, monkeypatch):
     assert dataset.train is False
 
 
-def test_get_dataset_invalid():
+def test_get_dataset_invalid() -> None:
     """Test that an invalid dataset name raises an assertion error.
     """
     with pytest.raises(AssertionError):
@@ -306,7 +306,7 @@ def test_get_dataset_invalid():
 # --- Tests for get_dataloader ---
 
 
-def test_get_dataloader_default_config():
+def test_get_dataloader_default_config() -> None:
     """Test get_dataloader with no custom configuration.
 
     It should use the default batch size and number of workers.
@@ -323,7 +323,7 @@ def test_get_dataloader_default_config():
     assert dataloader.num_workers == du.DEFAULT_NUM_WORKERS
 
 
-def test_get_dataloader_custom_config():
+def test_get_dataloader_custom_config() -> None:
     """Test get_dataloader when passing a custom OmegaConf configuration.
 
     The batch size and num_workers should be taken from the configuration.
@@ -344,7 +344,7 @@ def test_get_dataloader_custom_config():
     assert dataloader.num_workers == 2
 
 
-def test_get_dataloader_invalid_split(monkeypatch):
+def test_get_dataloader_invalid_split(monkeypatch) -> None:
     """Test that get_dataloader raises an assertion error when an invalid split is provided.
 
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
@@ -362,7 +362,7 @@ def test_get_dataloader_invalid_split(monkeypatch):
 # ---------------------- Test Source Calcs -----------------------------
 
 
-def test_get_split_source_config_defaults():
+def test_get_split_source_config_defaults() -> None:
     """When no configuration is provided, each split should use itself as the source
     with the default percentage.
 
@@ -381,7 +381,7 @@ def test_get_split_source_config_defaults():
     assert ranges == expected_ranges
 
 
-def test_get_split_source_config_custom():
+def test_get_split_source_config_custom() -> None:
     """Test when a custom configuration maps multiple splits to the same source.
 
     For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
@@ -412,7 +412,7 @@ def test_get_split_source_config_custom():
     assert ranges == expected_ranges
 
 
-def test_get_split_source_config_over_usage():
+def test_get_split_source_config_over_usage() -> None:
     """Test that an assertion error is raised if the total allocated percentage
     for a shared source exceeds 100% (i.e. > 1.0).
 
@@ -437,7 +437,7 @@ def test_get_split_source_config_over_usage():
 
 
 # Test for get_dataloaders
-def test_get_dataloaders(monkeypatch):
+def test_get_dataloaders(monkeypatch) -> None:
     """This test constructs a dummy configuration (via OmegaConf) and then patches
     out helper functions so that get_dataloaders returns predictable DataLoaders.
 

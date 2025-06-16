@@ -4,7 +4,7 @@ import torch
 import dr_gen.train.evaluate as eu
 
 
-def test_accuracy_top1_top5():
+def test_accuracy_top1_top5() -> None:
     """Test accuracy() with topk=(1,5) on a batch of 4 samples.
 
     Sample breakdown:
@@ -31,7 +31,7 @@ def test_accuracy_top1_top5():
     assert top5 == pytest.approx(75.0)
 
 
-def test_accuracy_top1_only():
+def test_accuracy_top1_only() -> None:
     """Test accuracy() with only topk=(1,).
 
     All predictions are arranged to be correct.
@@ -49,7 +49,7 @@ def test_accuracy_top1_only():
     assert top1 == pytest.approx(100.0)
 
 
-def test_accuracy_with_onehot_target():
+def test_accuracy_with_onehot_target() -> None:
     """Test accuracy() when the target is a one-hot encoded 2D tensor.
 
     The function should extract the index of the maximum value along dim=1.

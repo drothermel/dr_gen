@@ -6,7 +6,7 @@ import torch
 import dr_gen.utils.run as ru
 
 
-def test_set_deterministic_torch_random_np():
+def test_set_deterministic_torch_random_np() -> None:
     # Use a fixed seed.
     seed = 42
     generator1 = ru.set_deterministic(seed)
@@ -49,7 +49,7 @@ def test_set_deterministic_torch_random_np():
     assert rand_val2 == expected_rand2
 
 
-def test_seed_worker():
+def test_seed_worker() -> None:
     # Set a known global torch seed.
     torch.manual_seed(123)
     # Compute the worker seed.
