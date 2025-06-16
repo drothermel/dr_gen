@@ -41,8 +41,6 @@ test = [
     "pytest-benchmark>=4.0", # Performance benchmarking
 ]
 test-ml = [
-    #"pytest-pytorch>=0.2",   # PyTorch test utilities
-    #"pytest-randomly>=3.0",  # Randomize test order
     "pytest-pytorch>=0.2",
     "pytest-randomly>=3.0"
 ]
