@@ -1,5 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import timm
 import torch
@@ -39,7 +40,7 @@ CRITERION_DEFAULTS = {
 # ================== cfg free ==================
 
 
-def create_optim(name, model_params, optim_params):
+def create_optim(name: str, model_params: Any, optim_params: dict[str, Any]) -> torch.optim.Optimizer:
     assert "lr" in optim_params
     match name:
         case "timm_sgd":
@@ -99,7 +100,7 @@ def create_optim(name, model_params, optim_params):
             )
 
 
-def create_lrsched(cfg, optimizer):
+def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:
     match cfg.optim.lr_scheduler:
         case None:
             return None
@@ -115,6 +116,7 @@ def create_lrsched(cfg, optimizer):
         case LRSchedTypes.STEP_LR.value:
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
+                step_size=cfg.optim.get('step_size', 30),
                 gamma=cfg.optim.gamma,
             )
 
@@ -123,7 +125,7 @@ def create_lrsched(cfg, optimizer):
 
 
 # Config Req: cfg.model.name
-def create_model(cfg, num_classes):
+def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:
     assert "resnet" in cfg.model.name
     if cfg.model.source == "torchvision":
         weights_name = cfg.model.get("weights", None)
@@ -158,7 +160,7 @@ def create_model(cfg, num_classes):
 
 
 # Config Req: cfg.optim.name, cfg.optim.lr
-def create_optim_lrsched(cfg, model):
+def create_optim_lrsched(cfg: Any, model: torch.nn.Module) -> tuple[torch.optim.Optimizer, Any]:
     #vu.validate_optimizer(cfg.optim.name)
     #vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
     model_params = model.parameters()
@@ -176,7 +178,7 @@ def create_optim_lrsched(cfg, model):
     return optimizer, lr_scheduler
 
 
-def get_model_optim_lrsched(cfg, num_classes, md=None):
+def get_model_optim_lrsched(cfg: Any, num_classes: int, md: Any = None) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
     model = create_model(cfg, num_classes)
     optimizer = None
     lr_scheduler = None

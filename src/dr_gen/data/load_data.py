@@ -1,3 +1,5 @@
+from typing import Any
+
 import dr_util.data_utils as du
 import dr_util.determinism_utils as dtu
 import timm
@@ -17,7 +19,7 @@ DEFAULT_DATASET_CACHE_ROOT = "../data/"
 DEFAULT_DOWNLOAD = True
 
 # TODO: replace with timm
-def build_transforms(xfm_cfg):
+def build_transforms(xfm_cfg: Any) -> Any:
     if xfm_cfg is None:
         return None
 
@@ -58,12 +60,12 @@ def build_transforms(xfm_cfg):
     return xfs
 
 def get_dataset(
-    dataset_name,
-    source_split,
-    root=DEFAULT_DATASET_CACHE_ROOT,
-    transform=None,
-    download=DEFAULT_DOWNLOAD,
-):
+    dataset_name: str,
+    source_split: str,
+    root: str = DEFAULT_DATASET_CACHE_ROOT,
+    transform: Any = None,
+    download: bool = DEFAULT_DOWNLOAD,
+) -> Any:
     if dataset_name in ["cifar10", "cifar100"]:
         ds = du.get_cifar_dataset(
             dataset_name,
@@ -76,13 +78,13 @@ def get_dataset(
         assert False
     return ds
 
-def _parse_and_validate_config(cfg):
+def _parse_and_validate_config(cfg: Any) -> tuple[dict[str, Any], dict[str, tuple[float, float]]]:
     """Parses data configuration, identifies sources, and prepares for splitting.
     """
     vu.validate_dataset(cfg.data.name)
 
     parsed_configs = {}
-    source_usage_info = {} # Tracks how original sources are utilized
+    source_usage_info: dict[str, Any] = {} # Tracks how original sources are utilized
 
     for split_name_key in vu.SPLIT_NAMES: # e.g., 'train', 'val', 'eval'
         if split_name_key not in cfg.data:
@@ -129,7 +131,7 @@ def _parse_and_validate_config(cfg):
     return parsed_configs, source_usage_info, unique_source_dataset_names
 
 
-def _load_source_datasets(cfg, unique_source_names_to_load):
+def _load_source_datasets(cfg: Any, unique_source_names_to_load: list[str]) -> dict[str, Any]:
     """Loads raw datasets for each unique source. Transforms are NOT applied here.
     """
     loaded_raw_datasets = {}
@@ -143,7 +145,7 @@ def _load_source_datasets(cfg, unique_source_names_to_load):
         )
     return loaded_raw_datasets
 
-def _perform_source_splitting(raw_datasets, source_usage_details, data_split_seed):
+def _perform_source_splitting(raw_datasets: dict[str, Any], source_usage_details: dict[str, Any], data_split_seed: int) -> dict[str, Any]:
     """Splits raw datasets based on 'source_percent' using 'data_split_seed'.
     Output dict maps target_split_key (e.g., 'train', 'val') to its dataset.
     """

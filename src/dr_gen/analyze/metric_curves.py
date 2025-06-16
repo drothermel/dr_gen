@@ -1,3 +1,5 @@
+from typing import Any
+
 from dr_gen.utils.utils import flatten_dict_tuple_keys
 
 DEFAULT_XNAME = "epoch"
@@ -11,9 +13,9 @@ class SplitMetrics:
 
     def __init__(
         self,
-        config,
-        split,
-    ):
+        config: Any,
+        split: str,
+    ) -> None:
         """Initialize SplitMetrics for a given config and split."""
         self.config = config
         self.split = split
@@ -22,12 +24,12 @@ class SplitMetrics:
 
     def add_x_v(
         self,
-        x,
-        val,
-        metric_name,
-        x_name=DEFAULT_XNAME,
-        x_val_hashable=True,
-    ):
+        x: Any,
+        val: Any,
+        metric_name: str,
+        x_name: str = DEFAULT_XNAME,
+        x_val_hashable: bool = True,
+    ) -> None:
         """Add an x-value pair to the specified metric curve."""
         if metric_name not in self.curves:
             self.curves[metric_name] = MetricCurves(
@@ -42,12 +44,12 @@ class SplitMetrics:
             x_val_hashable=x_val_hashable,
         )
 
-    def get_xs(self, metric_name=DEFAULT_METRIC_NAME, x_name=DEFAULT_XNAME):
+    def get_xs(self, metric_name: str = DEFAULT_METRIC_NAME, x_name: str = DEFAULT_XNAME) -> list[Any]:
         assert metric_name in self.curves, f">> {metric_name} not in curves"
         metric_curves_obj = self.curves[metric_name]
         return metric_curves_obj.get_xs(x_name=x_name)
 
-    def get_vals(self, metric_name, x_name=DEFAULT_XNAME):
+    def get_vals(self, metric_name: str, x_name: str = DEFAULT_XNAME) -> list[Any]:
         assert metric_name in self.curves, f">> {metric_name} not in curves"
         metric_curves_obj = self.curves[metric_name]
         return metric_curves_obj.get_vals(x_name=x_name)
@@ -81,12 +83,14 @@ class SplitMetrics:
 
 
 class MetricCurves:
+    """Manages multiple curves for a specific metric."""
+    
     def __init__(
         self,
-        config,
-        split,
-        metric_name,
-    ):
+        config: Any,
+        split: str,
+        metric_name: str,
+    ) -> None:
         self.config = config
         self.split = split
         self.metric_name = metric_name
@@ -95,11 +99,11 @@ class MetricCurves:
 
     def add_x_v(
         self,
-        x,
-        val,
-        x_name=DEFAULT_XNAME,
-        x_val_hashable=True,
-    ):
+        x: Any,
+        val: Any,
+        x_name: str = DEFAULT_XNAME,
+        x_val_hashable: bool = True,
+    ) -> None:
         if x_name not in self.curves:
             self.curves[x_name] = MetricCurve(
                 self.config,
@@ -110,40 +114,42 @@ class MetricCurves:
             )
         self.curves[x_name].add_x_v(x, val)
 
-    def get_xs(self, x_name=DEFAULT_XNAME):
+    def get_xs(self, x_name: str = DEFAULT_XNAME) -> list[Any]:
         assert x_name in self.curves, f">> {x_name} not in curves"
         return self.curves[x_name].xs
 
-    def get_vals(self, x_name=DEFAULT_XNAME):
+    def get_vals(self, x_name: str = DEFAULT_XNAME) -> list[Any]:
         assert x_name in self.curves, f">> {x_name} not in curves"
         return self.curves[x_name].vals
 
-    def get_all_xs(self):
+    def get_all_xs(self) -> dict[str, list[Any]]:
         xs = {}  # x_name: list
         for x_name, metric_curve in self.curves.items():
             xs[x_name] = metric_curve.xs
         return xs
 
-    def get_all_vals(self):
+    def get_all_vals(self) -> dict[str, list[Any]]:
         vals = {}  # x_name: list
         for x_name, metric_curve in self.curves.items():
             vals[x_name] = metric_curve.vals
         return vals
 
-    def get_by_xval(self, xval, x_name=DEFAULT_XNAME):
+    def get_by_xval(self, xval: Any, x_name: str = DEFAULT_XNAME) -> Any:
         assert x_name in self.curves, f">> {x_name} not in curves"
         return self.curves[x_name].get_by_xval(xval)
 
 
 class MetricCurve:
+    """Represents a single metric curve with x-values and metric values."""
+    
     def __init__(
         self,
-        config,
-        split,
-        metric_name,
-        x_name=DEFAULT_XNAME,
-        x_val_hashable=True,
-    ):
+        config: Any,
+        split: str,
+        metric_name: str,
+        x_name: str = DEFAULT_XNAME,
+        x_val_hashable: bool = True,
+    ) -> None:
         self.config = config
         self.split = split
         self.metric_name = metric_name
@@ -155,14 +161,14 @@ class MetricCurve:
         self.x2met = {}
 
     @property
-    def xs(self):
+    def xs(self) -> list[Any]:
         return self.x_vals
 
     @property
-    def vals(self):
+    def vals(self) -> list[Any]:
         return self.metric_vals
 
-    def add_x_v(self, x, val):
+    def add_x_v(self, x: Any, val: Any) -> None:
         if not self.x_val_hashable:
             x = str(x)
         assert x not in self.x2met, f">> {x} already exists"
@@ -170,7 +176,7 @@ class MetricCurve:
         self.metric_vals.append(val)
         self.x2met[x] = val
 
-    def add_curve(self, xs, vals):
+    def add_curve(self, xs: list[Any], vals: list[Any]) -> None:
         assert len(self.x_vals) == 0, ">> x vals already exist"
         assert len(self.metric_vals) == 0, ">> metric vals already exist"
         assert len(self.x2met) == 0, ">> x2met already exists"
@@ -179,7 +185,7 @@ class MetricCurve:
         self.metric_vals = vals
         self.x2met = {x: m for x, m in zip(xs, vals, strict=False)}
 
-    def sort_curve_by_x(self):
+    def sort_curve_by_x(self) -> None:
         assert len(self.x_vals) != 0, ">> there are no x vals"
         assert len(self.metric_vals) == len(self.x_vals), (
             ">> xs and vals must be same length"
@@ -189,7 +195,7 @@ class MetricCurve:
         self.x_vals = [x for x, _ in after_sort]
         self.metric_vals = [m for _, m in after_sort]
 
-    def get_by_xval(self, xval):
+    def get_by_xval(self, xval: Any) -> Any:
         if not self.x_val_hashable:
             xval = str(xval)
         assert xval in self.x2met, f">> {xval} doesn't exist"

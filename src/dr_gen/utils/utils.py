@@ -10,7 +10,7 @@ def make_list(in_val: Any) -> list[Any]:
 def make_list_of_lists(in_val: Any, dim: int = 0) -> list[Any]:
     in_val = make_list(in_val)
     if isinstance(in_val[0], list):
-        return in_val
+        return in_val  # type: ignore[no-any-return]
 
     if dim == 0:
         return [in_val]
@@ -45,7 +45,7 @@ def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:
         return [[[v] for v in vs] for vs in in_val]
 
     # Default fallback (should not reach here in normal cases)
-    return in_val
+    return in_val  # type: ignore[no-any-return]
 
 
 def flatten_dict_tuple_keys(d: dict[Any, Any], parent_key: tuple[Any, ...] = ()) -> dict[tuple[Any, ...], Any]:
