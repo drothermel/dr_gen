@@ -94,10 +94,10 @@ def get_filter_function(table, **kwargs: Any):  # noqa: ANN401
 
     def filter_function(vals) -> bool:
         for k, v in kwargs.items():
-            k = k.lower()
-            v = [v] if not isinstance(v, list) else v
-            vstrs = [str(vv) for vv in v]
-            ind = field_index.get(k)
+            k_lower = k.lower()
+            v_list = [v] if not isinstance(v, list) else v
+            vstrs = [str(vv) for vv in v_list]
+            ind = field_index.get(k_lower)
             if ind is None:
                 continue
             if vals[ind] not in vstrs:

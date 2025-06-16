@@ -12,8 +12,8 @@ def filter_entries_by_selection(all_entries, **kwargs):
         key_dict = dict(key_tuple)
         match = True
         for sel_key, sel_vals in kwargs.items():
-            sel_vals = gu.make_list(sel_vals)
-            if sel_key not in key_dict or key_dict[sel_key] not in sel_vals:
+            sel_vals_list = gu.make_list(sel_vals)
+            if sel_key not in key_dict or key_dict[sel_key] not in sel_vals_list:
                 match = False
                 break
         if match:

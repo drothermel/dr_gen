@@ -290,7 +290,8 @@ if all_results:
 
     # Save to CSV
     results_df.to_csv(OUTPUT_CSV_PATH, index=False)
-    pkl.dump(all_results, Path(OUTPUT_PKL_PATH).open("wb"))
+    with Path(OUTPUT_PKL_PATH).open("wb") as f:
+        pkl.dump(all_results, f)
     print(f"Results saved successfully to {OUTPUT_CSV_PATH}")
 else:
     print("No results generated during the sweep.")
