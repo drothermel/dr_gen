@@ -43,7 +43,7 @@ def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:
         if dim == 1:
             return [[vs] for vs in in_val]
         return [[[v] for v in vs] for vs in in_val]
-    
+
     # Default fallback (should not reach here in normal cases)
     return in_val
 

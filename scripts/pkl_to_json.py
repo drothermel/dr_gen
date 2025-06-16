@@ -29,14 +29,11 @@ def convert_pkl_to_json(pkl_filepath: str, json_filepath: str) -> None:
         print(f"Error: The file '{pkl_filepath}' was not found.")
     except pickle.UnpicklingError:
         print(f"Error: Could not unpickle '{pkl_filepath}'. It might be corrupted or not a pickle file.")
-    except Exception as e:
+    except (OSError, ValueError, TypeError) as e:
         print(f"An error occurred during conversion: {e}")
 
-# --- Example Usage ---
-# Make sure to replace these file paths with your actual file paths.
-# pkl_input_path = "your_aggregated_results.pkl"
-# json_output_path = "plotter_data.json"
-# convert_pkl_to_json(pkl_input_path, json_output_path)
+# Example usage:
+# convert_pkl_to_json("your_aggregated_results.pkl", "plotter_data.json")
 if __name__ == "__main__":
     convert_pkl_to_json(
         "/Users/daniellerothermel/drotherm/data/dr_gen/run_data_v1/lr_wd_init_v0_t2.pkl",

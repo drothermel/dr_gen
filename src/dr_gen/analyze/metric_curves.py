@@ -7,11 +7,14 @@ DEFAULT_METRIC_NAME = "loss"
 
 
 class SplitMetrics:
+    """Manages metric curves for a specific split (train/val/eval)."""
+
     def __init__(
         self,
         config,
         split,
     ):
+        """Initialize SplitMetrics for a given config and split."""
         self.config = config
         self.split = split
 
@@ -25,6 +28,7 @@ class SplitMetrics:
         x_name=DEFAULT_XNAME,
         x_val_hashable=True,
     ):
+        """Add an x-value pair to the specified metric curve."""
         if metric_name not in self.curves:
             self.curves[metric_name] = MetricCurves(
                 self.config,

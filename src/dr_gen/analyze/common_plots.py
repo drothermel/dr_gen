@@ -108,9 +108,12 @@ def split_plot(
     ax=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # [split [curves [curve_data ...]]]
     split_curves = make_list_of_lols(split_curves, dim=1)
 
@@ -203,9 +206,12 @@ def split_sample_plot(
     n_sample=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # Initial Curves Goal: [split [curves [curve_data ...]]]
     #   -> assume missing dimension is "curves" not "split"
     split_curves_lists = make_list_of_lists(split_curves_lists, dim=1)
@@ -257,9 +263,12 @@ def split_sampled_summary_plot(
     n_sample=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # Initial Curves Goal: [split [curves [curve_data ...]]]
     #   -> assume missing dimension is "curves" not "split"
     split_curves_lists = make_list_of_lists(split_curves_lists, dim=1)
