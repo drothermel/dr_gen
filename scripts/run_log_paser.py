@@ -154,8 +154,7 @@ def parse_log_file(filepath):
 
 
 def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
-    """Identifies varying FLATTENED config parameters (excluding 'seed' and
-    blacklisted keys) and groups runs.
+    """Identifies varying FLATTENED config parameters (excluding 'seed' and blacklisted keys) and groups runs.
 
     Args:
         all_runs_data (list): A list of dictionaries, where each dict has
