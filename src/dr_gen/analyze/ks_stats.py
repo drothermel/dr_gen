@@ -10,7 +10,8 @@ def find_max_diff_point(values1, values2):
     all_vals = np.sort(np.unique(np.concatenate([v1, v2])))
 
     results = {}
-    # For each unique value, compute the proportion of values in each sample that are <= that value.
+    # For each unique value, compute the proportion of values in each sample
+    # that are <= that value.
     results["all_vals"] = all_vals
     results["cdf1"] = np.searchsorted(v1, all_vals, side="right") / len(v1)
     results["cdf2"] = np.searchsorted(v2, all_vals, side="right") / len(v2)
@@ -37,6 +38,8 @@ def calculate_ks_for_run_sets(vals_1, vals_2):
     # cdf1_val = results["cdf1"][results["max_idx"]]
     # cdf2_val = results["cdf2"][results["max_idx"]]
     # print(
-    #    f"ks_stat: {ks_stat:0.4f}, p_value: {p_value:0.4e} | max_val: {results['max_diff_value']:0.2f}, cdf1_val: {cdf1_val:0.4f}, cdf2_val: {cdf2_val:0.4f}"
+    #     f"ks_stat: {ks_stat:0.4f}, p_value: {p_value:0.4e} | "
+    #     f"max_val: {results['max_diff_value']:0.2f}, "
+    #     f"cdf1_val: {cdf1_val:0.4f}, cdf2_val: {cdf2_val:0.4f}"
     # )
     return results

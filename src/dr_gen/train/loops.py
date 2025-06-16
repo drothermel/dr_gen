@@ -97,7 +97,7 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
 
 
 def train_loop(
-    cfg: Any,
+    cfg: Any,  # noqa: ANN401
     train_dl: Any,
     model: torch.nn.Module,
     optim: torch.optim.Optimizer,

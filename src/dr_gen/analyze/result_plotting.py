@@ -4,6 +4,10 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
+# Constants for validation
+EXPECTED_MATCHING_HPMS = 2
+EXPECTED_KEY_VALUE_PARTS = 2
+
 import dr_gen.analyze.bootstrapping as bu
 
 # === Helpers to Select Relevant Run Groups === #
@@ -63,7 +67,8 @@ def get_pretrained_vs_random_init_runs(
         hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] != "DEFAULT"
     }
     if one_per:
-        assert len(hpms_pre) == len(hpms_rand) == 1
+        assert len(hpms_pre) == 1, f"Expected 1 pretrained HPM, got {len(hpms_pre)}"
+        assert len(hpms_rand) == 1, f"Expected 1 random HPM, got {len(hpms_rand)}"
     return hpms_pre, hpms_rand
 
 
@@ -94,7 +99,7 @@ def select_matching_hpms(
 
     # Only use hpms where the hash has a value for group A and B
     for hash_hpms in hpms_by_hash.values():
-        if len(hash_hpms) == 2:
+        if len(hash_hpms) == EXPECTED_MATCHING_HPMS:
             hpms_to_use.update(hash_hpms)
 
     return hpms_to_use
@@ -249,7 +254,9 @@ def parse_hpm_value(value_str):
 
 
 def parse_group_name(group_name_str):
-    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters."""
+    """Parses a group name string (e.g., "key1=val1 key2=val2") into a
+    dictionary of hyperparameters.
+    """
     hpm_dict = {}
     # Split by space, handling potential multiple spaces and stripping whitespace
     parts = re.split(r"\s+", group_name_str.strip())
@@ -258,7 +265,7 @@ def parse_group_name(group_name_str):
             continue
         # Split by '=', ensuring only the first '=' is used
         key_value = part.split("=", 1)
-        if len(key_value) == 2:
+        if len(key_value) == EXPECTED_KEY_VALUE_PARTS:
             key, value_str = key_value
             hpm_dict[key] = parse_hpm_value(value_str)
         else:
@@ -292,7 +299,8 @@ def add_hpm_columns(df):
     hpm_df = pd.DataFrame(hpm_series.tolist(), index=df.index)
 
     # Join the new HPM columns to the original DataFrame
-    # Use suffixes if there's an unlikely column name collision, though joining on index should be fine
+    # Use suffixes if there's an unlikely column name collision, though joining
+    # on index should be fine
     return df.join(hpm_df)
 
 

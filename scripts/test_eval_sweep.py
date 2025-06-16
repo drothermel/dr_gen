@@ -8,6 +8,9 @@ import pandas as pd
 import dr_gen.analyze.result_plotting as rplt
 from dr_gen.analyze.run_group import RunGroup
 
+# Constants for minimum data requirements
+MIN_DATA_POINTS_FOR_SWEEP = 2
+
 # === Configuration ===
 RUN_DATA_PATH = (
     "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
@@ -16,8 +19,14 @@ N_START = 3
 T_START = 1
 NUM_N_POINTS = 17  # Number of points to test along the N axis (runs)
 NUM_T_POINTS = 270  # Number of points to test along the T axis (timesteps)
-OUTPUT_CSV_PATH = f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.csv"
-OUTPUT_PKL_PATH = f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n{NUM_N_POINTS}_t{NUM_T_POINTS}.pkl"
+OUTPUT_CSV_PATH = (
+    f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n"
+    f"{NUM_N_POINTS}_t{NUM_T_POINTS}.csv"
+)
+OUTPUT_PKL_PATH = (
+    f"/Users/daniellerothermel/Desktop/comparison_sweep_summary_v0_n"
+    f"{NUM_N_POINTS}_t{NUM_T_POINTS}.pkl"
+)
 
 # HPMs for selecting runs (same as test_eval.py)
 hpm_specs_hpm_select = {
@@ -35,8 +44,10 @@ NUM_PERMUTATIONS = 1000
 
 
 def trim_hpm_data(hpm_data_dict, n_runs, t_length):
-    """Trims the data within a dictionary {hpm_name: [[run1_metrics], [run2_metrics], ...]}
-    to the specified number of runs and timesteps.
+    """Trims the data within a dictionary.
+
+    Takes {hpm_name: [[run1_metrics], [run2_metrics], ...]} to the specified number of
+    runs and timesteps.
 
     Args:
         hpm_data_dict (dict): The input dictionary of HPM data.
@@ -44,7 +55,8 @@ def trim_hpm_data(hpm_data_dict, n_runs, t_length):
         t_length (int): The maximum number of timesteps to keep per run.
 
     Returns:
-        dict: A new dictionary with the trimmed data. Returns empty dict if input is empty.
+        dict: A new dictionary with the trimmed data. Returns empty dict if input
+            is empty.
     """
     if not hpm_data_dict:
         return {}
@@ -59,7 +71,8 @@ def trim_hpm_data(hpm_data_dict, n_runs, t_length):
             isinstance(run, list | np.ndarray) for run in runs_data
         ):
             print(
-                f"Warning: Skipping HPM '{hpm_name}' due to unexpected data format: {type(runs_data)}"
+                f"Warning: Skipping HPM '{hpm_name}' due to unexpected data "
+                f"format: {type(runs_data)}"
             )
             continue
 
@@ -137,9 +150,11 @@ max_t = min(min_ts_pre, min_ts_rand)
 
 print(f"Determined sweep limits: max_n = {max_n}, max_t = {max_t}")
 
-if max_n < 2 or max_t < 2:  # Need at least 2 points to define a range
+# Need at least 2 points to define a range
+if max_n < MIN_DATA_POINTS_FOR_SWEEP or max_t < MIN_DATA_POINTS_FOR_SWEEP:
     print(
-        f"Error: Insufficient data dimensions (max_n={max_n}, max_t={max_t}) for sweep with >1 points. Exiting."
+        f"Error: Insufficient data dimensions (max_n={max_n}, max_t={max_t}) "
+        f"for sweep with >1 points. Exiting."
     )
     exit()
 
@@ -169,9 +184,6 @@ print(f"Starting sweep over {len(n_values)} n points and {len(t_values)} t point
 # for n in range(1, max_n + 1, N_STEP): # OLD LOOP
 for n in n_values:
     # Determine valid 't' range for this 'n' - trim function handles lengths
-    # t_values = range(1, max_t + 1, T_STEP) # OLD T VALUES
-    # if max_t not in t_values: # Ensure the max_t is included
-    #     t_values = list(t_values) + [max_t]
 
     for t in t_values:
         print(f"  Running analysis for n={n}, t={t}...")
@@ -198,7 +210,7 @@ for n in n_values:
 
         try:
             # Run the comparison
-            (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results) = (
+            (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results) = (
                 rplt.run_comparison_eval(
                     group_a_data=group_a_data,
                     group_b_data=group_b_data,
@@ -223,10 +235,10 @@ for n in n_values:
                 "sweep_t": t,
                 "group_A_name": "Pretrained",
                 "group_B_name": "Random Init",
-                "best_hpm_A": best_hpm_A,
-                "best_val_timestep_A": best_ts_A,
-                "best_hpm_B": best_hpm_B,
-                "best_val_timestep_B": best_ts_B,
+                "best_hpm_A": best_hpm_a,
+                "best_val_timestep_A": best_ts_a,
+                "best_hpm_B": best_hpm_b,
+                "best_val_timestep_B": best_ts_b,
             }
 
             # Flatten summary, difference, and test statistics
@@ -255,23 +267,12 @@ for n in n_values:
                         csv_data[f"{prefix}{key}"] = value
 
             ## Add original and bootstrapped samples (converting to string)
-            # for key_suffix in ['original', 'bootstraps']:
-            # for group_suffix in ['A', 'B']:
-            # full_key = f'{key_suffix}_{group_suffix}'
-            # if full_key in comparison_results:
-            # data_array = comparison_results[full_key]
-            # if isinstance(data_array, np.ndarray):
-            # csv_data[full_key] = str(data_array.tolist())
-            # else:
-            # csv_data[full_key] = str(data_array) # Handle non-array cases if any
 
             all_results.append(csv_data)
 
         except (ValueError, KeyError, TypeError, AttributeError) as e:
             print(f"    Error during analysis for n={n}, t={t}: {e}")
             # Optionally add a row indicating error or just skip
-            # error_row = {'sweep_n': n, 'sweep_t': t, 'error': str(e)}
-            # all_results.append(error_row)
             continue  # Continue to next iteration
 
 print("Sweep complete.")
@@ -279,7 +280,8 @@ print("Sweep complete.")
 # --- Save Results to CSV ---
 if all_results:
     print(
-        f"Saving results summary for {len(all_results)} successful runs to {OUTPUT_CSV_PATH}..."
+        f"Saving results summary for {len(all_results)} successful runs to "
+        f"{OUTPUT_CSV_PATH}..."
     )
     results_df = pd.DataFrame(all_results)
 

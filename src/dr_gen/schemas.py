@@ -24,26 +24,32 @@ def check_contains(cls: Any, val: Any) -> bool:
 
 
 class OptimizerTypes(Enum):
+    """Enumeration of supported optimizer types."""
     SGD = "sgd"
     RMSPROP = "rmsprop"
     ADAMW = "adamw"
 
     def __contains__(self, val: Any) -> bool:
+        """Check if value is in optimizer types."""
         return check_contains(self, val)
 
 
 class LRSchedTypes(Enum):
+    """Enumeration of supported learning rate scheduler types."""
     STEP_LR = "steplr"
     EXPONENTIAL_LR = "exponentiallr"
 
     def __contains__(self, val: Any) -> bool:
+        """Check if value is in scheduler types."""
         return check_contains(self, val)
 
 
 class CriterionTypes(Enum):
+    """Enumeration of supported loss criterion types."""
     CROSS_ENTROPY = "cross_entropy"
 
     def __contains__(self, val: Any) -> bool:
+        """Check if value is in criterion types."""
         return check_contains(self, val)
 
 
@@ -89,6 +95,7 @@ def validate_criterion(criterion: str) -> bool:
 
 
 class ConfigType(Enum):
+    """Enumeration of configuration schema types."""
     USES_METRICS = "uses_metrics"
     USES_DATA = "uses_data"
     USES_MODEL = "uses_model"
@@ -119,18 +126,21 @@ def get_schema(config_type: str) -> type | None:
 @lenient_validate
 @dataclass
 class DataConfig:
+    """Configuration for dataset settings."""
     name: str = field(default=cast("str", MISSING))
 
 
 @lenient_validate
 @dataclass
 class ModelConfig:
+    """Configuration for model settings."""
     name: str = field(default=cast("str", MISSING))
 
 
 @lenient_validate
 @dataclass
 class OptimConfig:
+    """Configuration for optimizer and training settings."""
     name: str = field(default=cast("str", MISSING))
     loss: str = field(default=cast("str", MISSING))
     lr: float = field(default=cast("float", MISSING))
@@ -139,6 +149,7 @@ class OptimConfig:
 @lenient_validate
 @dataclass
 class RunConfig:
+    """Configuration for run settings."""
     run: bool = field(default=cast("bool", MISSING))
 
 
@@ -150,6 +161,7 @@ class RunConfig:
 @lenient_validate
 @dataclass
 class UsingDataConfig:
+    """Configuration interface for data usage."""
     data: type = DataConfig
 
 
@@ -175,6 +187,7 @@ class UsingDataConfig:
 @lenient_validate
 @dataclass
 class UsingModelConfig:
+    """Configuration interface for model usage."""
     device: str = field(default=cast("str", MISSING))
     model: type = ModelConfig
 
@@ -182,6 +195,7 @@ class UsingModelConfig:
 @lenient_validate
 @dataclass
 class UsingOptimConfig:
+    """Configuration interface for optimizer usage."""
     device: str = field(default=cast("str", MISSING))
     model: type = ModelConfig
     optim: type = OptimConfig
@@ -190,6 +204,7 @@ class UsingOptimConfig:
 @lenient_validate
 @dataclass
 class PerformingRun:
+    """Configuration interface for performing training runs."""
     train: RunConfig
     val: RunConfig
     seed: int = field(default=cast("int", MISSING))

@@ -10,6 +10,9 @@ import numpy as np
 # A unique object to represent missing keys in configs for comparison during grouping
 _NotPresent = object()
 
+# Constants for dimensional validation
+EXPECTED_ARRAY_DIMENSIONS = 2
+
 # --- Configuration Key Blacklist ---
 # Keys containing any of these substrings will be ignored for varying HPM
 # checks and in the final HPM output.
@@ -154,9 +157,10 @@ def parse_log_file(filepath):
 
 
 def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
-    """Identifies varying FLATTENED config parameters (excluding blacklisted keys)
-    and groups runs.
-    
+    """Identifies varying FLATTENED config parameters (excluding blacklisted keys).
+
+    Groups runs and identifies varying keys.
+
     Args:
         all_runs_data (list): A list of dictionaries, where each dict has
                               {'config': FLATTENED_actual_config_dict,
@@ -325,7 +329,7 @@ def aggregate_metrics_for_groups(grouped_runs):
                 try:
                     aggregated_array = np.array(truncated_metrics_by_seed)
                     if (
-                        aggregated_array.ndim == 2
+                        aggregated_array.ndim == EXPECTED_ARRAY_DIMENSIONS
                         and aggregated_array.shape[1] == min_epochs
                     ):
                         current_group_split_metric_results[split][metric] = (

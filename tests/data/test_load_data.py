@@ -40,13 +40,22 @@ def transform_cfg():
 
 
 class DummyDataset(Dataset):
+    """Helper class for testing data loading functionality."""
+
     def __init__(self, data) -> None:
+        """Initialize DummyDataset with provided data.
+
+        Args:
+            data: The data to store in the dataset.
+        """
         self.data = data
 
     def __len__(self) -> int:
+        """Return the length of the dataset."""
         return len(self.data)
 
     def __getitem__(self, idx) -> Any:
+        """Get item at the specified index."""
         return self.data[idx]
 
 
@@ -347,9 +356,8 @@ def test_get_dataloader_custom_config() -> None:
 
 
 def test_get_dataloader_invalid_split(monkeypatch) -> None:
-    """Test that get_dataloader raises an assertion error when an invalid split
-    is provided.
-    
+    """Test that get_dataloader raises an assertion error when an invalid split is provided.
+
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """
     dummy_data = DummyDataset(list(range(10)))

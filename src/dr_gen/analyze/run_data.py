@@ -3,6 +3,10 @@ from collections.abc import MutableMapping
 from datetime import datetime
 from typing import Any
 
+# Constants for file parsing
+MIN_FILE_LINES = 2
+TRAIN_TIME_OFFSET_FROM_END = 2
+
 import dr_util.file_utils as fu
 
 import dr_gen.utils.utils as gu
@@ -187,7 +191,7 @@ class RunData:
         if contents is None:
             self.parse_errors.append(f">> Unable to load file: {self.file_path}")
             return
-        if len(contents) <= 2:
+        if len(contents) <= MIN_FILE_LINES:
             self.parse_errors.append(">> File two lines or less, unable to parse")
             return
 
@@ -200,7 +204,9 @@ class RunData:
 
         # Extract Run Metadata
         self.metadata["time_parsed"] = datetime.now()
-        self.metadata["train_time"] = get_train_time(contents[-2])
+        self.metadata["train_time"] = get_train_time(
+            contents[-TRAIN_TIME_OFFSET_FROM_END]
+        )
         self.metadata["log_strs"] = get_logged_strings(contents)
 
         # Extract and validate metrics

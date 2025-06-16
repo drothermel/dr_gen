@@ -102,7 +102,7 @@ def create_optim(
             )
 
 
-def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:
+def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:  # noqa: ANN401
     match cfg.optim.lr_scheduler:
         case None:
             return None
@@ -127,7 +127,7 @@ def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:
 
 
 # Config Req: cfg.model.name
-def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:
+def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:  # noqa: ANN401
     assert "resnet" in cfg.model.name
     if cfg.model.source == "torchvision":
         weights_name = cfg.model.get("weights", None)
@@ -162,10 +162,8 @@ def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:
 
 # Config Req: cfg.optim.name, cfg.optim.lr
 def create_optim_lrsched(
-    cfg: Any, model: torch.nn.Module
+    cfg: Any, model: torch.nn.Module  # noqa: ANN401
 ) -> tuple[torch.optim.Optimizer, Any]:
-    # vu.validate_optimizer(cfg.optim.name)
-    # vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
     model_params = model.parameters()
 
     # ---------- Optim -----------
@@ -182,7 +180,7 @@ def create_optim_lrsched(
 
 
 def get_model_optim_lrsched(
-    cfg: Any, num_classes: int, md: Any = None
+    cfg: Any, num_classes: int, md: Any = None  # noqa: ANN401
 ) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
     model = create_model(cfg, num_classes)
     optimizer = None

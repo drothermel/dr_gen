@@ -1,6 +1,9 @@
 from typing import Any
 
 import dr_util.data_utils as du
+
+# Constants for data splitting validation
+MAX_SUPPORTED_SPLITS = 2
 import dr_util.determinism_utils as dtu
 import timm
 import timm.data
@@ -20,7 +23,7 @@ DEFAULT_DOWNLOAD = True
 
 
 # TODO: replace with timm
-def build_transforms(xfm_cfg: Any) -> Any:
+def build_transforms(xfm_cfg: Any) -> Any:  # noqa: ANN401
     if xfm_cfg is None:
         return None
 
@@ -81,7 +84,7 @@ def get_dataset(
 
 
 def _parse_and_validate_config(
-    cfg: Any,
+    cfg: Any,  # noqa: ANN401
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
     """Parses data configuration, identifies sources, and prepares for splitting."""
     vu.validate_dataset(cfg.data.name)
@@ -113,7 +116,8 @@ def _parse_and_validate_config(
             source_usage_info[source_name] = []
         source_usage_info[source_name].append(
             {
-                "target_split_key": split_name_key,  # e.g. 'train' (the key for the final dataloader)
+                # e.g. 'train' (the key for the final dataloader)
+                "target_split_key": split_name_key,
                 "source_percent_allocation": split_config_from_file.source_percent,
             }
         )
@@ -134,7 +138,7 @@ def _parse_and_validate_config(
             source_usage_info[source_name] = sorted(
                 usages, key=lambda x: x["target_split_key"]
             )
-            if len(usages) > 2:  # Based on original code's assertion
+            if len(usages) > MAX_SUPPORTED_SPLITS:  # Based on original code's assertion
                 raise ValueError(
                     "Configuration implies a source is split into more than "
                     "two parts, which is not supported by the current logic."
@@ -145,7 +149,7 @@ def _parse_and_validate_config(
 
 
 def _load_source_datasets(
-    cfg: Any, unique_source_names_to_load: list[str]
+    cfg: Any, unique_source_names_to_load: list[str]  # noqa: ANN401
 ) -> dict[str, Any]:
     """Loads raw datasets for each unique source. Transforms are NOT applied here."""
     loaded_raw_datasets = {}
@@ -191,14 +195,20 @@ def _perform_source_splitting(
                 pass
             datasets_after_source_split[target_key] = original_dataset_for_source
 
-        elif len(usages) == 2:  # Source is split into two target splits
+        # Source is split into two target splits
+        elif len(usages) == MAX_SUPPORTED_SPLITS:
             target1_info = usages[0]  # Assumes sorted order from parsing
             target2_info = usages[1]
 
             ratio_for_target1 = target1_info["source_percent_allocation"]
 
-            # print(f"Splitting source '{source_name}' for '{target1_info['target_split_key']}' ({ratio_for_target1*100}%) "
-            #       f"and '{target2_info['target_split_key']}' ({(1-ratio_for_target1)*100}%) using seed {data_split_seed}.")
+            # print(
+            #     f"Splitting source '{source_name}' for "
+            #     f"'{target1_info['target_split_key']}' "
+            #     f"({ratio_for_target1*100}%) and "
+            #     f"'{target2_info['target_split_key']}' "
+            #     f"({(1-ratio_for_target1)*100}%) using seed {data_split_seed}."
+            # )
 
             dataset_for_target1, dataset_for_target2 = du.split_data(
                 original_dataset_for_source,
@@ -216,7 +226,8 @@ def _perform_source_splitting(
 
 def _apply_use_percent(datasets_after_source_splitting, parsed_configs):
     """Applies 'use_percent' to further subset the datasets.
-    Currently takes the first N elements of the (potentially shuffled by data_split_seed) input dataset.
+    Currently takes the first N elements of the (potentially shuffled by
+    data_split_seed) input dataset.
     """
     final_subsetted_datasets = {}
     for target_key, dataset_obj in datasets_after_source_splitting.items():
@@ -230,9 +241,13 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs):
             ):  # Ensure at least one sample if percent > 0
                 num_to_use = 1
 
-            # print(f"Applying use_percent={use_p} to '{target_key}'. Original size: {original_len}, new size: {num_to_use}")
+            # print(
+            #     f"Applying use_percent={use_p} to '{target_key}'. "
+            #     f"Original size: {original_len}, new size: {num_to_use}"
+            # )
 
-            # Takes the first N elements. If the dataset_obj is already a result of a seeded shuffle (from split_data),
+            # Takes the first N elements. If the dataset_obj is already a result of
+            # a seeded shuffle (from split_data),
             # this selection is deterministic on a consistently shuffled set.
             indices_to_keep = list(range(num_to_use))
             final_subsetted_datasets[target_key] = Subset(dataset_obj, indices_to_keep)
@@ -302,7 +317,11 @@ def _create_dataloaders_from_final_datasets(
             # generator for DataLoader (>=1.9) can also be set for workers
             # if worker_init_fn isn't covering all needs.
         )
-        # print(f"Created DataLoader for '{target_key}': batch_size={current_batch_size}, shuffle={use_shuffle_in_dl}, num_samples={len(final_dataset)}")
+        # print(
+        #     f"Created DataLoader for '{target_key}': "
+        #     f"batch_size={current_batch_size}, shuffle={use_shuffle_in_dl}, "
+        #     f"num_samples={len(final_dataset)}"
+        # )
 
     return data_loaders_map
 
