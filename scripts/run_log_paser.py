@@ -154,7 +154,8 @@ def parse_log_file(filepath):
 
 
 def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
-    """Identifies varying FLATTENED config parameters (excluding 'seed' and blacklisted keys) and groups runs.
+    """Identifies varying FLATTENED config parameters (excluding blacklisted keys)
+    and groups runs.
 
     Args:
         all_runs_data (list): A list of dictionaries, where each dict has
@@ -361,7 +362,7 @@ def aggregate_metrics_for_groups(grouped_runs):
 # Main execution block
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Process .jsonl log files from a directory to aggregate and group metrics.",
+        description="Process .jsonl log files to aggregate and group metrics.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -378,7 +379,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    args.log_dir = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0_t2/"
+    args.log_dir = (
+        "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/"
+        "lr_wd_init_v0_t2/"
+    )
     args.output_pkl = (
         "/Users/daniellerothermel/drotherm/data/dr_gen/run_data_v1/lr_wd_init_v0_t2.pkl"
     )
@@ -406,11 +410,13 @@ if __name__ == "__main__":
 
     if not all_runs_data_with_flattened_configs:
         print(
-            "No valid log files with parsable and flattenable configurations found. Exiting."
+            "No valid log files with parsable and flattenable configurations "
+            "found. Exiting."
         )
         exit(0)
     print(
-        f"Successfully parsed and flattened configs for {len(all_runs_data_with_flattened_configs)} files."
+        f"Successfully parsed and flattened configs for "
+        f"{len(all_runs_data_with_flattened_configs)} files."
     )
 
     print(
@@ -428,7 +434,9 @@ if __name__ == "__main__":
         exit(0)
 
     print(
-        f"Identified {len(varying_keys)} varying config parameters (excluding 'seed', blacklisted keys, dot-separated): {varying_keys if varying_keys else 'None'}"
+        f"Identified {len(varying_keys)} varying config parameters "
+        f"(excluding 'seed', blacklisted keys, dot-separated): "
+        f"{varying_keys if varying_keys else 'None'}"
     )
     print(f"Formed {len(grouped_runs)} run groups: {list(grouped_runs.keys())}")
 
@@ -440,7 +448,8 @@ if __name__ == "__main__":
     final_output_to_pickle = {}
     if not aggregated_metrics_per_group and group_to_hpms:
         print(
-            "No metrics could be aggregated, but HPM groups were formed. Output will contain HPMs only for groups that were identified."
+            "No metrics could be aggregated, but HPM groups were formed. "
+            "Output will contain HPMs only for groups that were identified."
         )
         # Still create entries if only HPMs are available for a group
         for group_name, hpms in group_to_hpms.items():
@@ -451,12 +460,14 @@ if __name__ == "__main__":
 
     elif not aggregated_metrics_per_group and not group_to_hpms:
         print(
-            "No metrics could be aggregated and no HPM groups formed. Output .pkl will be empty."
+            "No metrics could be aggregated and no HPM groups formed. "
+            "Output .pkl will be empty."
         )
 
     else:
         print(
-            f"Successfully aggregated metrics for {len(aggregated_metrics_per_group)} groups."
+            f"Successfully aggregated metrics for "
+            f"{len(aggregated_metrics_per_group)} groups."
         )
         for group_name, metrics_data in aggregated_metrics_per_group.items():
             if group_name in group_to_hpms:
@@ -467,10 +478,13 @@ if __name__ == "__main__":
                     ],  # HPMs are already flattened, seed & blacklisted excluded
                 }
             else:
-                # This case should ideally not happen if group_name comes from aggregated_metrics_per_group
-                # which is derived from grouped_runs, which also populates group_to_hpms.
+                # This case should ideally not happen if group_name comes from
+                # aggregated_metrics_per_group
+                # which is derived from grouped_runs, which also populates
+                # group_to_hpms.
                 print(
-                    f"Warning: HPMs not found for metric group '{group_name}'. This group will be incomplete in output."
+                    f"Warning: HPMs not found for metric group '{group_name}'. "
+                    f"This group will be incomplete in output."
                 )
                 final_output_to_pickle[group_name] = {
                     "metrics": metrics_data,
@@ -480,7 +494,8 @@ if __name__ == "__main__":
         for group_name, hpms in group_to_hpms.items():
             if group_name not in final_output_to_pickle:
                 print(
-                    f"Info: Group '{group_name}' had HPMs but no aggregated metrics. Adding with empty metrics."
+                    f"Info: Group '{group_name}' had HPMs but no aggregated metrics. "
+                    f"Adding with empty metrics."
                 )
                 final_output_to_pickle[group_name] = {"metrics": {}, "hpms": hpms}
 

@@ -346,7 +346,8 @@ def test_get_dataloader_custom_config() -> None:
 
 
 def test_get_dataloader_invalid_split(monkeypatch) -> None:
-    """Test that get_dataloader raises an assertion error when an invalid split is provided.
+    """Test that get_dataloader raises an assertion error when an invalid split
+    is provided.
 
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """
@@ -384,7 +385,8 @@ def test_get_split_source_config_defaults() -> None:
 def test_get_split_source_config_custom() -> None:
     """Test when a custom configuration maps multiple splits to the same source.
 
-    For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
+    For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2
+    respectively,
     while 'eval' uses the default (its own name and 1.0).
     """
     cfg = OmegaConf.create(
@@ -398,8 +400,10 @@ def test_get_split_source_config_custom() -> None:
     )
     sources, ranges = du.get_split_source_config(cfg)
 
-    # For train: range is (0, 0.8); for val: since it uses the same source "official_train",
-    # its range is (0.8, 1.0). For eval: default is used (source "eval", range (0, 1.0)).
+    # For train: range is (0, 0.8); for val: since it uses the same source
+    # "official_train",
+    # its range is (0.8, 1.0). For eval: default is used (source "eval",
+    # range (0, 1.0)).
     expected_ranges = {
         "train": (0, 0.8),
         "val": (0.8, 1.0),

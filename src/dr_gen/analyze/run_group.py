@@ -258,9 +258,7 @@ class RunGroup:
         return hpm_metrics
 
     # returns: { hpm: { split : [runs [metric_data ...]]}}
-    def select_run_metrics_by_hpms(
-        self, metric_name, splits=None, **kwargs
-    ):
+    def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs):
         if splits is None:
             splits = ["train", "val", "eval"]
         hpm_split_metrics = defaultdict(dict)

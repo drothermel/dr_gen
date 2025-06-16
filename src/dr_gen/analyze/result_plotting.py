@@ -213,13 +213,11 @@ def print_results_report(
     final_diff_stats["mean_diff_ci_95"]
     final_diff_stats["mean_diff_reject_null_ci_95"]
 
-
     # Report KS Permutation Test Results
     final_ks_perm_stats = comparison_results["ks_permutation_test"]
     final_ks_perm_stats.get("observed_ks", "N/A")
     final_ks_perm_stats.get("p_value", "N/A")
     final_ks_perm_stats.get("reject_null", None)  # Default to None
-
 
 
 # ================  CSV Export  ===================

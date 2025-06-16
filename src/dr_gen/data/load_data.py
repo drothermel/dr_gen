@@ -358,7 +358,6 @@ def get_dataloaders_refactored(cfg, main_torch_generator, model):
     )
 
 
-
 """
 def get_dataloaders(cfg, generator):
     vu.validate_dataset(cfg.data.name)

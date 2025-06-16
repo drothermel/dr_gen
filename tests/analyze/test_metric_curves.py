@@ -265,6 +265,7 @@ def test_splitmetrics_get_by_xval() -> None:
 
 def test_get_by_xval_invalid_metric() -> None:
     sm = SplitMetrics(DUMMY_CONFIG, "test")
-    # Attempting to get a value for a non-existent metric should raise an assertion error.
+    # Attempting to get a value for a non-existent metric should raise an
+    # assertion error.
     with pytest.raises(AssertionError, match=">> .* not in curves"):
         sm.get_by_xval(1, metric_name="nonexistent")

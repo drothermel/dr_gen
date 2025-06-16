@@ -221,9 +221,7 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None, md=N
     chpt_dir = Path(cfg.write_checkpoint)
     chpt_dir.mkdir(parents=True, exist_ok=True)
     chpt_path = chpt_dir / f"{checkpoint_name}.pt"
-    chpt = {"model": model.state_dict(),
-            "optimizer": optim,
-            "lr_scheduler": lrsched}
+    chpt = {"model": model.state_dict(), "optimizer": optim, "lr_scheduler": lrsched}
     torch.save(chpt, chpt_path)
     if md is not None:
         md.log(f">> Saved checkpoint to: {chpt_path}")
