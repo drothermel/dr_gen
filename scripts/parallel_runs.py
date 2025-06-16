@@ -161,27 +161,6 @@ def start_training_run(
             f"Logs: {stdout_log_path}"
         )
         return process, job_name
-    except FileNotFoundError:
-        print_flush(
-            f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or "
-            f"script '{TRAINING_SCRIPT_PATH}'. Please check paths."
-        )
-        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
-        with error_log_path.open("a") as f_err:
-            f_err.write(
-                f"FileNotFoundError for job '{job_name}': "
-                f"Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n"
-            )
-        return None, job_name
-    except (OSError, subprocess.SubprocessError) as e:
-        print_flush(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
-        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
-        with error_log_path.open("a") as f_err:
-            f_err.write(
-                f"Launch exception for job '{job_name}': {e}\n"
-                f"Command: {' '.join(command)}\n"
-            )
-        return None, job_name
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

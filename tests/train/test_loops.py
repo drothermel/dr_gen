@@ -49,14 +49,14 @@ def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None):
 
 # A dummy dataset that returns a fixed tensor and target.
 class DummyDataset(torch.utils.data.Dataset):
-    def __init__(self, num_samples=4):
+    def __init__(self, num_samples: int = 4) -> None:
         self.num_samples = num_samples
         self.classes = [0, 1, 2, 4, 5]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         # Return a dummy "image" (e.g. 3x32x32) and a target label (0)
         return torch.randn(3, 32, 32), torch.tensor(0)
 

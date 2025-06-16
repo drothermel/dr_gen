@@ -1,12 +1,13 @@
 import hashlib
 from datetime import datetime
+from typing import Any
 
 
-def make_list(in_val):
+def make_list(in_val: Any) -> list:
     return in_val if isinstance(in_val, list) else [in_val]
 
 
-def make_list_of_lists(in_val, dim=0):
+def make_list_of_lists(in_val: Any, dim: int = 0) -> list:
     in_val = make_list(in_val)
     if isinstance(in_val[0], list):
         return in_val
@@ -16,13 +17,13 @@ def make_list_of_lists(in_val, dim=0):
     return [[iv] for iv in in_val]
 
 
-def add_dim(inlist, dim=0):
+def add_dim(inlist: list, dim: int = 0) -> list:
     if dim == 0:
         return [inlist]
     return [[v] for v in inlist]
 
 
-def make_list_of_lols(in_val, dim=0):
+def make_list_of_lols(in_val: Any, dim: int = 0) -> list:
     in_val = make_list(in_val)
     if isinstance(in_val[0], list) and isinstance(in_val[0][0], list):
         return in_val
@@ -44,7 +45,7 @@ def make_list_of_lols(in_val, dim=0):
         return [[[v] for v in vs] for vs in in_val]
 
 
-def flatten_dict_tuple_keys(d, parent_key=()):
+def flatten_dict_tuple_keys(d: dict, parent_key: tuple = ()) -> dict:
     items = {}
     for k, v in d.items():
         new_key = parent_key + (k,)
@@ -55,12 +56,12 @@ def flatten_dict_tuple_keys(d, parent_key=()):
     return items
 
 
-def flatten_dict(in_dict):
+def flatten_dict(in_dict: dict) -> dict:
     flat_tuple_keys = flatten_dict_tuple_keys(in_dict)
     return {".".join(k): v for k, v in flat_tuple_keys.items()}
 
 
-def hash_string_to_length(s, length):
+def hash_string_to_length(s: str, length: int) -> str:
     # Encode the string to bytes and compute the SHA-256 hash
     hash_obj = hashlib.sha256(s.encode("utf-8"))
     # Get the hexadecimal digest of the hash
@@ -69,19 +70,19 @@ def hash_string_to_length(s, length):
     return hex_digest[:length]
 
 
-def hash_from_time(length):
+def hash_from_time(length: int) -> str:
     return hash_string_to_length(str(datetime.now()), length)
 
 
-def dict_to_tupledict(in_dict):
+def dict_to_tupledict(in_dict: dict) -> tuple:
     return tuple(sorted(list(in_dict.items())))
 
 
-def tupledict_to_dict(in_tupledict):
+def tupledict_to_dict(in_tupledict: tuple) -> dict:
     return {k: v for k, v in in_tupledict}
 
 
-def check_prefix_exclude(check_string, excluded_prefixes):
+def check_prefix_exclude(check_string: str, excluded_prefixes: list[str]) -> bool:
     for pre in excluded_prefixes:
         if check_string.startswith(pre):
             return True
