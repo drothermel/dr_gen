@@ -1,4 +1,5 @@
 import random
+from typing import Any
 
 import matplotlib.pyplot as plt
 
@@ -7,15 +8,15 @@ import dr_gen.analyze.plot_utils as pu
 from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 
 
-def len_to_inds(data_len):
+def len_to_inds(data_len: int) -> list[int]:
     return list(range(data_len))
 
 
-def data_to_inds(data):
+def data_to_inds(data: Any) -> list[int]:
     return len_to_inds(len(data))
 
 
-def default_grid_ind_labels(data):
+def default_grid_ind_labels(data: Any) -> list[list[str]]:
     data = make_list_of_lists(data)
     return [pu.default_ind_labels(dt) for dt in data]
 

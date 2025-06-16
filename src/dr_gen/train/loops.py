@@ -1,5 +1,6 @@
 import time
 from datetime import timedelta
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -9,7 +10,7 @@ import dr_gen.train.evaluate as eu
 import dr_gen.train.model as mu
 
 
-def log_metrics(md, group_name, **kwargs):
+def log_metrics(md: Any, group_name: str, **kwargs: Any) -> None:
     assert md is not None, "There should be a metrics obj"
 
     loss = kwargs.get("loss")
@@ -94,7 +95,7 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
             )
 
 
-def train_loop(cfg, train_dl, model, optim, lr_sched, val_dl=None, eval_dl=None, md=None):
+def train_loop(cfg: Any, train_dl: Any, model: torch.nn.Module, optim: torch.optim.Optimizer, lr_sched: Any, val_dl: Any = None, eval_dl: Any = None, md: Any = None) -> None:
     assert md is not None  # Temporarily
     criterion = mu.get_criterion(cfg)
     mu.checkpoint_model(cfg, model, "init_model", md=md)

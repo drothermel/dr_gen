@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import MutableMapping
 from datetime import datetime
+from typing import Any
 
 import dr_util.file_utils as fu
 
@@ -10,7 +11,7 @@ from dr_gen.analyze.metric_curves import SplitMetrics
 EPOCHS_KEY = "epochs"
 
 
-def parse_cfg_log_line(cfg_json):
+def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     errors = []
     if cfg_json.get("type", None) != "dict_config":
         errors.append(">> Config json doesn't have {type: dict_config}")
@@ -25,13 +26,13 @@ def parse_cfg_log_line(cfg_json):
     return cfg_json["value"], errors
 
 
-def get_train_time(train_time_json):
+def get_train_time(train_time_json: dict[str, Any]) -> str | None:
     if train_time_json.get("type", None) == "str" and "value" in train_time_json:
         return train_time_json["value"].strip("Training time ")
     return None
 
 
-def get_logged_strings(jsonl_contents):
+def get_logged_strings(jsonl_contents: list[dict[str, Any]]) -> list[str]:
     all_strings = []
     for jl in jsonl_contents:
         if jl.get("type", None) == "str" and jl.get("value", "").strip() != "":
@@ -39,10 +40,10 @@ def get_logged_strings(jsonl_contents):
     return all_strings
 
 
-def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
+def get_logged_metrics_infer_epoch(hpm: Any, jsonl_contents: list[dict[str, Any]]) -> dict[str, SplitMetrics]:
     metrics_by_split = {}
 
-    epochs = defaultdict(int)
+    epochs: dict[str, int] = defaultdict(int)
     x_name = "epoch"
     for jl in jsonl_contents:
         if "agg_stats" not in jl or "data_name" not in jl:
@@ -65,7 +66,7 @@ def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
     return metrics_by_split
 
 
-def validate_metrics(expected_epochs, metrics_by_split):
+def validate_metrics(expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]) -> bool:
     if expected_epochs is None or len(metrics_by_split) == 0:
         return [f"invalid input: {expected_epochs}, {len(metrics_by_split)}"]
 
