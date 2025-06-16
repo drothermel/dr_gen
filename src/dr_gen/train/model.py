@@ -116,7 +116,7 @@ def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:
         case LRSchedTypes.STEP_LR.value:
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=cfg.optim.get('step_size', 30),
+                step_size=cfg.optim.get("step_size", 30),
                 gamma=cfg.optim.gamma,
             )
 

@@ -379,7 +379,8 @@ if __name__ == "__main__":
                     )
                     if rc != 0:
                         print_flush(
-                            f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log"
+                            f"    Check logs: {LAUNCHER_LOG_DIR}/"
+                            f"{p_job_name}_stderr.log"
                         )
                     active_processes.remove(proc_info)
             if len(active_processes) >= MAX_PARALLEL_JOBS:
@@ -422,12 +423,13 @@ if __name__ == "__main__":
                         f"    Check logs: {LAUNCHER_LOG_DIR}/{p_job_name}_stderr.log"
                     )
                 active_processes.remove(proc_info)
-        if active_processes: time.sleep(20)
+        if active_processes:
+            time.sleep(20)
 
     print_flush("\n--- All training runs initiated by the launcher have completed. ---")
     print_flush(
         f"Launcher's per-job stdout/stderr logs are in: "
-        f"{os.path.abspath(LAUNCHER_LOG_DIR)}"
+        f"{Path(LAUNCHER_LOG_DIR).resolve()}"
     )
     print_flush("--- Launcher script finished. ---")
 

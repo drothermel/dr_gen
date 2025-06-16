@@ -84,7 +84,7 @@ class SplitMetrics:
 
 class MetricCurves:
     """Manages multiple curves for a specific metric."""
-    
+
     def __init__(
         self,
         config: Any,
@@ -141,7 +141,7 @@ class MetricCurves:
 
 class MetricCurve:
     """Represents a single metric curve with x-values and metric values."""
-    
+
     def __init__(
         self,
         config: Any,

@@ -13,7 +13,7 @@ EPOCHS_KEY = "epochs"
 
 def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     errors = []
-    if cfg_json.get("type", None) != "dict_config":
+    if cfg_json.get("type") != "dict_config":
         errors.append(">> Config json doesn't have {type: dict_config}")
     if "value" not in cfg_json:
         errors.append(">> Config 'value' not set")
@@ -27,7 +27,7 @@ def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[s
 
 
 def get_train_time(train_time_json: dict[str, Any]) -> str | None:
-    if train_time_json.get("type", None) == "str" and "value" in train_time_json:
+    if train_time_json.get("type") == "str" and "value" in train_time_json:
         return train_time_json["value"].strip("Training time ")  # type: ignore[no-any-return]
     return None
 
