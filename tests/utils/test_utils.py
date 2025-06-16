@@ -47,7 +47,7 @@ def test_flatten_single_level_dict():
 # You could also simulate reading one of your file's JSON lines.
 def test_flatten_from_json_line():
     # Suppose this is one line from your file (e.g., line 1)
-    json_line = '{"type": "dict_config", "value": {"paths": {"root": "/scratch/ddr8143", "proj_dir_name": "cifar10_scratch"}}}'
+    json_line = (\n        '{\"type\": \"dict_config\", \"value\": {\"paths\": {\"root\": \"/scratch/ddr8143\", '\n        '\"proj_dir_name\": \"cifar10_scratch\"}}}'\n    )
     data = json.loads(json_line)
 
     expected_output = {

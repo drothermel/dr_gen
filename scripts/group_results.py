@@ -73,7 +73,9 @@ def file_path_to_name(fpath):
     date_time_hash = hash_string_to_length(datetime, 6)
     return f"cifar10_{winit}__{bs}_{lr}_{wd}_{seed}__{date_time_hash}.jsonl"
     """
-    # /scratch/ddr8143/logs/cifar10/bs500/lr0.01/wd0.001/tup0.5/xftpycil/s0/pretrained/resnet8.a1_in1k/2025-03-01-17-39-1747039595/json_out.jsonl
+    # Long path example:
+    # /scratch/ddr8143/logs/cifar10/bs500/lr0.01/wd0.001/tup0.5/xftpycil/s0/
+    # pretrained/resnet8.a1_in1k/2025-03-01-17-39-1747039595/json_out.jsonl
     hpm_dict, run_label = parse_sweep2_path_hyperparameters(str(fpath))
     return hpm_dict, run_label
 

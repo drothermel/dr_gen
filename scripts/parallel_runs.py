@@ -22,7 +22,8 @@ DEFAULT_WEIGHT_TYPE = "scratch"
 
 # --- Static Configuration ---
 PYTHON_EXECUTABLE = "python"
-TRAINING_SCRIPT_PATH = "/scratch/ddr8143/repos/dr_gen/scripts/train.py" # IMPORTANT: Update this path!
+# IMPORTANT: Update this path!
+TRAINING_SCRIPT_PATH = "/scratch/ddr8143/repos/dr_gen/scripts/train.py"
 
 AVAILABLE_GPUS = None # Example: [0, 1] for specific GPU assignment
 _current_gpu_idx = 0
@@ -34,6 +35,7 @@ def print_flush(in_val):
 
 def parse_value_list(value_str, target_type=str):
     """Parses a command-line string. If it contains commas, splits it into a list.
+    
     Converts elements to the target_type.
     If already a list (e.g., for seeds), returns it after type conversion.
     """
@@ -47,7 +49,7 @@ def parse_value_list(value_str, target_type=str):
     items = [s.strip() for s in value_str.split(",")]
 
     # Handle boolean case explicitly if needed, e.g., "true" -> True
-    if target_type == bool:
+    if target_type is bool:
         return [s.lower() == "true" for s in items]
     return [target_type(item) for item in items]
 
@@ -61,7 +63,7 @@ def setup_launcher_logging():
 
 def get_next_gpu_id():
     """Cycles through available GPUs if specified."""
-    global _current_gpu_idx
+    global _current_gpu_idx  # noqa: PLW0603
     if AVAILABLE_GPUS and len(AVAILABLE_GPUS) > 0:
         gpu_id = AVAILABLE_GPUS[_current_gpu_idx % len(AVAILABLE_GPUS)]
         _current_gpu_idx += 1
@@ -69,18 +71,25 @@ def get_next_gpu_id():
     return None
 
 def create_unique_job_name(param_dict):
-    """Creates a unique and descriptive name from parameter dictionary for logging and directories."""
+    """Creates a unique and descriptive name from parameter dictionary.
+    
+    Used for logging and directories.
+    """
     name_parts = []
     # Sort items for consistent naming
     for key, value in sorted(param_dict.items()):
-        # Sanitize key for directory/file names: replace '.' with '_' or remove entirely if problematic
-        sanitized_key = key.replace(".", "_").replace("paths_", "").replace("optim_", "")
+        # Sanitize key for directory/file names: replace '.' with '_' or remove
+        # entirely if problematic
+        sanitized_key = (
+            key.replace(".", "_").replace("paths_", "").replace("optim_", "")
+        )
         name_parts.append(f"{sanitized_key}_{value}")
     return "-".join(name_parts)
 
 def start_training_run(param_combination_dict, job_name):
-    """Constructs the command to run the Hydra script with a specific parameter combination
-    and starts it as a subprocess.
+    """Constructs the command to run the Hydra script with a specific parameter combination.
+    
+    Starts it as a subprocess.
     Returns a tuple (subprocess.Popen object, job_name).
     """
     command = [PYTHON_EXECUTABLE, TRAINING_SCRIPT_PATH]
@@ -98,7 +107,11 @@ def start_training_run(param_combination_dict, job_name):
     current_env = os.environ.copy()
     current_env["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     assigned_gpu_id = get_next_gpu_id()
-    launch_message_gpu = f"on GPU {assigned_gpu_id}" if assigned_gpu_id is not None else "(default GPU)"
+    launch_message_gpu = (
+        f"on GPU {assigned_gpu_id}"
+        if assigned_gpu_id is not None
+        else "(default GPU)"
+    )
     print_flush(f"Attempting to launch job '{job_name}' {launch_message_gpu}...")
     if assigned_gpu_id is not None:
         current_env["CUDA_VISIBLE_DEVICES"] = str(assigned_gpu_id)
@@ -111,23 +124,45 @@ def start_training_run(param_combination_dict, job_name):
 
     # --- Start the Subprocess ---
     try:
-        with open(stdout_log_path, "wb") as stdout_file, open(stderr_log_path, "wb") as stderr_file:
-            process = subprocess.Popen(command, env=current_env, stdout=stdout_file, stderr=stderr_file)
-        print_flush(f"  Successfully launched PID: {process.pid} for job '{job_name}'. Logs: {stdout_log_path}")
+        with (
+            open(stdout_log_path, "wb") as stdout_file,
+            open(stderr_log_path, "wb") as stderr_file,
+        ):
+            process = subprocess.Popen(
+                command, env=current_env, stdout=stdout_file, stderr=stderr_file
+            )
+        print_flush(
+            f"  Successfully launched PID: {process.pid} for job '{job_name}'. "
+            f"Logs: {stdout_log_path}"
+        )
         return process, job_name
     except FileNotFoundError:
-        print_flush(f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or script '{TRAINING_SCRIPT_PATH}'. Please check paths.")
-        with open(os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log"), "a") as f_err:
-            f_err.write(f"FileNotFoundError for job '{job_name}': Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n")
+        print_flush(
+            f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or "
+            f"script '{TRAINING_SCRIPT_PATH}'. Please check paths."
+        )
+        error_log_path = os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log")
+        with open(error_log_path, "a") as f_err:
+            f_err.write(
+                f"FileNotFoundError for job '{job_name}': "
+                f"Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n"
+            )
         return None, job_name
     except Exception as e:
         print_flush(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
-        with open(os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log"), "a") as f_err:
-            f_err.write(f"Launch exception for job '{job_name}': {e}\nCommand: {' '.join(command)}\n")
+        error_log_path = os.path.join(LAUNCHER_LOG_DIR, "launcher_critical_errors.log")
+        with open(error_log_path, "a") as f_err:
+            f_err.write(
+                f"Launch exception for job '{job_name}': {e}\n"
+                f"Command: {' '.join(command)}\n"
+            )
         return None, job_name
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Launch multiple Hydra training runs by sweeping through combinations of parameters.")
+    parser = argparse.ArgumentParser(
+        description="Launch multiple Hydra training runs by sweeping through "
+        "combinations of parameters."
+    )
 
     # Core launcher args
     parser.add_argument("-p", "--max_parallel_jobs", type=int, default=DEFAULT_MAX_PARALLEL_JOBS, help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}")
