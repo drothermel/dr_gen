@@ -134,6 +134,28 @@ def start_training_run(
             process = subprocess.Popen(  # noqa: S603
                 command, env=current_env, stdout=stdout_file, stderr=stderr_file
             )
+    except FileNotFoundError:
+        print_flush(
+            f"[ERROR] Could not find Python executable '{PYTHON_EXECUTABLE}' or "
+            f"script '{TRAINING_SCRIPT_PATH}'. Please check paths."
+        )
+        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
+        with error_log_path.open("a") as f_err:
+            f_err.write(
+                f"FileNotFoundError for job '{job_name}': "
+                f"Python='{PYTHON_EXECUTABLE}', Script='{TRAINING_SCRIPT_PATH}'\n"
+            )
+        return None, job_name
+    except (OSError, subprocess.SubprocessError) as e:
+        print_flush(f"[ERROR] Failed to launch job '{job_name}' due to: {e}")
+        error_log_path = Path(LAUNCHER_LOG_DIR) / "launcher_critical_errors.log"
+        with error_log_path.open("a") as f_err:
+            f_err.write(
+                f"Launch exception for job '{job_name}': {e}\n"
+                f"Command: {' '.join(command)}\n"
+            )
+        return None, job_name
+    else:
         print_flush(
             f"  Successfully launched PID: {process.pid} for job '{job_name}'. "
             f"Logs: {stdout_log_path}"
@@ -169,31 +191,84 @@ if __name__ == "__main__":
 
     # Core launcher args
     parser.add_argument(
-        "-p", "--max_parallel_jobs", 
-        type=int, 
-        default=DEFAULT_MAX_PARALLEL_JOBS, 
+        "-p", "--max_parallel_jobs",
+        type=int,
+        default=DEFAULT_MAX_PARALLEL_JOBS,
         help=f"Max parallel training jobs. Default: {DEFAULT_MAX_PARALLEL_JOBS}"
     )
     parser.add_argument("-g", "--avail_gpus", type=str, default="")
-    parser.add_argument("-s", "--start_seed", type=int, default=DEFAULT_START_SEED, help=f"Start seed for sequence (if --max_seed is used). Default: {DEFAULT_START_SEED}")
-    parser.add_argument("-e", "--max_seed", type=int, default=None, help="Max seed for sequence. Overrides default seeds list.")
-    parser.add_argument("--seeds_list", type=str, default=",".join(map(str, DEFAULT_SEEDS_TO_RUN)), help=f"Comma-separated list of seeds if not using start/max_seed. Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}")
+    parser.add_argument(
+        "-s", "--start_seed", 
+        type=int, 
+        default=DEFAULT_START_SEED, 
+        help=f"Start seed for sequence (if --max_seed is used). Default: {DEFAULT_START_SEED}"
+    )
+    parser.add_argument(
+        "-e", "--max_seed", 
+        type=int, 
+        default=None, 
+        help="Max seed for sequence. Overrides default seeds list."
+    )
+    parser.add_argument(
+        "--seeds_list", 
+        type=str, 
+        default=",".join(map(str, DEFAULT_SEEDS_TO_RUN)), 
+        help=f"Comma-separated list of seeds if not using start/max_seed. Default: {','.join(map(str, DEFAULT_SEEDS_TO_RUN))}"
+    )
 
     # Hydra parameter sweep args
-    parser.add_argument("--val_bs", type=str, default=DEFAULT_VAL_BS, help=f"Validation/Evaluation batch size(s), comma-separated. Default: {DEFAULT_VAL_BS}")
-    parser.add_argument("--proj_name", type=str, default=DEFAULT_PROJ_DIR_NAME, help=f"Project directory name(s) for 'paths.proj_dir_name', comma-separated. Default: {DEFAULT_PROJ_DIR_NAME}")
-    parser.add_argument("--epochs", type=str, default=DEFAULT_EPOCHS, help=f"Number of epoch(s), comma-separated. Default: {DEFAULT_EPOCHS}")
-    parser.add_argument("--bs", type=str, default=DEFAULT_BATCH_SIZE, help=f"Training batch size(s), comma-separated. Default: {DEFAULT_BATCH_SIZE}")
-    parser.add_argument("--lr", type=str, default=DEFAULT_LR, help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}")
-    parser.add_argument("--wd", type=str, default=DEFAULT_WEIGHT_DECAY, help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}")
-    parser.add_argument("--wtype", type=str, default=DEFAULT_WEIGHT_TYPE, help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}")
+    parser.add_argument(
+        "--val_bs", 
+        type=str, 
+        default=DEFAULT_VAL_BS, 
+        help=f"Validation/Evaluation batch size(s), comma-separated. Default: {DEFAULT_VAL_BS}"
+    )
+    parser.add_argument(
+        "--proj_name", 
+        type=str, 
+        default=DEFAULT_PROJ_DIR_NAME, 
+        help=f"Project directory name(s) for 'paths.proj_dir_name', comma-separated. Default: {DEFAULT_PROJ_DIR_NAME}"
+    )
+    parser.add_argument(
+        "--epochs", 
+        type=str, 
+        default=DEFAULT_EPOCHS, 
+        help=f"Number of epoch(s), comma-separated. Default: {DEFAULT_EPOCHS}"
+    )
+    parser.add_argument(
+        "--bs", 
+        type=str, 
+        default=DEFAULT_BATCH_SIZE, 
+        help=f"Training batch size(s), comma-separated. Default: {DEFAULT_BATCH_SIZE}"
+    )
+    parser.add_argument(
+        "--lr", 
+        type=str, 
+        default=DEFAULT_LR, 
+        help=f"Learning rate(s) for 'optim.lr', comma-separated. Default: {DEFAULT_LR}"
+    )
+    parser.add_argument(
+        "--wd", 
+        type=str, 
+        default=DEFAULT_WEIGHT_DECAY, 
+        help=f"Weight decay(s) for 'optim.weight_decay', comma-separated. Default: {DEFAULT_WEIGHT_DECAY}"
+    )
+    parser.add_argument(
+        "--wtype", 
+        type=str, 
+        default=DEFAULT_WEIGHT_TYPE, 
+        help=f"Weight type(s) for 'weight_type', comma-separated. Default: {DEFAULT_WEIGHT_TYPE}"
+    )
     parser.add_argument("--wn", type=str, default="DEFAULT")
     parser.add_argument("--ws", type=str, default="torchvision")
     parser.add_argument("--xft", type=str, default="pycil")
     parser.add_argument("--use_percent", type=str, default="1.0")
 
     args = parser.parse_args()
-    AVAILABLE_GPUS = None if args.avail_gpus == "" else parse_value_list(args.avail_gpus, target_type=int)
+    AVAILABLE_GPUS = (
+        None if args.avail_gpus == "" 
+        else parse_value_list(args.avail_gpus, target_type=int)
+    )
     MAX_PARALLEL_JOBS = args.max_parallel_jobs
     WEIGHT_NAME = args.wn
 
