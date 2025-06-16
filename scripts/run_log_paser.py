@@ -33,7 +33,7 @@ def is_key_blacklisted(key, blacklist):
 
 def flatten_dict(d, parent_key="", sep="."):
     """Flattens a nested dictionary.
-    
+
     E.g., {"a": 1, "b": {"c": 2}} becomes {"a": 1, "b.c": 2}.
     Preserves order if input is OrderedDict.
     """
@@ -52,7 +52,7 @@ def flatten_dict(d, parent_key="", sep="."):
 
 def parse_log_file(filepath):
     """Parses a single .jsonl log file.
-    
+
     The first line is expected to be the JSON config.
     It handles potentially nested configs like
     {"type": "dict_config", "value": {...actual_config...}}.
