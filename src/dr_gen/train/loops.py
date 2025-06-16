@@ -43,7 +43,7 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):  
     model.train()
     for _i, (image, target) in enumerate(dataloader):
         # if i % 10 == 0:
-        #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")  # noqa: ERA001
+        #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")  # noqa: ERA001,E501
         image, target = image.to(cfg.device), target.to(cfg.device)  # noqa: PLW2901
         output = model(image)
         loss = criterion(output, target)

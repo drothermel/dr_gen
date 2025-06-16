@@ -56,8 +56,10 @@ def make_uniform_2d_data_arrays_pair(data_a, data_b):
 
 
 def make_uniform_2d_data_arrays_dict(data_dict):
-    """Converts dict of lists of lists to dict of numpy arrays with uniform
-    shape (min_R, min_T). Returns None if input is empty or contains empty lists.
+    """Converts dict of lists of lists to dict of numpy arrays with uniform shape.
+    
+    Returns None if input is empty or contains empty lists.
+    Shape will be (min_R, min_T).
     """
     min_dims = get_min_2d_data_shape(data_dict)
     if min_dims is None:
@@ -77,6 +79,7 @@ def make_uniform_2d_data_arrays_dict(data_dict):
 # Takes (batch_dim, data_dim), returns (batch_dim, B, data_dim)
 def bootstrap_samples_batched(dataset, b=None):
     """Generates bootstrap samples for each row of a 2D array (the batch dimension).
+    
     Samples elements with replacement from the second dimension (the data dimension).
     Input shape: (batch_dim, data_dim)
     Output shape: (batch_dim, num_samples_b, data_dim).
