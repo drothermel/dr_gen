@@ -12,8 +12,6 @@ from dr_gen.analyze.run_group import RunGroup
 RUN_DATA_PATH = (
     "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
 )
-# T_STEP = 50  # Step size for sweeping through timesteps - REMOVED
-# N_STEP = 5  # Step size for sweeping through runs - REMOVED
 N_START = 3
 T_START = 1
 NUM_N_POINTS = 17  # Number of points to test along the N axis (runs)

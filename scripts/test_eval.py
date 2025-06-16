@@ -53,10 +53,10 @@ group_a_data = (hpms_val_pre, hpms_eval_pre)
 group_b_data = (hpms_val_rand, hpms_eval_rand)
 
 (
-    best_hpm_A,
-    best_ts_A,
-    best_hpm_B,
-    best_ts_B,
+    best_hpm_a,
+    best_ts_a,
+    best_hpm_b,
+    best_ts_b,
     comparison_results,
 ) = rplt.run_comparison_eval(
     group_a_data=group_a_data,
@@ -71,10 +71,10 @@ group_b_data = (hpms_val_rand, hpms_eval_rand)
 # --- Print Report ---
 print("Comparison analysis complete.")
 rplt.print_results_report(
-    best_hpm_A=best_hpm_A,
-    best_ts_A=best_ts_A,
-    best_hpm_B=best_hpm_B,
-    best_ts_B=best_ts_B,
+    best_hpm_A=best_hpm_a,
+    best_ts_A=best_ts_a,
+    best_hpm_B=best_hpm_b,
+    best_ts_B=best_ts_b,
     comparison_results=comparison_results,
 )
 
@@ -84,10 +84,10 @@ print(f"\nSaving results summary to {OUTPUT_CSV_PATH}...")
 csv_data = {
     "group_A_name": "Pretrained",
     "group_B_name": "Random Init",
-    "best_hpm_A": best_hpm_A,
-    "best_val_timestep_A": best_ts_A,
-    "best_hpm_B": best_hpm_B,
-    "best_val_timestep_B": best_ts_B,
+    "best_hpm_A": best_hpm_a,
+    "best_val_timestep_A": best_ts_a,
+    "best_hpm_B": best_hpm_b,
+    "best_val_timestep_B": best_ts_b,
     "bootstraps_A": comparison_results["bootstraps_A"],
     "bootstraps_B": comparison_results["bootstraps_B"],
     "original_A": comparison_results["original_A"],
@@ -117,9 +117,6 @@ for prefix, stats_dict in stats_to_flatten.items():
             # Store other primitive types directly
             csv_data[f"{prefix}{key}"] = value
 
-# print(csv_data['bootstraps_A'])
-# print(csv_data['bootstraps_A'].tolist())
-# print(str(csv_data['bootstraps_A'].tolist()))
 for key in ["bootstraps", "original"]:
     b_a = comparison_results[f"{key}_A"]
     if isinstance(b_a, np.ndarray):
