@@ -5,7 +5,7 @@ import torch
 
 # From https://github.com/pytorch/vision/blob/main/references/classification/utils.py#L173
 def accuracy(output: torch.Tensor, target: torch.Tensor, topk: Sequence[int] = (1,)) -> list[torch.Tensor]:
-    """Computes the accuracy over the k top predictions for the specified values of k"""
+    """Computes the accuracy over the k top predictions for the specified values of k."""
     with torch.inference_mode():
         maxk = max(topk)
         batch_size = target.size(0)

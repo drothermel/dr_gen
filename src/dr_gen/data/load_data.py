@@ -79,8 +79,7 @@ def get_dataset(
     return ds
 
 def _parse_and_validate_config(cfg: Any) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
-    """Parses data configuration, identifies sources, and prepares for splitting.
-    """
+    """Parses data configuration, identifies sources, and prepares for splitting."""
     vu.validate_dataset(cfg.data.name)
 
     parsed_configs = {}
@@ -140,8 +139,7 @@ def _parse_and_validate_config(cfg: Any) -> tuple[dict[str, dict[str, Any]], dic
 
 
 def _load_source_datasets(cfg: Any, unique_source_names_to_load: list[str]) -> dict[str, Any]:
-    """Loads raw datasets for each unique source. Transforms are NOT applied here.
-    """
+    """Loads raw datasets for each unique source. Transforms are NOT applied here."""
     loaded_raw_datasets = {}
     for source_name in unique_source_names_to_load:
         loaded_raw_datasets[source_name] = get_dataset(
@@ -237,8 +235,7 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs):
     return final_subsetted_datasets
 
 def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model):
-    """Applies transforms to the datasets.
-    """
+    """Applies transforms to the datasets."""
     datasets_with_transforms = {}
     for target_key, dataset_obj in datasets_to_be_transformed.items():
         data_config = timm.data.resolve_model_data_config(model)
@@ -271,8 +268,7 @@ def _create_dataloaders_from_final_datasets(
     num_workers_global: int,
     main_torch_generator: torch.Generator,
 ) -> dict[str, torch.utils.data.DataLoader[Any]]:
-    """Creates DataLoaders for each processed dataset.
-    """
+    """Creates DataLoaders for each processed dataset."""
     data_loaders_map = {}
     for target_key, final_dataset in final_datasets_for_loaders.items():
         config_for_this_loader = parsed_configs[target_key]

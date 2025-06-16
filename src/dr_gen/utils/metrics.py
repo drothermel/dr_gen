@@ -73,7 +73,7 @@ class GenMetricsSubgroup(MetricsSubgroup):
     ## Override these to handle batch size better ##
     @singledispatchmethod
     def add(self, data, ns=None):  # noqa: ARG002 (unused args)
-        assert False, f">> Unexpected data type: {type(data)}"  # noqa
+        assert False, f">> Unexpected data type: {type(data)}"
 
     @add.register(tuple)
     def _(self, data, ns=None):

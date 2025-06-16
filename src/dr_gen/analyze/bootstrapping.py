@@ -10,7 +10,7 @@ _RNG = np.random.default_rng()
 
 
 def get_min_2D_data_shape(data_dict):
-    """Takes { exp_name: list_of_lists }
+    """Takes { exp_name: list_of_lists }.
 
     Finds the minimum lengths of outer (R) and inner (T) lists.
     Returns (min_R, min_T) or None if empty dict/lists found.
@@ -34,7 +34,7 @@ def get_min_2D_data_shape(data_dict):
 
 
 def make_uniform_2D_data_arrays_pair(data_a, data_b):
-    """Make numpy arrays, determine min common dimensions and crop"""
+    """Make numpy arrays, determine min common dimensions and crop."""
     arr_a, arr_b = np.array(data_a, dtype=float), np.array(data_b, dtype=float)
     assert arr_a.ndim == 2 and arr_b.ndim == 2 and arr_a.size != 0 and arr_b.size != 0
     R = min(arr_a.shape[0], arr_b.shape[0])

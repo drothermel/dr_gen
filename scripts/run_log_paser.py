@@ -271,6 +271,7 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
 def aggregate_metrics_for_groups(grouped_runs):
     """Aggregates metrics for each run group into S x E NumPy arrays.
+
     This function's core logic for metrics aggregation remains the same.
 
     Args:
