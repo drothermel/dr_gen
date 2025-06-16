@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -45,7 +46,7 @@ class DummyDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Any:
         return self.data[idx]
 
 
@@ -112,7 +113,7 @@ def dummy_get_split_source_config(cfg):
     """
     sources_used = ["source1", "eval"]
 
-    def range_for_split(split):
+    def range_for_split(split) -> tuple[float, float]:
         mapping = {"train": (0.0, 0.8), "val": (0.8, 1.0), "eval": (0.0, 1.0)}
         return mapping[split]
 

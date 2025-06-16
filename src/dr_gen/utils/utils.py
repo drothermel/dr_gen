@@ -1,13 +1,13 @@
 import hashlib
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
-def make_list(in_val: Any) -> list[Any]:
+def make_list(in_val: Any) -> list[Any]:  # noqa: ANN401
     return in_val if isinstance(in_val, list) else [in_val]
 
 
-def make_list_of_lists(in_val: Any, dim: int = 0) -> list[Any]:
+def make_list_of_lists(in_val: Any, dim: int = 0) -> list[Any]:  # noqa: ANN401
     in_val = make_list(in_val)
     if isinstance(in_val[0], list):
         return in_val  # type: ignore[no-any-return]
@@ -23,7 +23,7 @@ def add_dim(inlist: list[Any], dim: int = 0) -> list[Any]:
     return [[v] for v in inlist]
 
 
-def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:
+def make_list_of_lols(in_val: Any, dim: int = 0) -> list[Any]:  # noqa: ANN401
     in_val = make_list(in_val)
     if isinstance(in_val[0], list) and isinstance(in_val[0][0], list):
         return in_val
@@ -76,7 +76,7 @@ def hash_string_to_length(s: str, length: int) -> str:
 
 
 def hash_from_time(length: int) -> str:
-    return hash_string_to_length(str(datetime.now()), length)
+    return hash_string_to_length(str(datetime.now(UTC)), length)
 
 
 def dict_to_tupledict(in_dict: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
