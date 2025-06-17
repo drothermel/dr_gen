@@ -207,7 +207,6 @@ def _perform_source_splitting(
 
             ratio_for_target1 = target1_info["source_percent_allocation"]
 
-
             dataset_for_target1, dataset_for_target2 = du.split_data(
                 original_dataset_for_source,
                 ratio_for_target1,
@@ -241,7 +240,6 @@ def _apply_use_percent(
                 num_to_use == 0 and use_p > 0 and original_len > 0
             ):  # Ensure at least one sample if percent > 0
                 num_to_use = 1
-
 
             # Takes the first N elements. If the dataset_obj is already a result of
             # a seeded shuffle (from split_data),
@@ -370,5 +368,3 @@ def get_dataloaders_refactored(cfg: DictConfig, main_torch_generator, model):
         cfg.data.num_workers,
         main_torch_generator,
     )
-
-
