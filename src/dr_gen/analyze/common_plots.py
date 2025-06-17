@@ -1,4 +1,5 @@
 import random
+from collections.abc import Sized
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -12,11 +13,11 @@ def len_to_inds(data_len: int) -> list[int]:
     return list(range(data_len))
 
 
-def data_to_inds(data: Any) -> list[int]:
+def data_to_inds(data: Sized) -> list[int]:
     return len_to_inds(len(data))
 
 
-def default_grid_ind_labels(data: Any) -> list[list[str]]:
+def default_grid_ind_labels(data: Sized) -> list[list[str]]:
     data = make_list_of_lists(data)
     return [pu.default_ind_labels(dt) for dt in data]
 
@@ -97,7 +98,7 @@ def cdf_histogram_plot(vals1, vals2, **kwargs: Any):
     pu.make_histogram_plot(
         [vals1, vals2],
         ax=axes[0, 1],
-        **kwargs: Any,
+        **kwargs,
     )
     pu.annotate_grid_figure(axes, pu.get_plt_cfg(**kwargs))
     plt.show()
@@ -236,11 +237,13 @@ def split_sample_plot(
         metric_name=metric_name,
         x_name=x_name,
         splits=splits,
-        **kwargs: Any,
+        **kwargs,
     )
 
 
-def multi_line_sampled_summary_plot(curves_lists, ax=None, n_sample=None, **kwargs: Any):
+def multi_line_sampled_summary_plot(
+    curves_lists, ax=None, n_sample=None, **kwargs: Any
+):
     # Initial Curves: [summary_line [curves [curve_data ...]]
     curves_lists = make_list_of_lols(curves_lists, dim=0)
     # Sampled       : [summary_line [sampled_curves [curve_data ...]]
@@ -314,7 +317,7 @@ def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwarg
             curves,
             ax=ax,
             n_sample=n_sample,
-            **kwargs: Any,
+            **kwargs,
         )
 
     # Annotate and Show
@@ -328,7 +331,7 @@ def multi_line_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
         curves,
         n_sample=n_sample,
         n_grid=n_grid,
-        **kwargs: Any,
+        **kwargs,
     )
 
 
@@ -338,7 +341,7 @@ def multi_line_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwar
         curves,
         n_sample=n_sample,
         n_grid=n_grid,
-        **kwargs: Any,
+        **kwargs,
     )
 
 
@@ -348,7 +351,7 @@ def spilt_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
         curves,
         n_sample=n_sample,
         n_grid=n_grid,
-        **kwargs: Any,
+        **kwargs,
     )
 
 
@@ -358,7 +361,7 @@ def spilt_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: A
         curves,
         n_sample=n_sample,
         n_grid=n_grid,
-        **kwargs: Any,
+        **kwargs,
     )
 
 

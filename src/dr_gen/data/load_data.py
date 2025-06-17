@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Any
 
 import dr_util.data_utils as du
@@ -5,7 +6,9 @@ import dr_util.determinism_utils as dtu
 import timm
 import timm.data
 import torch
+from omegaconf import DictConfig
 from torch.utils.data import (
+    Dataset,
     RandomSampler,
     SequentialSampler,
     Subset,
@@ -23,7 +26,7 @@ DEFAULT_DOWNLOAD = True
 
 
 # TODO: replace with timm
-def build_transforms(xfm_cfg: Any) -> Any:  # noqa: ANN401
+def build_transforms(xfm_cfg: DictConfig | None) -> Any:  # noqa: ANN401
     if xfm_cfg is None:
         return None
 
@@ -67,9 +70,9 @@ def get_dataset(
     dataset_name: str,
     source_split: str,
     root: str = DEFAULT_DATASET_CACHE_ROOT,
-    transform: Any = None,
+    transform: Callable[[Any], Any] | None = None,
     download: bool = DEFAULT_DOWNLOAD,
-) -> Any:
+) -> Dataset[Any]:
     if dataset_name in ["cifar10", "cifar100"]:
         ds = du.get_cifar_dataset(
             dataset_name,
@@ -84,7 +87,7 @@ def get_dataset(
 
 
 def _parse_and_validate_config(
-    cfg: Any,  # noqa: ANN401
+    cfg: DictConfig,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
     """Parses data configuration, identifies sources, and prepares for splitting."""
     vu.validate_dataset(cfg.data.name)
@@ -149,7 +152,7 @@ def _parse_and_validate_config(
 
 
 def _load_source_datasets(
-    cfg: Any,
+    cfg: DictConfig,
     unique_source_names_to_load: list[str],
 ) -> dict[str, Any]:
     """Loads raw datasets for each unique source. Transforms are NOT applied here."""
@@ -252,7 +255,7 @@ def _apply_use_percent(
 
 
 def _apply_transforms(
-    cfg, datasets_to_be_transformed, parsed_configs, model
+    cfg: DictConfig, datasets_to_be_transformed, parsed_configs, model
 ) -> dict[str, Any]:
     """Applies transforms to the datasets."""
     datasets_with_transforms = {}
@@ -316,7 +319,7 @@ def _create_dataloaders_from_final_datasets(
     return data_loaders_map
 
 
-def get_dataloaders_refactored(cfg, main_torch_generator, model):
+def get_dataloaders_refactored(cfg: DictConfig, main_torch_generator, model):
     """Refactored function to create dataloaders, incorporating source_percent splits.
 
     (with data_split_seed) and use_percent subsampling, with a modular design.

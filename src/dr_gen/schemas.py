@@ -12,7 +12,7 @@ SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = ["cifar10", "cifar100"]
 
 
-def check_contains(cls: Any, val: Any) -> bool:
+def check_contains(cls: type[Enum], val: Any) -> bool:
     try:
         cls(val)
     except ValueError:
