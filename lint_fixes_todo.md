@@ -13,17 +13,17 @@ Found 167 errors from `ckdr` run. Categories and plan:
 - [x] Fix `src/dr_gen/analyze/bootstrapping.py:469` - Line 92 chars (parameter)
 
 ## 3. Missing Type Annotations for **kwargs (ANN003) - ~10 instances
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:37` - line_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:53` - histogram_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:64` - cdf_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:82` - cdf_histogram_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:113` - multi_line_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:191` - multi_line_sample_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:211` - multi_line_summary_plot function
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:243` - multi_line_sampled_summary_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:37` - line_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:53` - histogram_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:64` - cdf_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:82` - cdf_histogram_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:113` - multi_line_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:191` - multi_line_sample_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:211` - multi_line_summary_plot function
+- [x] Fix `src/dr_gen/analyze/common_plots.py:243` - multi_line_sampled_summary_plot function
 
 ## 4. Unused Function Arguments (ARG001) - 1 instance
-- [ ] Fix `src/dr_gen/analyze/common_plots.py:82` - Remove unused `ax` parameter in cdf_histogram_plot
+- [x] Fix `src/dr_gen/analyze/common_plots.py:82` - Remove unused `ax` parameter in cdf_histogram_plot
 
 ## 5. typing.Any Disallowed (ANN401) - ~15 instances
 Need to replace with proper type hints:
@@ -44,7 +44,7 @@ Need to replace with proper type hints:
 ## Commit Strategy
 After completing each major category, commit with descriptive message:
 - [x] Commit after fixing import order issues
-- [ ] Commit after fixing line length issues  
+- [x] Commit after fixing line length issues  
 - [ ] Commit after fixing missing **kwargs annotations
 - [ ] Commit after fixing unused arguments
 - [ ] Commit after fixing typing.Any issues
