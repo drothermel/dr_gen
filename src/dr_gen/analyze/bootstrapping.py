@@ -96,9 +96,8 @@ def bootstrap_samples_batched(dataset, b=None):
 
 
 def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
-    """Performs batched bootstrapping on timestep data across runs for multiple experiments.
-
-    "
+    """Performs batched bootstrapping on timestep data across runs for multiple
+    experiments.
 
     Standardizes experiments to (min_R, min_T), transposes to (min_T, min_R),
     stacks experiments, performs batched bootstrapping on the runs (R) for each
@@ -302,7 +301,8 @@ def select_best_hpms(summary_stats_data):
 
 # Calculates point differences and bootstrap CIs for the differences.
 def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
-    """Calculates point differences and bootstrap CIs for the difference between statistics.
+    """Calculates point differences and bootstrap CIs for the difference between
+    statistics.
 
     The inputs are lists of timestep summary dicts for each exp.
     """
@@ -333,7 +333,8 @@ def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
 
 
 def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
-    """Calculates bootstrap confidence interval for the KS statistic between matched samples.
+    """Calculates bootstrap confidence interval for the KS statistic between
+    matched samples.
 
     Takes: bootstrapped data for one timestep, shape (B, R).
     Returns: List of results per timestep.
@@ -466,7 +467,8 @@ def compare_experiments_bootstrap(
 def print_bootstrap_summary_exp_results(
     _exp_name,  # Unused but kept for API compatibility
     exp_result,
-    _max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,  # Unused but kept for API compatibility
+    _max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,  # Unused but kept for API
+    # compatibility
 ):
     for key, value in exp_result.items():
         if key == "timestep":  # Already printed

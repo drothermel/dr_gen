@@ -219,7 +219,9 @@ def _perform_source_splitting(
     return datasets_after_source_split
 
 
-def _apply_use_percent(datasets_after_source_splitting, parsed_configs) -> dict[str, Any]:
+def _apply_use_percent(
+    datasets_after_source_splitting, parsed_configs
+) -> dict[str, Any]:
     """Applies 'use_percent' to further subset the datasets.
 
     Currently takes the first N elements of the (potentially shuffled by
@@ -249,7 +251,9 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs) -> dict[
     return final_subsetted_datasets
 
 
-def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model) -> dict[str, Any]:
+def _apply_transforms(
+    cfg, datasets_to_be_transformed, parsed_configs, model
+) -> dict[str, Any]:
     """Applies transforms to the datasets."""
     datasets_with_transforms = {}
     for target_key, dataset_obj in datasets_to_be_transformed.items():

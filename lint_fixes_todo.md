@@ -7,10 +7,10 @@ Found 167 errors from `ckdr` run. Categories and plan:
 - [x] Fix `src/dr_gen/data/load_data.py:19` - Move dr_gen.schemas import to top
 
 ## 2. Line Length Issues (E501) - 4 instances  
-- [ ] Fix `src/dr_gen/analyze/bootstrapping.py:99` - Line 92 chars (docstring)
-- [ ] Fix `src/dr_gen/analyze/bootstrapping.py:305` - Line 92 chars (docstring)
-- [ ] Fix `src/dr_gen/analyze/bootstrapping.py:336` - Line 93 chars (docstring)
-- [ ] Fix `src/dr_gen/analyze/bootstrapping.py:469` - Line 92 chars (parameter)
+- [x] Fix `src/dr_gen/analyze/bootstrapping.py:99` - Line 92 chars (docstring)
+- [x] Fix `src/dr_gen/analyze/bootstrapping.py:305` - Line 92 chars (docstring)
+- [x] Fix `src/dr_gen/analyze/bootstrapping.py:336` - Line 93 chars (docstring)
+- [x] Fix `src/dr_gen/analyze/bootstrapping.py:469` - Line 92 chars (parameter)
 
 ## 3. Missing Type Annotations for **kwargs (ANN003) - ~10 instances
 - [ ] Fix `src/dr_gen/analyze/common_plots.py:37` - line_plot function
@@ -43,7 +43,7 @@ Need to replace with proper type hints:
 
 ## Commit Strategy
 After completing each major category, commit with descriptive message:
-- [ ] Commit after fixing import order issues
+- [x] Commit after fixing import order issues
 - [ ] Commit after fixing line length issues  
 - [ ] Commit after fixing missing **kwargs annotations
 - [ ] Commit after fixing unused arguments
