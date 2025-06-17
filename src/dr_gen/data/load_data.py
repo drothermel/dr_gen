@@ -1,10 +1,10 @@
 from typing import Any
 
 import dr_util.data_utils as du
+import dr_util.determinism_utils as dtu
 
 # Constants for data splitting validation
 MAX_SUPPORTED_SPLITS = 2
-import dr_util.determinism_utils as dtu
 import timm
 import timm.data
 import torch
