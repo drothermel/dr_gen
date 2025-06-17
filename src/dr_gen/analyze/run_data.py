@@ -3,15 +3,14 @@ from collections.abc import MutableMapping
 from datetime import datetime
 from typing import Any
 
-# Constants for file parsing
-MIN_FILE_LINES = 2
-TRAIN_TIME_OFFSET_FROM_END = 2
-
 import dr_util.file_utils as fu
 
 import dr_gen.utils.utils as gu
 from dr_gen.analyze.metric_curves import SplitMetrics
 
+# Constants for file parsing
+MIN_FILE_LINES = 2
+TRAIN_TIME_OFFSET_FROM_END = 2
 EPOCHS_KEY = "epochs"
 
 

@@ -4,11 +4,11 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
+import dr_gen.analyze.bootstrapping as bu
+
 # Constants for validation
 EXPECTED_MATCHING_HPMS = 2
 EXPECTED_KEY_VALUE_PARTS = 2
-
-import dr_gen.analyze.bootstrapping as bu
 
 # === Helpers to Select Relevant Run Groups === #
 

@@ -12,7 +12,7 @@ DEFAULT_FIGSIZE = (5, 4)
 DEFAULT_SUBPLOT_SHAPE = (1, None)
 
 
-def get_plt_cfg(**kwargs):
+def get_plt_cfg(**kwargs):  # noqa: ANN003
     base_plt_cfg = OmegaConf.create(
         {
             "figsize": DEFAULT_FIGSIZE,
@@ -280,7 +280,7 @@ def get_subplot_axis(ax=None, figsize=None):
     return plt_show, ax
 
 
-def make_line_plot(curve_or_curves, ax=None, **kwargs):
+def make_line_plot(curve_or_curves, ax=None, **kwargs):  # noqa: ANN003
     # Must at least be [curve_data ...]
     curve_or_curves = make_list(curve_or_curves)
 
@@ -295,7 +295,7 @@ def make_line_plot(curve_or_curves, ax=None, **kwargs):
         plt.show()
 
 
-def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
+def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):  # noqa: ANN003
     # Must at least be [vals ...]
     vals_or_vals_list = make_list(vals_or_vals_list)
 
@@ -312,7 +312,7 @@ def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):
         plt.show()
 
 
-def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
+def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):  # noqa: ANN003
     kwargs["colors"] = kwargs.get("colors", [None, None])
     kwargs["labels"] = kwargs.get("labels", ["cdf 1", "cdf 2"])
     plc = kwargs.get("plc", get_plt_cfg(**kwargs))
@@ -325,7 +325,7 @@ def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
         plt.show()
 
 
-def make_summary_plot(data_lists, ax=None, **kwargs):
+def make_summary_plot(data_lists, ax=None, **kwargs):  # noqa: ANN003
     assert len(data_lists) > 0, ">> Empty data lists"
     n_data = len(data_lists)
     plc = kwargs["plc"] if "plc" in kwargs else get_plt_cfg(**kwargs)
