@@ -6,7 +6,7 @@ import dr_gen.utils.utils as gu
 from dr_gen.analyze.run_data import RunData
 
 
-def filter_entries_by_selection(all_entries, **kwargs: Any):
+def filter_entries_by_selection(all_entries, **kwargs: Any):  # noqa: ANN401
     result = {}
     for key_tuple, value in all_entries.items():
         # Convert the tuple-of-tuples into a dict for easy lookup.
@@ -221,7 +221,7 @@ class RunGroup:
         return field_names, rows
 
     # Returns: { hpm: [rdata ...] }
-    def select_run_data_by_hpms(self, **kwargs: Any):
+    def select_run_data_by_hpms(self, **kwargs: Any):  # noqa: ANN401
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
             # Made complicated by remapping display text from true
@@ -249,7 +249,7 @@ class RunGroup:
                 selected[hpm] = [self.rid_to_run_data[rid] for rid in rids]
         return selected
 
-    def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs: Any):
+    def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs: Any):  # noqa: ANN401
         """Select run split metrics by hyperparameters.
 
         Returns: { hpm: [runs [metric_data ...]]}
@@ -263,7 +263,7 @@ class RunGroup:
             ]
         return hpm_metrics
 
-    def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs: Any):
+    def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs: Any):  # noqa: ANN401
         """Select run metrics by hyperparameters.
 
         Returns: { hpm: { split : [runs [metric_data ...]]}}
@@ -281,7 +281,7 @@ class RunGroup:
                 hpm_split_metrics[hpm][split] = runs_metrics
         return hpm_split_metrics
 
-    def ignore_runs_by_hpms(self, **kwargs: Any):
+    def ignore_runs_by_hpms(self, **kwargs: Any):  # noqa: ANN401
         """Ignore runs by hyperparameters.
 
         Marks runs matching the hyperparameter filters as ignored.

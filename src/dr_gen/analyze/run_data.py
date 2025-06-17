@@ -45,7 +45,7 @@ def get_logged_strings(jsonl_contents: list[dict[str, Any]]) -> list[str]:
 
 
 def get_logged_metrics_infer_epoch(
-    hpm: Any, jsonl_contents: list[dict[str, Any]]
+    hpm: Hpm, jsonl_contents: list[dict[str, Any]]
 ) -> dict[str, SplitMetrics]:
     metrics_by_split = {}
 
