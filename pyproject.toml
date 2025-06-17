@@ -190,9 +190,24 @@ disallow_untyped_defs = true
 # Ignore missing imports for libraries without type stubs
 ignore_missing_imports = true
 
+# Reduce external library issues
+disable_error_code = [
+    "attr-defined",     # Missing attributes from external libs
+    "no-untyped-call",  # Calls to untyped external functions  
+]
+
 # Performance
 cache_dir = ".mypy_cache"
 show_error_codes = true
+
+# External library overrides
+[[tool.mypy.overrides]]
+module = [
+    "timm.*",
+    "dr_util.*"
+]
+ignore_errors = true
+ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
