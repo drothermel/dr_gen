@@ -2,9 +2,6 @@ from typing import Any
 
 import dr_util.data_utils as du
 import dr_util.determinism_utils as dtu
-
-# Constants for data splitting validation
-MAX_SUPPORTED_SPLITS = 2
 import timm
 import timm.data
 import torch
@@ -17,6 +14,9 @@ from torch.utils.data.dataloader import default_collate
 from torchvision.transforms import v2 as transforms_v2
 
 import dr_gen.schemas as vu
+
+# Constants for data splitting validation
+MAX_SUPPORTED_SPLITS = 2
 
 DEFAULT_DATASET_CACHE_ROOT = "../data/"
 DEFAULT_DOWNLOAD = True
