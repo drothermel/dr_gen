@@ -14,7 +14,7 @@ def accuracy(
 
     Args:
         output: Model predictions tensor
-        target: Ground truth labels tensor  
+        target: Ground truth labels tensor
         topk: Sequence of k values for top-k accuracy calculation
 
     Returns:

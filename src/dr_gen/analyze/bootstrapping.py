@@ -76,7 +76,6 @@ def make_uniform_2d_data_arrays_dict(data_dict):
 # --- Bootstrapping Functions ---
 
 
-# Takes (batch_dim, data_dim), returns (batch_dim, B, data_dim)
 def bootstrap_samples_batched(dataset, b=None):
     """Generates bootstrap samples for each row of a 2D array (the batch dimension).
 
@@ -99,7 +98,7 @@ def bootstrap_samples_batched(dataset, b=None):
 def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
     """Performs batched bootstrapping on timestep data across runs for multiple experiments.
 
-    
+    "
 
     Standardizes experiments to (min_R, min_T), transposes to (min_T, min_R),
     stacks experiments, performs batched bootstrapping on the runs (R) for each
@@ -119,7 +118,6 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
                       each timestep. Returns None if the initial data processing fails
                       (e.g., empty lists).
     """
-    # Produces: { exp_name: np.ndarray(min_R, min_T) } or None
     uniform_arrays = make_uniform_2d_data_arrays_dict(data_dict)
     if uniform_arrays is None or not uniform_arrays:
         return None
@@ -133,12 +131,8 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
     #   Transpose each array from (min_R, min_T) to (min_T, min_R)
     transposed_arrays = [uniform_arrays[name].T for name in experiment_names]
 
-    # Stack transposed arrays along a new first dimension (experiments)
-    # Shape: (E, T, R)
     stacked_data = np.stack(transposed_arrays, axis=0)
 
-    # Reshape to create the batch dimension for bootstrapping
-    # Shape: (E * T, R)
     reshaped_data = stacked_data.reshape(-1, R)
 
     # == Perform Batched Bootstrapping ==
@@ -219,7 +213,9 @@ def summarize_distribution(dist):
 
 
 def calc_multi_stat_bootstrap_summary(bootstrapped_data):
-    """Calculates bootstrap summary statistics for multiple stats (per exp and timestep).
+    """Calculates bootstrap summary statistics for multiple stats.
+
+    Per experiment and timestep.
 
     Takes: dict { exp_name: (T, B, R) numpy array }, timestep,
     bootstrap samples, replicas
@@ -273,8 +269,9 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
 
 
 def select_best_hpms(summary_stats_data):
-    """Selects the best hyperparameter set (experiment) and the best timestep
-    by maximizing the 'mean_point_estimate'.
+    """Selects the best hyperparameter set (experiment) and the best timestep.
+
+    By maximizing the 'mean_point_estimate'.
     Takes: the output of calc_multi_stat_bootstrap_summary
     Returns: (best_experiment_name (str), best_timestep (int)).
     """
@@ -305,8 +302,9 @@ def select_best_hpms(summary_stats_data):
 
 # Calculates point differences and bootstrap CIs for the differences.
 def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
-    """Calculates point differences and bootstrap CIs for the difference
-    between statistics.
+    """Calculates point differences and bootstrap CIs for the difference between statistics.
+
+    
     The inputs are lists of timestep summary dicts for each exp.
     """
     stat_names = [
@@ -336,8 +334,9 @@ def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
 
 
 def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
-    """Calculates bootstrap confidence interval for the KS statistic between
-    matched samples.
+    """Calculates bootstrap confidence interval for the KS statistic between matched samples.
+
+    
     Takes: bootstrapped data for one timestep, shape (B, R).
     Returns: List of results per timestep.
     """

@@ -42,8 +42,6 @@ def log_metrics(md: Metrics | None, group_name: str, **kwargs: Any) -> None:  # 
 def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):  # noqa: ARG001
     model.train()
     for _i, (image, target) in enumerate(dataloader):
-        # if i % 10 == 0:
-        #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")  # noqa: ERA001,E501
         image, target = image.to(cfg.device), target.to(cfg.device)  # noqa: PLW2901
         output = model(image)
         loss = criterion(output, target)

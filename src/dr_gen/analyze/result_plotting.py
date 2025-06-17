@@ -54,7 +54,6 @@ def get_pretrained_vs_random_init_runs(
     Returns:
         Tuple of (pretrained_runs, random_runs)
     """
-    # {hpm: runs_metrics}
     all_hpms = rg.select_run_split_metrics_by_hpms(
         metric,
         split,
@@ -271,8 +270,6 @@ def parse_group_name(group_name_str):
         else:
             # Log a warning if a part cannot be parsed as key=value
             pass
-            # Optionally assign a default value or skip:
-            # hpm_dict[part] = None # Example: Assign None if parsing fails
     return hpm_dict
 
 

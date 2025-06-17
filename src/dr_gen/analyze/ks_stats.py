@@ -34,12 +34,4 @@ def calculate_ks_for_run_sets(vals_1, vals_2):
     results["seeds_group_1"] = len(vals_1)
     results["seeds_group_2"] = len(vals_2)
 
-    # Print Main Stats
-    # cdf1_val = results["cdf1"][results["max_idx"]]
-    # cdf2_val = results["cdf2"][results["max_idx"]]
-    # print(
-    #     f"ks_stat: {ks_stat:0.4f}, p_value: {p_value:0.4e} | "
-    #     f"max_val: {results['max_diff_value']:0.2f}, "
-    #     f"cdf1_val: {cdf1_val:0.4f}, cdf2_val: {cdf2_val:0.4f}"
-    # )
     return results

@@ -307,8 +307,6 @@ def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwarg
         nominal_subplot_shape=kwargs.get("subplot_shape", pu.DEFAULT_SUBPLOT_SHAPE),
         plot_size=kwargs.get("figsize", pu.DEFAULT_FIGSIZE),
     )
-    # Use this only for non-sampled grid
-    # kwargs_list = pu.get_kwargs_lists_for_grid(kwargs, n_grid)
 
     # Plot Grid
     for _grid_ind, ax in enumerate(axes.flatten()):

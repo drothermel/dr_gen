@@ -203,13 +203,6 @@ def _perform_source_splitting(
 
             ratio_for_target1 = target1_info["source_percent_allocation"]
 
-            # print(
-            #     f"Splitting source '{source_name}' for "
-            #     f"'{target1_info['target_split_key']}' "
-            #     f"({ratio_for_target1*100}%) and "
-            #     f"'{target2_info['target_split_key']}' "
-            #     f"({(1-ratio_for_target1)*100}%) using seed {data_split_seed}."
-            # )
 
             dataset_for_target1, dataset_for_target2 = du.split_data(
                 original_dataset_for_source,
@@ -242,10 +235,6 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs):
             ):  # Ensure at least one sample if percent > 0
                 num_to_use = 1
 
-            # print(
-            #     f"Applying use_percent={use_p} to '{target_key}'. "
-            #     f"Original size: {original_len}, new size: {num_to_use}"
-            # )
 
             # Takes the first N elements. If the dataset_obj is already a result of
             # a seeded shuffle (from split_data),
@@ -312,17 +301,11 @@ def _create_dataloaders_from_final_datasets(
             sampler=sampler,
             num_workers=num_workers_global,
             collate_fn=default_collate,
-            # pin_memory=True, # Common optimization
             pin_memory=False,
             worker_init_fn=dtu.seed_worker,
             # generator for DataLoader (>=1.9) can also be set for workers
             # if worker_init_fn isn't covering all needs.
         )
-        # print(
-        #     f"Created DataLoader for '{target_key}': "
-        #     f"batch_size={current_batch_size}, shuffle={use_shuffle_in_dl}, "
-        #     f"num_samples={len(final_dataset)}"
-        # )
 
     return data_loaders_map
 
@@ -380,75 +363,3 @@ def get_dataloaders_refactored(cfg, main_torch_generator, model):
     )
 
 
-"""
-def get_dataloaders(cfg, generator):
-    vu.validate_dataset(cfg.data.name)
-
-    # Extract the split source and ratio info
-    splits = []
-    split_by_source = {}
-    for split in vu.SPLIT_NAMES:
-        if split not in cfg.data:
-            continue
-        splits.append(split)
-        source = cfg.data[split].source
-        ratio = cfg.data[split].source_percent
-        if source not in split_by_source:
-            split_by_source[source] = []
-        elif len(split_by_source) > 1:
-            assert False, "Only two splits can share a source"
-        split_by_source[source].append((split, ratio))
-
-    # Get the split data, dividing a input data split if needed
-    # using the data_split_seed
-    split_data = {}
-    for source, split_ratio_list in split_by_source.items():
-        # Include transforms in the dataset if just one source
-        if len(split_ratio_list == 1):
-            split, _ = split_ratio_list[0]
-            transform_cfg = cfg.data[split].transform
-            split_data[split] = get_dataset(
-                cfg.data.name,
-                source,
-                root=cfg.paths.dataset_cache_root,
-                transform=build_transforms(transfomr_cfg),
-                download=cfg.data.download,
-            )
-            continue
-
-        # If source needs to be split, create dataset without
-        # transforms and add them to the subsets instead
-        dataset = get_dataset(
-            cfg.data.name,
-            source,
-            root=cfg.paths.dataset_cache_root,
-            transform=None,
-            download=cfg.data.download,
-        )
-        subsets = du.split_data(
-            dataset, ratio1, data_split_seed=cfg.data.split_seed,
-        )
-        for (split, _), subset in zip(split_ratio_list, subsets):
-            transform_cfg = cfg.data[split].transform
-            split_data[split] = du.TransformedSubset(
-                subset, build_transforms(transform_cfg),
-            )
-
-    # For each split select the portion of the dataset specified
-    split_dls = {}
-    for split, ds in split_data.items():
-        shuffle = cfg.data[split].shuffle
-        sampler = RandomSampler() if shuffle else SequentialSampler(ds)
-        # Note: SubsetRandomSampler(indices) might help in future
-        split_dls[split] = torch.utils.data.DataLoader(
-            ds,
-            battch_size=cfg[split].batch_size,
-            sampler=sampler,
-            num_workers=cfg.data.num_workers,
-            collate_fn=default_collate,
-            pin_memory=True,
-            worker_init_fn=dtu.seed_worker,
-            generator=generator,
-        )
-    return split_dls
-"""
