@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import MutableMapping
-from datetime import datetime
+from collections.abc import Iterator, MutableMapping
+from datetime import UTC, datetime
 from typing import Any
 
 import dr_util.file_utils as fu
@@ -33,7 +33,7 @@ def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[s
 
 def get_train_time(train_time_json: dict[str, Any]) -> str | None:
     if train_time_json.get("type") == "str" and "value" in train_time_json:
-        return train_time_json["value"].strip("Training time ")  # type: ignore[no-any-return]
+        return train_time_json["value"].replace("Training time ", "")  # type: ignore[no-any-return]
     return None
 
 
@@ -95,55 +95,74 @@ def validate_metrics(
 
 # Hashable: can serve as key to a dictionary
 class Hpm(MutableMapping):
+    """A mutable mapping for hyperparameters with important value tracking."""
+
     def __init__(
         self,
         all_vals=None,
     ) -> None:
+        """Initialize the Hpm instance.
+
+        Args:
+            all_vals: Dictionary of all hyperparameter values. Defaults to None.
+        """
         if all_vals is None:
             all_vals = {}
         self._all_values = gu.flatten_dict(all_vals)
         self.important_values = {}
         self.reset_important()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Any:  # noqa: ANN401
+        """Get an item from the hyperparameters."""
         return self._all_values[key]
 
     def __setitem__(self, key, value) -> None:
+        """Set an item in the hyperparameters."""
         self._all_values[key] = value
 
     def __delitem__(self, key) -> None:
+        """Delete an item and exclude it from important values."""
         del self._all_values[key]
         self.exclude_from_important([key])
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the important values."""
         return iter(self.important_values)
 
     def __len__(self) -> int:
+        """Return the number of important values."""
         return len(self.important_values)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        """Check equality between Hpm instances based on their hash."""
         if not isinstance(other, Hpm):
             return NotImplemented
         return hash(self) == hash(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
+        """Return hash of the Hpm instance based on its tupledict representation."""
         return hash(self.as_tupledict())
 
     def __str__(self) -> str:
+        """Return string representation of important values."""
         return " ".join(self.as_strings())
 
     def get_from_all(self, key):
+        """Get a value from all values, returning None if not found."""
         return self._all_values.get(key, None)
 
     def reset_important(self):
+        """Reset important values to include all values."""
         self.important_values = dict(self._all_values.items())
 
     def exclude_from_important(self, excludes):
+        """Exclude specified keys from important values."""
         self.important_values = {
             k: v for k, v in self.important_values.items() if k not in excludes
         }
 
     def exclude_prefixes_from_important(self, exclude_prefixes):
+        """Exclude keys with specified prefixes from important values."""
         important_values = {}
         for k, v in self.important_values.items():
             if gu.check_prefix_exclude(k, exclude_prefixes):
@@ -152,21 +171,26 @@ class Hpm(MutableMapping):
         self.important_values = important_values
 
     def set_important(self, keys):
+        """Set important values to only the specified keys."""
         self.important_values = {k: self._all_values[k] for k in keys}
 
     def as_dict(self):
+        """Return the important values as a dictionary."""
         return self.important_values
 
     def as_tupledict(self, important_vals=None):
+        """Convert important values to a sorted tuple dictionary."""
         if important_vals is None:
             important_vals = self.important_values
         return gu.dict_to_tupledict(important_vals)
 
     def as_strings(self):
+        """Return important values as a list of key=value strings."""
         # Use as_tupledict to get consistent sort order
         return [f"{k}={v}" for k, v in self.as_tupledict()]
 
     def as_valstrings(self, remap_kvs=None):
+        """Return values as strings with optional remapping."""
         if remap_kvs is None:
             remap_kvs = {}
         vs = []
@@ -177,7 +201,15 @@ class Hpm(MutableMapping):
 
 
 class RunData:
+    """Container for a single run's data including hyperparameters and metrics."""
+
     def __init__(self, file_path, rid=None) -> None:
+        """Initialize RunData from a log file.
+
+        Args:
+            file_path: Path to the log file to parse.
+            rid: Optional run identifier.
+        """
         self.file_path = file_path
         self.id = rid
         self.hpms = None
@@ -188,6 +220,7 @@ class RunData:
         self.parse_log_file()
 
     def parse_log_file(self):
+        """Parse the log file and extract hyperparameters, metadata, and metrics."""
         contents = fu.load_file(self.file_path)
         if contents is None:
             self.parse_errors.append(f">> Unable to load file: {self.file_path}")
@@ -204,7 +237,7 @@ class RunData:
         self.hpms = Hpm(cfg)
 
         # Extract Run Metadata
-        self.metadata["time_parsed"] = datetime.now()
+        self.metadata["time_parsed"] = datetime.now(tz=UTC)
         self.metadata["train_time"] = get_train_time(
             contents[-TRAIN_TIME_OFFSET_FROM_END]
         )
@@ -217,5 +250,6 @@ class RunData:
         self.parse_errors.extend(errors)
 
     def get_split_metrics(self, split):
+        """Get metrics for a specific data split."""
         assert split in self.metrics_by_split, f">> {split} not in metrics"
         return self.metrics_by_split[split]

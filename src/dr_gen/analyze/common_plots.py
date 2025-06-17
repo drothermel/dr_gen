@@ -11,6 +11,7 @@ from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 
 class PlotKwargs(TypedDict, total=False):
     """Type hints for matplotlib plotting kwargs used in dr_gen."""
+
     # Line and marker properties
     color: str
     colors: list[str]

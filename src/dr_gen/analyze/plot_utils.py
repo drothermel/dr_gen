@@ -158,7 +158,7 @@ def add_lines_to_plot(plc, ax, data_list, xs=None):
 
 
 def add_min_max_shade_to_plot(
-    plc,
+    _plc,
     ax,
     data_list,
     data_stats=None,
@@ -184,7 +184,7 @@ def add_min_max_shade_to_plot(
 
 
 def add_std_shade_to_plot(
-    plc,
+    _plc,
     ax,
     data_list,
     data_stats=None,
@@ -211,7 +211,7 @@ def add_std_shade_to_plot(
 
 
 def add_sem_shade_to_plot(
-    plc,
+    _plc,
     ax,
     data_list,
     data_stats=None,

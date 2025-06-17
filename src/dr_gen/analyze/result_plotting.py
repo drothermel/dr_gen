@@ -136,8 +136,8 @@ def get_compare_runs_pretrain_vs_random(
     return (hpms_val_pre, hpms_eval_pre), (hpms_val_rand, hpms_eval_rand)
 
 
-def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
-    """Finds the best hyperparameter set and timestep for a given group based on validation data.
+def find_best_hpm_for_group(group_val_data, _group_name, num_bootstraps):
+    """Find best hyperparameter set and timestep for a group using validation data.
 
     tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
     """
@@ -200,7 +200,7 @@ def run_comparison_eval(
 
 
 def print_results_report(
-    best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results
+    _best_hpm_a, _best_ts_a, _best_hpm_b, _best_ts_b, comparison_results
 ):
     """Prints a formatted report summarizing the analysis results.
 
@@ -253,9 +253,7 @@ def parse_hpm_value(value_str):
 
 
 def parse_group_name(group_name_str):
-    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters.
-
-    """
+    """Parse a group name string (e.g., "key1=val1 key2=val2") into a dictionary."""
     hpm_dict = {}
     # Split by space, handling potential multiple spaces and stripping whitespace
     parts = re.split(r"\s+", group_name_str.strip())
@@ -354,7 +352,7 @@ def run_groups_to_df(valid_groups, min_steps):
     final_metric_values = np.concatenate(all_metric_values)
 
     # Create the initial DataFrame
-    df = pd.DataFrame(
+    initial_df = pd.DataFrame(
         {
             "group_name": final_group_names,
             "run_index": final_run_indices,
@@ -362,4 +360,4 @@ def run_groups_to_df(valid_groups, min_steps):
             "metric_value": final_metric_values,
         }
     )
-    return add_hpm_columns(df)
+    return add_hpm_columns(initial_df)
