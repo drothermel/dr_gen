@@ -144,7 +144,7 @@ class RunGroup:
         return " ".join(display)
 
     def display_hpm_key_to_real_key(self, hpm, kstr):
-        def preproc(k):
+        def preproc(k) -> str:
             return str(k).lower().strip()
 
         kstr_to_k = {preproc(self.get_display_hpm_key(k)): k for k in hpm}
@@ -226,20 +226,22 @@ class RunGroup:
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
             # Made complicated by remapping display text from true
             # values
-            def comp_hpm(kstr, vs):
+            def comp_hpm(kstr, vs, hpm_val) -> bool:
                 new_vs = [str(v) for v in gu.make_list(vs)]
-                k = self.display_hpm_key_to_real_key(hpm, kstr)
+                k = self.display_hpm_key_to_real_key(hpm_val, kstr)
                 k_not_found = False
-                if k in hpm:
-                    hpm_v = str(hpm[k])
-                elif kstr in hpm:
-                    hpm_v = str(hpm[kstr])
+                if k in hpm_val:
+                    hpm_v = str(hpm_val[k])
+                elif kstr in hpm_val:
+                    hpm_v = str(hpm_val[kstr])
                 else:
                     k_not_found = True
-                hpm_v = self.get_display_hpm_val(k, hpm_v)
+                    hpm_v = ""  # Initialize hmp_v for when k_not_found is True
+                if not k_not_found:
+                    hpm_v = self.get_display_hpm_val(k, hpm_v)
                 return k_not_found or hpm_v in new_vs
 
-            if not all(comp_hpm(kstr, vs) for kstr, vs in kwargs.items()):
+            if not all(comp_hpm(kstr, vs, hpm) for kstr, vs in kwargs.items()):
                 continue
 
             rids = self.filter_rids(potential_rids)
