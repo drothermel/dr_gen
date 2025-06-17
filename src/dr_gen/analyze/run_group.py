@@ -249,7 +249,7 @@ class RunGroup:
 
     def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs: Any):
         """Select run split metrics by hyperparameters.
-        
+
         Returns: { hpm: [runs [metric_data ...]]}
         """
         runs = self.select_run_data_by_hpms(**kwargs)
@@ -263,7 +263,7 @@ class RunGroup:
 
     def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs: Any):
         """Select run metrics by hyperparameters.
-        
+
         Returns: { hpm: { split : [runs [metric_data ...]]}}
         """
         if splits is None:
@@ -281,7 +281,7 @@ class RunGroup:
 
     def ignore_runs_by_hpms(self, **kwargs: Any):
         """Ignore runs by hyperparameters.
-        
+
         Marks runs matching the hyperparameter filters as ignored.
         """
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)

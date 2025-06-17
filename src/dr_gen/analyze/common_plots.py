@@ -1,12 +1,51 @@
 import random
 from collections.abc import Sized
-from typing import Any
+from typing import Any, TypedDict, Unpack, Union
 
 import matplotlib.pyplot as plt
 
 import dr_gen.analyze.ks_stats as ks
 import dr_gen.analyze.plot_utils as pu
 from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
+
+
+class PlotKwargs(TypedDict, total=False):
+    """Type hints for matplotlib plotting kwargs used in dr_gen."""
+    # Line and marker properties
+    color: str
+    colors: list[str]
+    linewidth: float
+    linestyle: str
+    marker: str
+    markersize: float
+    alpha: float
+
+    # Labels and annotations
+    label: str
+    labels: list[str]
+    title: str
+    xlabel: str
+    ylabel: str
+    suptitle: str
+
+    # Layout and display
+    figsize: tuple[float, float]
+    grid: bool
+    legend: bool
+
+    # Axes limits
+    xlim: tuple[float, float]
+    ylim: tuple[float, float]
+
+    # Histogram specific
+    bins: int | str
+    density: bool
+    edgecolor: str
+
+    # Subplot and grid specific
+    subplot_shape: tuple[int, int]
+    n_grid: int
+    n_sample: int
 
 
 def len_to_inds(data_len: int) -> list[int]:
@@ -35,7 +74,7 @@ def default_grid_sample_titles(title, orig_data, sampled):
 # Handles one or many curves
 # Nearly identical to make_line_plot but included to make example
 #    pattern clear.
-def line_plot(curve, ax=None, **kwargs: Any):
+def line_plot(curve, ax=None, **kwargs: Unpack[PlotKwargs]):
     # [curve_data...] or [curves [curve_data ...]]
     curve = make_list(curve)
 
@@ -51,7 +90,7 @@ def line_plot(curve, ax=None, **kwargs: Any):
 
 
 # Handles one or many vals lists
-def histogram_plot(vals, ax=None, **kwargs: Any):
+def histogram_plot(vals, ax=None, **kwargs: Unpack[PlotKwargs]):
     # [vals...] or [sets [vals ...]]
     vals = make_list(vals)
 
@@ -62,7 +101,7 @@ def histogram_plot(vals, ax=None, **kwargs: Any):
         plt.show()
 
 
-def cdf_plot(vals1, vals2, ax=None, **kwargs: Any):
+def cdf_plot(vals1, vals2, ax=None, **kwargs: Unpack[PlotKwargs]):
     results = ks.calculate_ks_for_run_sets(vals1, vals2)
     vals = results["all_vals"]
     cdfs = [results["cdf1"], results["cdf2"]]
@@ -80,7 +119,7 @@ def cdf_plot(vals1, vals2, ax=None, **kwargs: Any):
         plt.show()
 
 
-def cdf_histogram_plot(vals1, vals2, **kwargs: Any):
+def cdf_histogram_plot(vals1, vals2, **kwargs: Unpack[PlotKwargs]):
     results = ks.calculate_ks_for_run_sets(vals1, vals2)
     vals = results["all_vals"]
     cdfs = [results["cdf1"], results["cdf2"]]
@@ -111,7 +150,7 @@ def split_plot(
     metric_name="Metric",
     x_name="Epoch",
     splits=None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotKwargs],
 ):
     if splits is None:
         splits = ["train", "val", "eval"]
@@ -189,7 +228,9 @@ def sample_from_dim(data, n_sample, dim=1):
     return sampled_inds, sampled_curves, sample_str
 
 
-def multi_line_sample_plot(curves, ax=None, n_sample=None, **kwargs: Any):
+def multi_line_sample_plot(
+    curves, ax=None, n_sample=None, **kwargs: Unpack[PlotKwargs]
+):
     # Initial Curves: [curves [curve_data ...]]
     # Sampled       : [sampled_curves [curve_data ...]]
     curves = make_list_of_lists(curves)
@@ -209,7 +250,7 @@ def split_sample_plot(
     metric_name="Metric",
     x_name="Epoch",
     splits=None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotKwargs],
 ):
     if splits is None:
         splits = ["train", "val", "eval"]
@@ -242,7 +283,7 @@ def split_sample_plot(
 
 
 def multi_line_sampled_summary_plot(
-    curves_lists, ax=None, n_sample=None, **kwargs: Any
+    curves_lists, ax=None, n_sample=None, **kwargs: Unpack[PlotKwargs]
 ):
     # Initial Curves: [summary_line [curves [curve_data ...]]
     curves_lists = make_list_of_lols(curves_lists, dim=0)
@@ -268,7 +309,7 @@ def split_sampled_summary_plot(
     metric_name="Metric",
     x_name="Epoch",
     splits=None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotKwargs],
 ):
     if splits is None:
         splits = ["train", "val", "eval"]
@@ -303,7 +344,9 @@ def split_sampled_summary_plot(
 # -------------------- Grid Plots: Sample from Set -------------------------
 
 
-def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwargs: Any):
+def grid_sample_plot_wrapper(
+    plot_func, curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
+):
     # Setup Grid and Args
     axes = pu.make_grid_figure(
         n_grid,
@@ -325,7 +368,9 @@ def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwarg
     plt.show()
 
 
-def multi_line_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
+def multi_line_sample_plot_grid(
+    curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
+):
     grid_sample_plot_wrapper(
         multi_line_sample_plot,
         curves,
@@ -335,7 +380,9 @@ def multi_line_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
     )
 
 
-def multi_line_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
+def multi_line_sampled_summary_plot_grid(
+    curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
+):
     grid_sample_plot_wrapper(
         multi_line_sampled_summary_plot,
         curves,
@@ -345,7 +392,9 @@ def multi_line_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwar
     )
 
 
-def spilt_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
+def spilt_sample_plot_grid(
+    curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
+):
     grid_sample_plot_wrapper(
         split_sample_plot,
         curves,
@@ -355,7 +404,9 @@ def spilt_sample_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
     )
 
 
-def spilt_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: Any):
+def spilt_sampled_summary_plot_grid(
+    curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
+):
     grid_sample_plot_wrapper(
         split_sampled_summary_plot,
         curves,
@@ -365,7 +416,7 @@ def spilt_sampled_summary_plot_grid(curves, n_sample=None, n_grid=4, **kwargs: A
     )
 
 
-def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Any):
+def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Unpack[PlotKwargs]):
     n_curves = len(curves)
 
     # Setup Grid and Args
@@ -386,5 +437,5 @@ def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Any):
     plt.show()
 
 
-def histogram_plot_grid(vals, **kwargs: Any):
+def histogram_plot_grid(vals, **kwargs: Unpack[PlotKwargs]):
     grid_seq_plot_wrapper(histogram_plot, vals, **kwargs)
