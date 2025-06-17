@@ -57,7 +57,7 @@ def make_uniform_2d_data_arrays_pair(data_a, data_b):
 
 def make_uniform_2d_data_arrays_dict(data_dict):
     """Converts dict of lists of lists to dict of numpy arrays with uniform shape.
-    
+
     Returns None if input is empty or contains empty lists.
     Shape will be (min_R, min_T).
     """
@@ -79,7 +79,7 @@ def make_uniform_2d_data_arrays_dict(data_dict):
 # Takes (batch_dim, data_dim), returns (batch_dim, B, data_dim)
 def bootstrap_samples_batched(dataset, b=None):
     """Generates bootstrap samples for each row of a 2D array (the batch dimension).
-    
+
     Samples elements with replacement from the second dimension (the data dimension).
     Input shape: (batch_dim, data_dim)
     Output shape: (batch_dim, num_samples_b, data_dim).
@@ -97,8 +97,9 @@ def bootstrap_samples_batched(dataset, b=None):
 
 
 def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
-    """Performs batched bootstrapping on timestep data across runs for multiple
-    experiments.
+    """Performs batched bootstrapping on timestep data across runs for multiple experiments.
+
+    
 
     Standardizes experiments to (min_R, min_T), transposes to (min_T, min_R),
     stacks experiments, performs batched bootstrapping on the runs (R) for each
@@ -159,6 +160,7 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
 
 def calc_stats_across_bootstrap_samples(timestep_data):
     """Calculates multiple base statistics for each bootstrap sample (vectorized).
+
     Takes a np array for a single timestep shape (B, R).
     Returns dict mapping stat names to 1D arrays (shape B,).
     """
@@ -188,6 +190,7 @@ def calc_stats_across_bootstrap_samples(timestep_data):
 
 def summarize_distribution(dist):
     """Calculates summary stats (mean, std, CI) for a 1D bootstrap distribution.
+
     Takes: 1D array of data values
     Returns dict: 'point_estimate', 'spread', 'ci_95_lower', 'ci_95_upper'.
     """
@@ -216,8 +219,9 @@ def summarize_distribution(dist):
 
 
 def calc_multi_stat_bootstrap_summary(bootstrapped_data):
-    """Calculates bootstrap summary statistics for multiple stats (per exp and
-    timestep). Takes: dict { exp_name: (T, B, R) numpy array }, timestep,
+    """Calculates bootstrap summary statistics for multiple stats (per exp and timestep).
+
+    Takes: dict { exp_name: (T, B, R) numpy array }, timestep,
     bootstrap samples, replicas
     Returns:
       {
@@ -240,7 +244,9 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
             or exp_data.ndim != EXPECTED_3D_DIMENSIONS
         ):
             continue
-        T, B, R = exp_data.shape  # Timesteps, Bootstrap samples, Runs/Replicates  # noqa: N806
+        T, B, R = (
+            exp_data.shape
+        )  # Timesteps, Bootstrap samples, Runs/Replicates
         if B <= 1 or R == 0:
             continue
 
@@ -411,8 +417,12 @@ def compare_experiments_bootstrap(
     # Calculate statistics
     summary_a_list = calc_multi_stat_bootstrap_summary({"exp_A": bdata_a})["exp_A"]
     summary_b_list = calc_multi_stat_bootstrap_summary({"exp_B": bdata_b})["exp_B"]
-    assert len(summary_a_list) == 1, f"Expected 1 summary for A, got {len(summary_a_list)}"
-    assert len(summary_b_list) == 1, f"Expected 1 summary for B, got {len(summary_b_list)}"
+    assert len(summary_a_list) == 1, (
+        f"Expected 1 summary for A, got {len(summary_a_list)}"
+    )
+    assert len(summary_b_list) == 1, (
+        f"Expected 1 summary for B, got {len(summary_b_list)}"
+    )
     summary_a = summary_a_list[0]
     summary_b = summary_b_list[0]
 

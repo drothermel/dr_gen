@@ -356,7 +356,7 @@ def test_get_dataloader_custom_config() -> None:
 
 
 def test_get_dataloader_invalid_split(monkeypatch) -> None:
-    """Test that get_dataloader raises an assertion error when an invalid split is provided.  # noqa: E501
+    """Test that get_dataloader raises an assertion error for invalid splits.
 
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """

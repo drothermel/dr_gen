@@ -149,7 +149,8 @@ def _parse_and_validate_config(
 
 
 def _load_source_datasets(
-    cfg: Any, unique_source_names_to_load: list[str]  # noqa: ANN401
+    cfg: Any,
+    unique_source_names_to_load: list[str],
 ) -> dict[str, Any]:
     """Loads raw datasets for each unique source. Transforms are NOT applied here."""
     loaded_raw_datasets = {}
@@ -327,13 +328,15 @@ def _create_dataloaders_from_final_datasets(
 
 
 def get_dataloaders_refactored(cfg, main_torch_generator, model):
-    """Refactored function to create dataloaders, incorporating source_percent splits
+    """Refactored function to create dataloaders, incorporating source_percent splits.
+
     (with data_split_seed) and use_percent subsampling, with a modular design.
 
     Args:
         cfg: The main configuration object.
         main_torch_generator: A torch.Generator for reproducible random operations
                               (e.g., shuffling in DataLoaders).
+        model: The model being used for training/evaluation.
     """
     # 1. Parse and Validate Configuration
     (

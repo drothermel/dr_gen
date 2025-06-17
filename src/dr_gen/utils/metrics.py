@@ -18,6 +18,7 @@ from dr_gen.schemas import SPLIT_NAMES
 
 class GenMetricType(Enum):
     """Enumeration of metric data types for generative models."""
+
     INT = "int"
     LIST = "list"
     BATCH_WEIGHTED_AVG_LIST = "batch_weighted_avg_list"
@@ -31,6 +32,7 @@ def agg_avg_list(data, key):
 
 class GenMetricsSubgroup(MetricsSubgroup):
     """Metrics subgroup implementation for generative model training."""
+
     def _init_data(self) -> None:
         self._init_data_values()
         self._init_data_fxns()
@@ -96,6 +98,7 @@ class GenMetricsSubgroup(MetricsSubgroup):
 
 class GenMetrics(Metrics):
     """Main metrics management class for generative model training."""
+
     def __init__(self, cfg) -> None:
         """Initialize GenMetrics with configuration.
 

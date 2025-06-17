@@ -164,7 +164,8 @@ def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:  # noqa: ANN401
 
 # Config Req: cfg.optim.name, cfg.optim.lr
 def create_optim_lrsched(
-    cfg: Any, model: torch.nn.Module  # noqa: ANN401
+    cfg: Any,
+    model: torch.nn.Module,
 ) -> tuple[torch.optim.Optimizer, Any]:
     model_params = model.parameters()
 
@@ -182,7 +183,9 @@ def create_optim_lrsched(
 
 
 def get_model_optim_lrsched(
-    cfg: Any, num_classes: int, md: Any = None  # noqa: ANN401
+    cfg: Any,
+    num_classes: int,
+    md: Any = None,  # noqa: ANN401
 ) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
     model = create_model(cfg, num_classes)
     optimizer = None

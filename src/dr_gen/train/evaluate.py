@@ -10,8 +10,15 @@ EXPECTED_TARGET_DIMENSIONS = 2
 def accuracy(
     output: torch.Tensor, target: torch.Tensor, topk: Sequence[int] = (1,)
 ) -> list[torch.Tensor]:
-    """Computes the accuracy over the k top predictions for the specified
-    values of k.
+    """Computes the accuracy over the k top predictions for the specified values of k.
+
+    Args:
+        output: Model predictions tensor
+        target: Ground truth labels tensor  
+        topk: Sequence of k values for top-k accuracy calculation
+
+    Returns:
+        List of accuracy tensors for each k value
     """
     with torch.inference_mode():
         maxk = max(topk)
