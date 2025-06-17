@@ -1,11 +1,12 @@
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 import dr_gen.utils.utils as gu
 from dr_gen.analyze.run_data import RunData
 
 
-def filter_entries_by_selection(all_entries, **kwargs):
+def filter_entries_by_selection(all_entries, **kwargs: Any):
     result = {}
     for key_tuple, value in all_entries.items():
         # Convert the tuple-of-tuples into a dict for easy lookup.
@@ -220,7 +221,7 @@ class RunGroup:
         return field_names, rows
 
     # Returns: { hpm: [rdata ...] }
-    def select_run_data_by_hpms(self, **kwargs):
+    def select_run_data_by_hpms(self, **kwargs: Any):
         selected = {}
         for hpm, potential_rids in self.hpm_group.hpm_to_rids.items():
             # Made complicated by remapping display text from true
@@ -246,8 +247,11 @@ class RunGroup:
                 selected[hpm] = [self.rid_to_run_data[rid] for rid in rids]
         return selected
 
-    # Returns: { hpm: [runs [metric_data ...]]}
-    def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs):
+    def select_run_split_metrics_by_hpms(self, metric_name, split, **kwargs: Any):
+        """Select run split metrics by hyperparameters.
+        
+        Returns: { hpm: [runs [metric_data ...]]}
+        """
         runs = self.select_run_data_by_hpms(**kwargs)
         hpm_metrics = {}
         for hpm, rdata_list in runs.items():
@@ -257,8 +261,11 @@ class RunGroup:
             ]
         return hpm_metrics
 
-    # returns: { hpm: { split : [runs [metric_data ...]]}}
-    def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs):
+    def select_run_metrics_by_hpms(self, metric_name, splits=None, **kwargs: Any):
+        """Select run metrics by hyperparameters.
+        
+        Returns: { hpm: { split : [runs [metric_data ...]]}}
+        """
         if splits is None:
             splits = ["train", "val", "eval"]
         hpm_split_metrics = defaultdict(dict)
@@ -272,7 +279,11 @@ class RunGroup:
                 hpm_split_metrics[hpm][split] = runs_metrics
         return hpm_split_metrics
 
-    def ignore_runs_by_hpms(self, **kwargs):
+    def ignore_runs_by_hpms(self, **kwargs: Any):
+        """Ignore runs by hyperparameters.
+        
+        Marks runs matching the hyperparameter filters as ignored.
+        """
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)
         for runs_list in runs_to_ignore.values():
             for run in runs_list:
