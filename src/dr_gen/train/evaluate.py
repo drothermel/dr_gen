@@ -26,7 +26,7 @@ def accuracy(
         if target.ndim == EXPECTED_TARGET_DIMENSIONS:
             target = target.max(dim=1)[1]
 
-        _, pred = output.topk(maxk, 1, True, True)
+        _, pred = output.topk(maxk, 1, largest=True, sorted=True)
         pred = pred.t()
         correct = pred.eq(target[None])
 

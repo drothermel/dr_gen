@@ -137,8 +137,8 @@ def get_compare_runs_pretrain_vs_random(
 
 
 def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
-    """Finds the best hyperparameter set and timestep for a given group
-    based on validation data.
+    """Finds the best hyperparameter set and timestep for a given group based on validation data.
+
     tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
     """
     if not group_val_data:
@@ -253,8 +253,8 @@ def parse_hpm_value(value_str):
 
 
 def parse_group_name(group_name_str):
-    """Parses a group name string (e.g., "key1=val1 key2=val2") into a
-    dictionary of hyperparameters.
+    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters.
+
     """
     hpm_dict = {}
     # Split by space, handling potential multiple spaces and stripping whitespace
@@ -302,8 +302,9 @@ def add_hpm_columns(df):
 
 
 def run_groups_to_df(valid_groups, min_steps):
-    """Builds intermediate NumPy arrays for columns based on valid groups and min_steps,
-    then concatenates them and creates the initial Pandas DataFrame.
+    """Builds intermediate NumPy arrays for columns based on valid groups and min_steps.
+
+    Then concatenates them and creates the initial Pandas DataFrame.
 
     Args:
         valid_groups (dict): Dictionary of valid group names to 2D NumPy arrays.

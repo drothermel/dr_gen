@@ -1,3 +1,5 @@
+from typing import Any
+
 import matplotlib.pyplot as plt
 import torch
 from torchvision.transforms.v2 import functional as f
@@ -9,7 +11,7 @@ def plot_first_from_dl(dl):
 
 
 # Copy helper from https://github.com/pytorch/vision/blob/main/gallery/transforms/helpers.py
-def plot(imgs, row_title=None, **imshow_kwargs):
+def plot(imgs, row_title=None, **imshow_kwargs: Any) -> None:
     if not isinstance(imgs[0], list):
         # Make a 2d grid even if there's just 1 row
         imgs = [imgs]

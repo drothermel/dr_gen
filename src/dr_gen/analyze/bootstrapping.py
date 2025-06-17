@@ -240,7 +240,7 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
             or exp_data.ndim != EXPECTED_3D_DIMENSIONS
         ):
             continue
-        T, B, R = (
+        T, B, R = (  # noqa: N806
             exp_data.shape
         )  # Timesteps, Bootstrap samples, Runs/Replicates
         if B <= 1 or R == 0:
@@ -304,7 +304,6 @@ def select_best_hpms(summary_stats_data):
 def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
     """Calculates point differences and bootstrap CIs for the difference between statistics.
 
-    
     The inputs are lists of timestep summary dicts for each exp.
     """
     stat_names = [
@@ -336,7 +335,6 @@ def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
 def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
     """Calculates bootstrap confidence interval for the KS statistic between matched samples.
 
-    
     Takes: bootstrapped data for one timestep, shape (B, R).
     Returns: List of results per timestep.
     """
@@ -466,9 +464,9 @@ def compare_experiments_bootstrap(
 
 # --- Utility Functions ---
 def print_bootstrap_summary_exp_results(
-    exp_name,
+    _exp_name,  # Unused but kept for API compatibility
     exp_result,
-    max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,
+    _max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,  # Unused but kept for API compatibility
 ):
     for key, value in exp_result.items():
         if key == "timestep":  # Already printed
