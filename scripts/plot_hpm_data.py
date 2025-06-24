@@ -318,7 +318,7 @@ def select_run_group_interactively(all_runs_data):
     )
 
 
-def plot_metrics(run_name, run_details, split_name, metric_name):
+def plot_metrics(run_name, run_details, split_name, metric_name) -> None:
     """Plots the specified metric for the given run."""
     if (
         split_name not in run_details["metrics"]
@@ -384,7 +384,7 @@ def plot_metrics(run_name, run_details, split_name, metric_name):
     plt.show()
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Interactively plot metrics from aggregated log data."
     )
