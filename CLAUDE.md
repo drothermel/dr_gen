@@ -11,15 +11,25 @@ dr_gen is a PyTorch-based deep learning training framework focused on generative
 ### Setup and Dependencies
 ```bash
 # Sync dependencies
-rye sync
+us  # (uv sync)
 
 # Add new dependencies
-rye add [package_name]
-rye add --dev [dev_package]  # For development dependencies
+uv add [package_name]
+uv add --dev [dev_package]  # For development dependencies
+```
 
-# Format and lint code
-rye fmt
-rye lint --fix
+### Code Quality
+```bash
+# Format code
+format  # (uv run ruff format)
+
+# Lint and auto-fix
+lint_fix  # (uv run ruff check --fix)
+
+# Just check linting
+lint  # (uv run ruff check)
+
+# IMPORTANT: Always run lint_fix after making code changes
 ```
 
 ### Type Checking
@@ -43,38 +53,83 @@ mp src scripts tests  # Run type checking (may show "Error")
 ### Testing
 ```bash
 # Run all tests
-rye test -v
+pt -v  # (pytest)
 
 # Run specific test file
-rye test tests/train/test_model.py -v
+pt tests/train/test_model.py -v
 
 # Run tests matching pattern
-rye test -k "test_create_optim" -v
+pt -k "test_create_optim" -v
+
+# Run tests without parallelization (needed for MonkeyType)
+pt tests/ -v -n0
 ```
 
 ### Training and Evaluation
 ```bash
 # Basic training run
-python scripts/train.py
+uvrp scripts/train.py
 
-# Training with custom parameters
-python scripts/train.py model.name=resnet50 optim.lr=0.01 train.batch_size=128
+# Training with custom parameters (Hydra overrides)
+uvrp scripts/train.py model.name=resnet50 optim.lr=0.01 train.batch_size=128
 
 # Run evaluation only
-python scripts/test_eval.py eval.run=true train.run=false val.run=false
+uvrp scripts/test_eval.py eval.run=true train.run=false val.run=false
 
 # Parallel seed sweep (8 processes, seeds 0-19)
-python scripts/parallel_runs.py -p 8 --start_seed 0 --max_seed 19
+uvrp scripts/parallel_runs.py -p 8 --start_seed 0 --max_seed 19
 ```
 
 ### Analysis
 ```bash
 # Analyze training logs
-python scripts/analyze.py log_file=path/to/log.jsonl
+uvrp scripts/analyze.py log_file=path/to/log.jsonl
 
 # Convert pkl results to JSON
-python scripts/pkl_to_json.py input.pkl output.json
+uvrp scripts/pkl_to_json.py input.pkl output.json
 ```
+
+### Git Workflow
+```bash
+# Use these shortcuts ALWAYS (never full git commands):
+gst         # git status
+gd_agent    # git --no-pager diff
+glo         # git log --oneline -10
+ga .        # git add .
+gc -m "msg" # git commit -m "msg"
+
+# Standard workflow:
+glo         # See recent history
+# Make changes
+lint_fix    # Verify quality and auto-fix
+gst         # Check status
+gd_agent    # Review changes
+ga .        # Stage files
+gc -m "type: description"  # Commit with proper message format
+```
+
+## Development Guidelines
+
+### Code Quality Rules
+- **Use type hints** on all functions
+- **Place imports at top** with existing imports, never mid-file
+- **Show full modified functions** when editing, not just diffs
+- **Run lint_fix after changes** to verify quality
+
+### Performance Requirements (ML-specific)
+```python
+# YES - Use asserts (fast for training loops)
+assert len(inputs) == len(targets), f"Mismatch: {len(inputs)} vs {len(targets)}"
+
+# NO - Don't use exceptions in hot paths (slow)
+if len(inputs) != len(targets):
+    raise ValueError("Mismatch")
+```
+
+### Hydra Configuration
+- All scripts use Hydra for configuration
+- Override parameters with dot notation: `optim.lr=0.01`
+- Config files in `configs/` directory
 
 ## High-Level Architecture
 
