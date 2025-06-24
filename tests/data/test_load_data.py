@@ -60,7 +60,7 @@ class DummyDataset(Dataset):
 
 
 # --- Fake __init__ functions for CIFAR datasets ---
-def fake_cifar10_init(self, root, train, transform, target_transform, download):
+def fake_cifar10_init(self, root, train, transform, target_transform, download) -> None:
     # Simply assign attributes without file checks.
     self.train = train
     self.root = root
@@ -69,7 +69,9 @@ def fake_cifar10_init(self, root, train, transform, target_transform, download):
     self.download = download
 
 
-def fake_cifar100_init(self, root, train, transform, target_transform, download):
+def fake_cifar100_init(
+    self, root, train, transform, target_transform, download
+) -> None:
     # Simply assign attributes without file checks.
     self.train = train
     self.root = root
@@ -88,7 +90,7 @@ def dummy_get_dataset(
     return DummyDataset(list(range(20)))
 
 
-def dummy_get_ds_root(cfg):
+def dummy_get_ds_root(cfg) -> str:
     return "dummy_root"
 
 
@@ -101,7 +103,7 @@ def dummy_get_transform_cfg(split, cfg):
     return {}
 
 
-def dummy_get_download(cfg):
+def dummy_get_download(cfg) -> bool:
     return False
 
 
@@ -129,17 +131,17 @@ def dummy_get_split_source_config(cfg):
     return sources_used, range_for_split
 
 
-def dummy_get_shuffle(split, cfg):
+def dummy_get_shuffle(split, cfg) -> bool:
     # For testing purposes, fix shuffle to False
     return False
 
 
-def dummy_validate_dataset(name):
+def dummy_validate_dataset(name) -> bool:
     # Always validate successfully
     return True
 
 
-def dummy_validate_split(split):
+def dummy_validate_split(split) -> bool:
     # Allow only our known splits
     return split in ["train", "val", "eval"]
 

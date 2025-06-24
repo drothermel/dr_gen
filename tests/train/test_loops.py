@@ -19,19 +19,19 @@ class DummyMetrics:
         """Initialize the dummy metrics logger."""
         self.logs = []  # collect all log calls for inspection
 
-    def log_data(self, data, group_name, ns=None):
+    def log_data(self, data, group_name, ns=None) -> None:
         """Log data entry."""
         self.logs.append(("log_data", data))
 
-    def log(self, msg):
+    def log(self, msg) -> None:
         """Log a message."""
         self.logs.append(("log", msg))
 
-    def agg_log(self, group):
+    def agg_log(self, group) -> None:
         """Log aggregated data for a group."""
         self.logs.append(("agg_log", group))
 
-    def clear_data(self):
+    def clear_data(self) -> None:
         """Clear logged data."""
         self.logs.append(("clear_data", None))
 
@@ -49,7 +49,7 @@ def dummy_get_criterion(cfg):
     return nn.CrossEntropyLoss()
 
 
-def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None):
+def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None) -> None:
     # Do nothing for checkpointing during tests.
     pass
 
