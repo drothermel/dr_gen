@@ -466,7 +466,7 @@ def print_bootstrap_summary_exp_results(
     exp_result,
     _max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,  # Unused but kept for API
     # compatibility
-):
+) -> None:
     for key, value in exp_result.items():
         if key == "timestep":  # Already printed
             continue

@@ -68,7 +68,7 @@ def init_plc_lists(plc, list_len):
 # -----------------------------------------------------------
 
 
-def format_plot_element(plc, ax):
+def format_plot_element(plc, ax) -> None:
     if plc.xlabel is not None:
         ax.set_xlabel(plc.xlabel)
     if plc.ylabel is not None:
@@ -140,7 +140,7 @@ def first_upper_str(in_str):
 # ----------------- Add Elements ------------------------
 
 
-def add_lines_to_plot(plc, ax, data_list, xs=None):
+def add_lines_to_plot(plc, ax, data_list, xs=None) -> None:
     data_list = make_list_of_lists(data_list)
     plc = init_plc_lists(plc, len(data_list))
 
@@ -164,7 +164,7 @@ def add_min_max_shade_to_plot(
     data_stats=None,
     min_line=False,
     max_line=False,
-):
+) -> None:
     data_list = make_list_of_lists(data_list)
     data_n = len(data_list)
 
@@ -190,7 +190,7 @@ def add_std_shade_to_plot(
     data_stats=None,
     std_min_line=False,
     std_max_line=False,
-):
+) -> None:
     data_list = make_list_of_lists(data_list)
     data_n = len(data_list)
 
@@ -217,7 +217,7 @@ def add_sem_shade_to_plot(
     data_stats=None,
     sem_min_line=False,
     sem_max_line=False,
-):
+) -> None:
     data_list = make_list_of_lists(data_list)
     data_n = len(data_list)
 
@@ -237,7 +237,7 @@ def add_sem_shade_to_plot(
             ax.plot(x, sem_high, color=colors[i], alpha=0.6)
 
 
-def add_histograms_to_plot(plc, ax, vals_list, means=None):
+def add_histograms_to_plot(plc, ax, vals_list, means=None) -> None:
     vals_list = make_list_of_lists(vals_list)
     for i, vals in enumerate(vals_list):
         n, bins, patches = ax.hist(
@@ -259,7 +259,7 @@ def add_histograms_to_plot(plc, ax, vals_list, means=None):
             )
 
 
-def add_cdfs_to_plot(plc, ax, vals, cdfs):
+def add_cdfs_to_plot(plc, ax, vals, cdfs) -> None:
     for i, cdf in enumerate(cdfs):
         (line,) = ax.plot(
             vals, cdf, color=plc.colors[i], linestyle=plc.linestyle, label=plc.labels[i]
@@ -280,7 +280,7 @@ def get_subplot_axis(ax=None, figsize=None):
     return plt_show, ax
 
 
-def make_line_plot(curve_or_curves, ax=None, **kwargs):  # noqa: ANN003
+def make_line_plot(curve_or_curves, ax=None, **kwargs) -> None:  # noqa: ANN003
     # Must at least be [curve_data ...]
     curve_or_curves = make_list(curve_or_curves)
 
@@ -295,7 +295,7 @@ def make_line_plot(curve_or_curves, ax=None, **kwargs):  # noqa: ANN003
         plt.show()
 
 
-def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):  # noqa: ANN003
+def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs) -> None:  # noqa: ANN003
     # Must at least be [vals ...]
     vals_or_vals_list = make_list(vals_or_vals_list)
 
@@ -312,7 +312,7 @@ def make_histogram_plot(vals_or_vals_list, ax=None, **kwargs):  # noqa: ANN003
         plt.show()
 
 
-def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):  # noqa: ANN003
+def make_cdfs_plot(vals, cdfs, ax=None, **kwargs) -> None:  # noqa: ANN003
     kwargs["colors"] = kwargs.get("colors", [None, None])
     kwargs["labels"] = kwargs.get("labels", ["cdf 1", "cdf 2"])
     plc = kwargs.get("plc", get_plt_cfg(**kwargs))
@@ -325,7 +325,7 @@ def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):  # noqa: ANN003
         plt.show()
 
 
-def make_summary_plot(data_lists, ax=None, **kwargs):  # noqa: ANN003
+def make_summary_plot(data_lists, ax=None, **kwargs) -> None:  # noqa: ANN003
     assert len(data_lists) > 0, ">> Empty data lists"
     n_data = len(data_lists)
     plc = kwargs["plc"] if "plc" in kwargs else get_plt_cfg(**kwargs)
@@ -428,7 +428,7 @@ def make_grid_figure(
     return np.atleast_2d(axes)  # Make indexing easy
 
 
-def annotate_grid_figure(axes, plc):
+def annotate_grid_figure(axes, plc) -> None:
     if plc.subplot_ylabel is not None:
         for y in range(axes.shape[0]):
             axes[y, 0].set_ylabel(plc.subplot_ylabel)
