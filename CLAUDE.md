@@ -22,6 +22,24 @@ rye fmt
 rye lint --fix
 ```
 
+### Type Checking
+```bash
+# Run type checking with mp command
+mp src scripts tests
+
+# IMPORTANT: The mp command behavior:
+# - ALWAYS writes output to .mypy_errors.jsonl (never to stdout)
+# - Returns "Error" exit status when type errors are found (this is EXPECTED)
+# - An "Error" status means "type errors found", NOT "tool failed"
+# - First line of .mypy_errors.jsonl contains {"type": "metadata", "error_count": N}
+# - Subsequent lines contain individual error details
+
+# Correct workflow:
+mp src scripts tests  # Run type checking (may show "Error")
+# Then immediately read .mypy_errors.jsonl to see results
+# Do NOT retry the command or assume it failed
+```
+
 ### Testing
 ```bash
 # Run all tests
