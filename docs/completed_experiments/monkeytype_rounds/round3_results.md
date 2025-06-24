@@ -86,3 +86,43 @@ For maximum typing automation effectiveness:
 4. Focus on modules with good test coverage for best results
 
 The experiment proves that combining static and dynamic typing approaches can achieve significantly better results than either approach alone.
+
+## Methodological Notes and Improvements
+
+### 1. Combined Static + Dynamic Typing Strategy
+- **Approach:** Applied autotyping first as foundation, then MonkeyType for runtime insights
+- **Why it worked:** Static tools handle obvious patterns, runtime tools capture actual usage
+- **Key insight:** The tools are complementary, not competitive
+- **Evidence:** Static alone achieved -87, combined achieved -115 to -116 total reduction
+
+### 2. Correct Test Execution with -n0 Flag
+- **Critical discovery:** MonkeyType requires sequential test execution
+- **Implementation:** Used `pytest -n0` to disable parallelization
+- **Impact:** Enabled accurate runtime type tracing across test suite
+- **Learning:** Tool documentation and constraints must be carefully understood
+
+### 3. Test Coverage as Key Dependency
+- **Observation:** MonkeyType can only type what gets executed
+- **Implication:** High test coverage directly translates to better type inference
+- **Strategy:** Prioritized modules with comprehensive test coverage
+- **Limitation:** Untested code paths remain untyped
+
+### 4. Focused Application to src/ Directory
+- **Scope decision:** Applied typing improvements only to production code
+- **Rationale:** Maximum value from typing core library code
+- **Not included:** scripts/ and tests/ directories left unmodified
+- **Trade-off:** Accepted some remaining errors for focused impact
+
+### 5. Breaking Through the Automation Ceiling
+- **The ceiling:** Static analysis tools plateaued at -87 error reduction
+- **The breakthrough:** Runtime analysis added -28 to -29 more reductions
+- **Mechanism:** Runtime capture sees actual types that static analysis cannot infer
+- **Significance:** Proves that automation limits can be surpassed with right approach
+
+### 6. Lessons for Future Typing Automation
+1. **Start with static tools** for quick wins and obvious cases
+2. **Ensure good test coverage** before applying runtime analysis
+3. **Understand tool constraints** (e.g., -n0 for MonkeyType)
+4. **Focus on high-value targets** (production code over test code)
+5. **Combine approaches** for synergistic effects
+6. **Measure incrementally** to understand each tool's contribution

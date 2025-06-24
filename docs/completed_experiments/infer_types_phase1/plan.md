@@ -1,3 +1,11 @@
+<!-- METHODOLOGICAL NOTES
+- Baseline: 211 errors (unclear which directories were included)
+- Tool application: Only applied to src/ directory
+- Results validity: FLAWED - scope mismatch between measurement and tool application
+- Key issue: If baseline included scripts/ and tests/, tool missed significant portion of errors
+- Import placement: Tool added imports mid-file, creating E402 errors
+-->
+
 # Phase 1: Static Inference with `infer-types` - Detailed Execution Plan
 
 ## Pre-Execution State

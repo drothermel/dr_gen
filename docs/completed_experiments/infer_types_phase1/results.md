@@ -1,3 +1,11 @@
+<!-- METHODOLOGICAL NOTES
+- Baseline: 211 errors (scope unclear - likely all directories)
+- Tool application: Only src/ directory processed
+- Results validity: POTENTIALLY INFLATED - 95% reduction may be misleading if baseline included other directories
+- Key issue: Tool only fixed src/ errors while baseline may have included scripts/ and tests/
+- Import errors: Created 5 new E402 errors due to mid-file import placement
+-->
+
 # Phase 1 Results: infer-types Static Inference Analysis
 
 ## Executive Summary

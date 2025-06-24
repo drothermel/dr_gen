@@ -88,3 +88,38 @@ autotyping --safe --none-return --scalar-return --none-param --guess-simple src/
 - Auto-fix integration in measurement
 
 This experiment tests whether **conservative typing improvements can be compounded** for greater benefit than any single tool alone.
+
+## Methodological Notes (Post-Experiment)
+
+### Critical Flaws Identified
+
+1. **Scope Mismatch**
+   - **Problem:** Baseline measurements included `src/`, `scripts/`, and `tests/` directories
+   - **Tool application:** Only applied to `src/` directory
+   - **Impact:** ~33% of codebase excluded from improvement attempts
+   - **Consequence:** Understated potential improvement by excluding 2/3 of measured scope
+
+2. **Invalid Tool Configurations**
+   - **Failed configurations:** 3 out of 5 (60% failure rate)
+   - **Issues:** Non-existent flags (`--none-param`, `--guess-simple`), incorrect syntax
+   - **Impact:** Reduced experiment to only 2 valid configurations
+   - **Implication:** Insufficient research on tool capabilities before experiment design
+
+3. **Flawed Baseline Selection**
+   - **Started from:** autotyping-safe results instead of clean baseline
+   - **Problem:** Already at local optimum for conservative approaches
+   - **Impact:** Unable to test true additive effects of different tools
+   - **Better approach:** Test each tool independently from clean baseline, then combinations
+
+4. **Premature Conclusions**
+   - **Claimed:** "Tool Composition Hypothesis Disproven"
+   - **Reality:** Only tested 2 valid configurations on partial codebase
+   - **Missing:** Independent tool testing, full codebase coverage, valid flag combinations
+   - **Conclusion validity:** Cannot conclude about tool stacking with 60% invalid tests
+
+### Correct Experiment Design Would Include:
+- Apply tools to same scope as measurements (src/, scripts/, tests/)
+- Validate all tool flags and syntax before experiment
+- Test each tool independently from clean baseline
+- Test valid combinations only after understanding individual effects
+- Include statistical analysis of results across multiple runs

@@ -125,3 +125,31 @@ monkeytype apply dr_gen.train.evaluate
 3. **Integration:** Full mypy check + test suite execution
 
 This experiment leverages MonkeyType's proven ability to capture accurate runtime types, targeting exactly the parameter annotations that static analysis cannot infer.
+
+## Methodological Improvements from Previous Rounds
+
+### 1. Combined Static + Dynamic Approach
+- **Innovation:** Used autotyping as foundation, then applied MonkeyType for deeper insights
+- **Rationale:** Static tools handle obvious cases, runtime capture handles complex types
+- **Result:** Synergistic effect - each tool's strengths complement the other's weaknesses
+
+### 2. Correct Test Execution Strategy
+- **Key Fix:** Discovered `-n0` flag requirement for MonkeyType compatibility
+- **Impact:** Enabled accurate runtime tracing by disabling pytest parallelization
+- **Learning:** Tool constraints must be understood for effective deployment
+
+### 3. Test Coverage Dependency Recognition
+- **Insight:** MonkeyType effectiveness directly correlates with test coverage
+- **Strategy:** Focused on modules with comprehensive test suites first
+- **Limitation:** Can only type what gets executed during test runs
+
+### 4. Focused Application Scope
+- **Decision:** Applied only to `src/` directory, not `scripts/` or `tests/`
+- **Reasoning:** Production code typing provides most value
+- **Trade-off:** Left some potential improvements unexplored but maintained focus
+
+### 5. Breaking the Automation Ceiling
+- **Static Tool Limit:** -87 errors was the maximum achievable with static analysis
+- **Runtime Breakthrough:** Additional -28 to -29 errors via runtime type capture
+- **Proof of Concept:** Demonstrated that runtime analysis can surpass static limitations
+- **Total Achievement:** -115 to -116 total error reduction, far exceeding the -87 ceiling

@@ -1,3 +1,11 @@
+<!-- METHODOLOGICAL NOTES
+- Baseline: Unclear which directories were checked (likely all based on 395 errors)
+- Tool application: Manual MultiEdit approach on identified files
+- Error counting: Assumed errors were additive across files (now known to be incorrect)
+- Results validity: FLAWED - mypy errors are context-dependent and non-additive
+- Key issue: File-by-file error distribution used for load balancing doesn't account for cross-file dependencies
+-->
+
 # MyPy Parallel Fix Planning Process
 
 ## Initial Assessment

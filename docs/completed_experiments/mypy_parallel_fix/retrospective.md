@@ -1,3 +1,11 @@
+<!-- METHODOLOGICAL NOTES
+- Baseline: 395 errors (unclear which directories - likely all)
+- Tool application: Manual MultiEdit approach with limited success
+- Results validity: PARTIALLY FLAWED - later discovered 44% reduction from external library configuration
+- Key insight: Many "errors" were external library issues, not true type errors
+- Cross-directory effects: Not measured or considered in this experiment
+-->
+
 # MyPy Parallel Fix Retrospective
 
 ## Executive Summary
