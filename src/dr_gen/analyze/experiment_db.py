@@ -30,10 +30,10 @@ class ExperimentDB(BaseModel):
 
     def load_experiments(self) -> None:
         """Load experiments from base_path directory."""
-        runs, errors = load_runs_from_dir(self.base_path)
+        runs = load_runs_from_dir(self.base_path)
         self._runs_df = runs_to_dataframe(runs)
         self._metrics_df = runs_to_metrics_df(runs)
-        self._errors = errors
+        self._errors = []
 
     def query_metrics(
         self, metric_filter: str | None = None, run_filter: list[str] | None = None
