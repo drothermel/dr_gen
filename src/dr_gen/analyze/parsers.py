@@ -58,3 +58,37 @@ def load_runs_from_dir(directory: Path, pattern: str = "*.jsonl") -> list[Run]:
             except Exception:  # noqa: BLE001, S112
                 continue
     return runs
+
+
+def convert_legacy_format(legacy_data: dict) -> dict:
+    """Convert legacy experiment format to new Run model format.
+
+    Args:
+        legacy_data: Dictionary in old analysis system format
+
+    Returns:
+        Dictionary compatible with Run model
+    """
+    # Extract hyperparameters from various legacy locations
+    hparams = {}
+    if "config" in legacy_data:
+        hparams.update(legacy_data["config"])
+    if "hyperparameters" in legacy_data:
+        hparams.update(legacy_data["hyperparameters"])
+
+    # Convert metrics from epoch-based to list format
+    metrics = {}
+    if "history" in legacy_data:
+        for epoch_data in legacy_data["history"]:
+            for key, value in epoch_data.items():
+                if key != "epoch":
+                    if key not in metrics:
+                        metrics[key] = []
+                    metrics[key].append(value)
+
+    return {
+        "run_id": legacy_data.get("run_id", legacy_data.get("name", "unknown")),
+        "hyperparameters": hparams,
+        "metrics": metrics,
+        "metadata": legacy_data.get("metadata", {}),
+    }
