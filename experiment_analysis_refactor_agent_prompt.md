@@ -1,8 +1,8 @@
 # Agent Prompt for Experiment Analysis Refactor
 
 ## Current Progress
-Last Completed: Commit 8 - test: Directory-based run loading and error resilience
-Next Up: Commit 9 - Add Polars DataFrame builders
+Last Completed: Commit 14 - test: Hyperparameter and metric analysis functions
+Next Up: Commit 15 - Add analysis configuration model
 
 ## Task Overview
 You are implementing a refactor of the experiment analysis system according to the plan in `experiment_analysis_refactor_plan.md`. This refactor replaces the complex class hierarchy with Pydantic models and Polars DataFrames for better performance and maintainability.

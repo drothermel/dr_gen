@@ -2,7 +2,8 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic_settings import BaseSettings
 
 
 class Hyperparameters(BaseModel):
@@ -53,3 +54,27 @@ class Run(BaseModel):
         """Get the final epoch number based on metric length."""
         lengths = [len(v) for v in self.metrics.values() if v]
         return max(lengths) - 1 if lengths else 0
+
+
+class AnalysisConfig(BaseSettings):
+    """Configuration for experiment analysis with environment variable support."""
+
+    model_config = ConfigDict(env_prefix="ANALYSIS_", env_file=".env")
+
+    # Data paths
+    experiment_dir: str = Field(
+        default="./experiments", description="Root experiment directory"
+    )
+    output_dir: str = Field(default="./analysis_output", description="Output directory")
+
+    # Display mappings
+    metric_display_names: dict[str, str] = Field(
+        default_factory=lambda: {
+            "train/loss": "Training Loss",
+            "val/loss": "Validation Loss",
+            "val/acc": "Validation Accuracy",
+        }
+    )
+    hparam_display_names: dict[str, str] = Field(
+        default_factory=lambda: {"lr": "Learning Rate", "batch_size": "Batch Size"}
+    )
