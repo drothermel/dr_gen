@@ -4,8 +4,6 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-import dr_gen.analyze.bootstrapping as bu
-
 # Constants for validation
 EXPECTED_MATCHING_HPMS = 2
 EXPECTED_KEY_VALUE_PARTS = 2
@@ -134,94 +132,6 @@ def get_compare_runs_pretrain_vs_random(
     hpms_val_rand = {str(h): d for h, d in hpms_val_rand.items() if h in hpms_to_use}
     hpms_eval_rand = {str(h): d for h, d in hpms_eval_rand.items() if h in hpms_to_use}
     return (hpms_val_pre, hpms_eval_pre), (hpms_val_rand, hpms_eval_rand)
-
-
-def find_best_hpm_for_group(group_val_data, _group_name, num_bootstraps):
-    """Find best hyperparameter set and timestep for a group using validation data.
-
-    tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
-    """
-    if not group_val_data:
-        return None, None
-
-    bootstrapped_val = bu.bootstrap_experiment_timesteps(
-        group_val_data, num_bootstraps=num_bootstraps
-    )
-    summary_stats_val = bu.calc_multi_stat_bootstrap_summary(bootstrapped_val)
-    best_exp_name, best_timestep = bu.select_best_hpms(summary_stats_val)
-    return best_exp_name, best_timestep
-
-
-# TODO: this is what I want to call in the script
-# After using get_compare_runs_pretrain_vs_random() to get the group data
-def run_comparison_eval(
-    group_a_data,
-    group_b_data,
-    group_a_name,
-    group_b_name,
-    val_num_bootstraps=1000,
-    eval_num_bootstraps=1000,
-    num_permutations=1000,
-):
-    val_a, eval_a = group_a_data
-    val_b, eval_b = group_b_data
-    best_hpm_a, best_ts_a = find_best_hpm_for_group(
-        val_a, group_a_name, val_num_bootstraps
-    )
-    best_hpm_b, best_ts_b = find_best_hpm_for_group(
-        val_b, group_b_name, val_num_bootstraps
-    )
-
-    # Check if best HPMs were found
-    if best_hpm_a is None or best_hpm_b is None:
-        # Return indicating failure but providing partial results if available
-        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
-
-    # --- Perform comparison on evaluation data using ONLY the best HPMs found ---
-    # Get the evaluation data for the *specific* best HPMs and timesteps
-    eval_data_a = eval_a.get(best_hpm_a)
-    eval_data_b = eval_b.get(best_hpm_b)
-
-    # Ensure we have data for the best HPMs in the evaluation set
-    if eval_data_a is None or eval_data_b is None:
-        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
-
-    comparison_results = bu.compare_experiments_bootstrap(
-        eval_data_a,  # just the best hpm data, all timesteps
-        eval_data_b,  # just the best hpm data, all timesteps
-        hpm_a=best_hpm_a,  # for naming
-        hpm_b=best_hpm_b,  # for naming
-        timestep_a=best_ts_a,  # to select best timestep from eval data
-        timestep_b=best_ts_b,  # to select best timestep from eval data
-        num_bootstraps=eval_num_bootstraps,
-        num_permutations=num_permutations,
-    )
-    return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results)
-
-
-def print_results_report(
-    _best_hpm_a, _best_ts_a, _best_hpm_b, _best_ts_b, comparison_results
-) -> None:
-    """Prints a formatted report summarizing the analysis results.
-
-    Args:
-        best_hpm_a (str): Name of the best HPM for Group A.
-        best_ts_a (int): Best validation timestep for Group A.
-        best_hpm_b (str): Name of the best HPM for Group B.
-        best_ts_b (int): Best validation timestep for Group B.
-        comparison_results (dict): Results from the evaluation comparison.
-    """
-    # Report Difference Statistics
-    final_diff_stats = comparison_results["difference_stats"]
-    final_diff_stats["mean_diff_point_estimate"]
-    final_diff_stats["mean_diff_ci_95"]
-    final_diff_stats["mean_diff_reject_null_ci_95"]
-
-    # Report KS Permutation Test Results
-    final_ks_perm_stats = comparison_results["ks_permutation_test"]
-    final_ks_perm_stats.get("observed_ks", "N/A")
-    final_ks_perm_stats.get("p_value", "N/A")
-    final_ks_perm_stats.get("reject_null", None)  # Default to None
 
 
 # ================  CSV Export  ===================

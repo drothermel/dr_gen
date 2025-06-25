@@ -209,66 +209,13 @@ for n in n_values:
         group_b_data = (hpms_val_rand, hpms_eval_rand)
 
         try:
-            # Run the comparison
-            (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results) = (
-                rplt.run_comparison_eval(
-                    group_a_data=group_a_data,
-                    group_b_data=group_b_data,
-                    group_a_name="Pretrained",
-                    group_b_name="Random Init",
-                    val_num_bootstraps=VAL_NUM_BOOTSTRAPS,
-                    eval_num_bootstraps=EVAL_NUM_BOOTSTRAPS,
-                    num_permutations=NUM_PERMUTATIONS,
-                )
+            # Bootstrap comparison functionality has been removed
+            print(
+                "    Bootstrap comparison analysis has been removed from the codebase."
             )
+            continue  # Skip this iteration since comparison is no longer available
 
-            # --- Collect Results ---
-            if comparison_results is None:
-                print(
-                    f"    Warning: Comparison failed for n={n}, t={t}. Skipping result."
-                )
-                continue  # Skip if comparison failed internally
-
-            # Prepare data row for CSV (adapted from test_eval.py)
-            csv_data = {
-                "sweep_n": n,
-                "sweep_t": t,
-                "group_A_name": "Pretrained",
-                "group_B_name": "Random Init",
-                "best_hpm_A": best_hpm_a,
-                "best_val_timestep_A": best_ts_a,
-                "best_hpm_B": best_hpm_b,
-                "best_val_timestep_B": best_ts_b,
-            }
-
-            # Flatten summary, difference, and test statistics
-            stats_to_flatten = {
-                "summary_A_": comparison_results.get("summary_A", {}),
-                "summary_B_": comparison_results.get("summary_B", {}),
-                "diff_": comparison_results.get("difference_stats", {}),
-                "ks_ci_": comparison_results.get("ks_ci_test", {}),
-                "ks_perm_": comparison_results.get("ks_permutation_test", {}),
-            }
-
-            for prefix, stats_dict in stats_to_flatten.items():
-                for key, value in stats_dict.items():
-                    if isinstance(value, np.ndarray):
-                        csv_data[f"{prefix}{key}"] = str(
-                            value.tolist()
-                        )  # Stringify arrays
-                    elif isinstance(value, tuple):
-                        csv_data[f"{prefix}{key}_lower"] = (
-                            value[0] if len(value) > 0 else np.nan
-                        )
-                        csv_data[f"{prefix}{key}_upper"] = (
-                            value[1] if len(value) > 1 else np.nan
-                        )
-                    else:
-                        csv_data[f"{prefix}{key}"] = value
-
-            ## Add original and bootstrapped samples (converting to string)
-
-            all_results.append(csv_data)
+            # Result collection and CSV export code removed with bootstrap functionality
 
         except (ValueError, KeyError, TypeError, AttributeError) as e:
             print(f"    Error during analysis for n={n}, t={t}: {e}")
