@@ -54,3 +54,16 @@ class ExperimentDB(BaseModel):
         if self._runs_df is None:
             return pl.DataFrame()
         return summarize_by_hparams(self._runs_df, self._metrics_df, hparams)
+
+    def lazy_query(self) -> pl.LazyFrame:
+        """Get a lazy frame for efficient querying of large datasets."""
+        if self._metrics_df is None:
+            # Scan JSONL files lazily
+            pattern = str(self.base_path / "*.jsonl")
+            return pl.scan_ndjson(pattern).lazy()
+        return self._metrics_df.lazy()
+
+    def stream_metrics(self) -> pl.DataFrame:
+        """Stream metrics for memory-efficient processing of large datasets."""
+        lazy_frame = self.lazy_query()
+        return lazy_frame.collect(streaming=True)
