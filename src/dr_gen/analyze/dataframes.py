@@ -2,7 +2,7 @@
 
 import polars as pl
 
-from dr_gen.analyze.models import Run
+from dr_gen.analyze.models import AnalysisConfig, Run
 
 
 def runs_to_dataframe(runs: list[Run]) -> pl.DataFrame:
@@ -127,3 +127,32 @@ def summarize_by_hparams(
         pl.col("value").max().alias("max"),
         pl.col("run_id").n_unique().alias("n_runs"),
     )
+
+
+def remap_display_names(
+    df: pl.DataFrame, config: AnalysisConfig, target: str = "metric"
+) -> pl.DataFrame:
+    """Remap column values using display name mappings from config.
+
+    Args:
+        df: DataFrame to remap
+        config: Analysis configuration with display mappings
+        target: Which column to remap ('metric' or 'hparam')
+
+    Returns:
+        DataFrame with remapped values
+    """
+    if target == "metric" and "metric" in df.columns:
+        mapping = config.metric_display_names
+        return df.with_columns(
+            pl.col("metric").map_dict(mapping, default=pl.col("metric")).alias("metric")
+        )
+
+    # For hparams, remap column names
+    if target == "hparam":
+        rename_map = {
+            k: v for k, v in config.hparam_display_names.items() if k in df.columns
+        }
+        return df.rename(rename_map)
+
+    return df
