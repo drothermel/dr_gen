@@ -1,5 +1,9 @@
 # Agent Prompt for Experiment Analysis Refactor
 
+## Current Progress
+Last Completed: Commit 4 - test: Run model validation and computed fields
+Next Up: Commit 5 - Add JSONL parsing utilities
+
 ## Task Overview
 You are implementing a refactor of the experiment analysis system according to the plan in `experiment_analysis_refactor_plan.md`. This refactor replaces the complex class hierarchy with Pydantic models and Polars DataFrames for better performance and maintainability.
 
