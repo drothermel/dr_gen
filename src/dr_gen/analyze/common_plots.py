@@ -103,27 +103,42 @@ def histogram_plot(vals, ax=None, **kwargs: Unpack[PlotKwargs]) -> None:
 
 
 def cdf_plot(vals1, vals2, ax=None, **kwargs: Unpack[PlotKwargs]) -> None:
-    results = ks.calculate_ks_for_run_sets(vals1, vals2)
-    vals = results["all_vals"]
-    cdfs = [results["cdf1"], results["cdf2"]]
+    # Create empirical CDFs using scipy
+    import scipy.stats as sps
 
-    kwargs["linestyle"] = kwargs.get("linestyle", "-")
-    kwargs["alpha"] = kwargs.get("alpha", 0.3)
+    ecdf1 = sps.ecdf(vals1)
+    ecdf2 = sps.ecdf(vals2)
+
+    # Set up plot parameters
     kwargs["xlabel"] = kwargs.get("xlabel", "accuracy")
     kwargs["ylabel"] = kwargs.get("ylabel", "cdf")
-    kwargs["title"] = kwargs.get("title", "CDF" + "s" if len(cdfs) > 1 else "")
-    kwargs["labels"] = kwargs.get("labels", [f"CDF {i}" for i in range(len(cdfs))])
+    kwargs["title"] = kwargs.get("title", "CDFs")
+    labels = kwargs.get("labels", ["CDF 1", "CDF 2"])
 
     plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
-    pu.make_cdfs_plot(vals, cdfs, ax=ax, **kwargs)
+
+    # Plot ECDFs using scipy's built-in plotting
+    ecdf1.cdf.plot(ax, label=labels[0], alpha=kwargs.get("alpha", 0.7))
+    ecdf2.cdf.plot(ax, label=labels[1], alpha=kwargs.get("alpha", 0.7))
+
+    ax.set_xlabel(kwargs["xlabel"])
+    ax.set_ylabel(kwargs["ylabel"])
+    ax.set_title(kwargs["title"])
+    ax.legend()
+
     if plt_show:
         plt.show()
 
 
 def cdf_histogram_plot(vals1, vals2, **kwargs: Unpack[PlotKwargs]) -> None:
-    results = ks.calculate_ks_for_run_sets(vals1, vals2)
-    vals = results["all_vals"]
-    cdfs = [results["cdf1"], results["cdf2"]]
+    # Get KS statistic for title
+    ks_stat, _, _, _ = ks.ks_analysis(vals1, vals2)
+
+    # Create empirical CDFs using scipy
+    import scipy.stats as sps
+
+    ecdf1 = sps.ecdf(vals1)
+    ecdf2 = sps.ecdf(vals2)
 
     axes = pu.make_grid_figure(
         data_len=2,
@@ -131,10 +146,16 @@ def cdf_histogram_plot(vals1, vals2, **kwargs: Unpack[PlotKwargs]) -> None:
         plot_size=kwargs.get("figsize", pu.DEFAULT_FIGSIZE),
     )
 
-    kwargs["linestyle"] = kwargs.get("linestyle", "-")
-    kwargs["alpha"] = kwargs.get("alpha", 0.3)
-    kwargs["suptitle"] = f"CDFs and Histograms | KS Stat: {results['ks_stat']:0.2f}"
-    pu.make_cdfs_plot(vals, cdfs, ax=axes[0, 0], **kwargs)
+    labels = kwargs.get("labels", ["CDF 1", "CDF 2"])
+    kwargs["suptitle"] = f"CDFs and Histograms | KS Stat: {ks_stat:0.2f}"
+
+    # Plot ECDFs using scipy's built-in plotting
+    ecdf1.cdf.plot(axes[0, 0], label=labels[0], alpha=kwargs.get("alpha", 0.7))
+    ecdf2.cdf.plot(axes[0, 0], label=labels[1], alpha=kwargs.get("alpha", 0.7))
+    axes[0, 0].set_xlabel(kwargs.get("xlabel", "accuracy"))
+    axes[0, 0].set_ylabel(kwargs.get("ylabel", "cdf"))
+    axes[0, 0].legend()
+
     pu.make_histogram_plot(
         [vals1, vals2],
         ax=axes[0, 1],
