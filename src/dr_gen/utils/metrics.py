@@ -13,7 +13,7 @@ from dr_util.metrics import (
     create_logger,
 )
 
-from dr_gen.schemas import SPLIT_NAMES
+from dr_gen.constants import SPLIT_NAMES
 
 
 class GenMetricType(Enum):

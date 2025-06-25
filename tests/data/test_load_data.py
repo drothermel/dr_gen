@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Dataset, SequentialSampler
 from torchvision.transforms import v2 as transforms_v2
 
 import dr_gen.data.load_data as du
-import dr_gen.schemas as vu
+from dr_gen.constants import SPLIT_NAMES
 
 # ---------------------------------------------------------
 # Fixtures and Helpers
@@ -367,7 +367,7 @@ def test_get_dataloader_invalid_split(monkeypatch) -> None:
     generator = torch.Generator()
     invalid_split = "invalid_split"
     # Patch vu.validate_split for the purpose of this test.
-    monkeypatch.setattr(vu, "validate_split", lambda s: s in ["train", "val", "eval"])
+    # No longer need to patch validate_split since we removed validation
     with pytest.raises(AssertionError):
         du.get_dataloader(dummy_data, sampler, generator, invalid_split, cfg=None)
 
@@ -384,9 +384,9 @@ def test_get_split_source_config_defaults() -> None:
     sources, ranges = du.get_split_source_config(cfg=None)
 
     # Each split uses itself as the source.
-    expected_sources = list(vu.SPLIT_NAMES)
+    expected_sources = list(SPLIT_NAMES)
     # For each split, the range is (0, du.DEFAULT_SOURCE_PERCENT) i.e. (0, 1.0)
-    expected_ranges = dict.fromkeys(vu.SPLIT_NAMES, (0, du.DEFAULT_SOURCE_PERCENT))
+    expected_ranges = dict.fromkeys(SPLIT_NAMES, (0, du.DEFAULT_SOURCE_PERCENT))
 
     # Order may depend on SPLIT_NAMES; we compare sorted lists for safety.
     assert sorted(sources) == sorted(expected_sources)
@@ -475,10 +475,9 @@ def test_get_dataloaders(monkeypatch) -> None:
     monkeypatch.setattr(utils, "get_download", dummy_get_download)
     monkeypatch.setattr(utils, "get_source", dummy_get_source)
     monkeypatch.setattr(utils, "get_shuffle", dummy_get_shuffle)
-    monkeypatch.setattr(utils.vu, "validate_dataset", dummy_validate_dataset)
-    monkeypatch.setattr(utils.vu, "validate_split", dummy_validate_split)
-    # Force vu.SPLIT_NAMES to be predictable.
-    monkeypatch.setattr(utils.vu, "SPLIT_NAMES", ["train", "val", "eval"])
+    # No longer need to patch validation functions since we removed them
+    # Force SPLIT_NAMES to be predictable.
+    monkeypatch.setattr("dr_gen.constants.SPLIT_NAMES", ["train", "val", "eval"])
 
     # Create a dummy OmegaConf configuration.
     cfg = OmegaConf.create(

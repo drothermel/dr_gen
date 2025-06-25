@@ -11,13 +11,6 @@ from timm.optim import create_optimizer
 from timm.scheduler.cosine_lr import CosineLRScheduler
 from torch.nn.parameter import Parameter
 
-import dr_gen.schemas as vu
-from dr_gen.schemas import (
-    CriterionTypes,
-    LRSchedTypes,
-    OptimizerTypes,
-)
-
 # Match the torch defaults
 
 OPTIM_DEFAULTS = {
@@ -55,7 +48,7 @@ def create_optim(
             args.opt = "sgd"
             args.momentum = optim_params["momentum"]
             return create_optimizer(args, model_params)
-        case OptimizerTypes.SGD.value:
+        case "sgd":
             return torch.optim.SGD(
                 model_params,
                 **{
@@ -71,7 +64,7 @@ def create_optim(
                     ]
                 },
             )
-        case OptimizerTypes.RMSPROP.value:
+        case "rmsprop":
             return torch.optim.RMSprop(
                 model_params,
                 **{
@@ -87,7 +80,7 @@ def create_optim(
                     ]
                 },
             )
-        case OptimizerTypes.ADAMW.value:
+        case "adamw":
             return torch.optim.AdamW(
                 model_params,
                 **{
@@ -118,7 +111,7 @@ def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:  # noqa: 
                 lr_min=cfg.optim.lr_min,
                 cycle_limit=cfg.optim.cycle_limit,
             )
-        case LRSchedTypes.STEP_LR.value:
+        case "steplr":
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
                 step_size=cfg.optim.get("step_size", 30),
@@ -210,11 +203,12 @@ def get_model_optim_lrsched(
 
 
 def get_criterion(cfg):
-    vu.validate_criterion(cfg.optim.loss)
+    if cfg.optim.loss not in ["cross_entropy"]:
+        raise ValueError(f"Invalid criterion: {cfg.optim.loss}")
     crit_params = {k: cfg.optim.get(k, v) for k, v in CRITERION_DEFAULTS.items()}
 
     match cfg.optim.loss:
-        case CriterionTypes.CROSS_ENTROPY.value:
+        case "cross_entropy":
             return torch.nn.CrossEntropyLoss(**crit_params)
 
 

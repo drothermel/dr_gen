@@ -16,7 +16,7 @@ from torch.utils.data import (
 from torch.utils.data.dataloader import default_collate
 from torchvision.transforms import v2 as transforms_v2
 
-import dr_gen.schemas as vu
+from dr_gen.constants import AVAIL_DATASETS, SPLIT_NAMES
 
 # Constants for data splitting validation
 MAX_SUPPORTED_SPLITS = 2
@@ -90,12 +90,13 @@ def _parse_and_validate_config(
     cfg: DictConfig,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
     """Parses data configuration, identifies sources, and prepares for splitting."""
-    vu.validate_dataset(cfg.data.name)
+    if cfg.data.name not in AVAIL_DATASETS:
+        raise ValueError(f"Dataset {cfg.data.name} should be in {AVAIL_DATASETS}")
 
     parsed_configs = {}
     source_usage_info: dict[str, Any] = {}  # Tracks how original sources are utilized
 
-    for split_name_key in vu.SPLIT_NAMES:  # e.g., 'train', 'val', 'eval'
+    for split_name_key in SPLIT_NAMES:  # e.g., 'train', 'val', 'eval'
         if split_name_key not in cfg.data:
             continue
 
