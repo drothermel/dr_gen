@@ -1,102 +1,187 @@
-# ML Experiment Analysis System Overview
+# Experiment Analysis System Overview
 
-This document describes the goals and design philosophy behind the experiment analysis system in `src/dr_gen/analyze/`.
+## Introduction
 
-## Primary Goals
+The experiment analysis system provides a modern, efficient framework for analyzing deep learning experiments. Built on Pydantic v2 for data validation and Polars for high-performance data manipulation, it replaces complex class hierarchies with a clean, functional approach.
 
-### 1. Experiment Organization & Tracking
+## Architecture
 
-The system automatically manages collections of machine learning experiments by:
+### Core Components
 
-- **Automated Log Parsing**: Loads and parses training logs from JSONL files across directory structures
-- **Hyperparameter Extraction**: Extracts complete hyperparameter configurations from each training run
-- **Metadata Collection**: Captures training time, logged messages, and run completion status
-- **Error Handling**: Gracefully handles malformed, incomplete, or failed training logs with detailed error tracking
-- **Run Grouping**: Organizes experiments by hyperparameter combinations for systematic comparison
+1. **Data Models** (`models.py`)
+   - `Hyperparameters`: Flexible model with dot-notation flattening
+   - `Run`: Complete experiment run with metrics and metadata
+   - `AnalysisConfig`: Configuration with environment variable support
 
-### 2. Flexible Metric Analysis
+2. **Data Loading** (`parsers.py`)
+   - JSONL parsing with error collection
+   - Batch loading from directories
+   - Legacy format conversion utilities
 
-The system provides comprehensive metric tracking capabilities:
+3. **DataFrame Operations** (`dataframes.py`)
+   - Polars-based DataFrame builders
+   - Hyperparameter variation detection
+   - Metric querying and aggregation
 
-- **Time Series Storage**: Stores training metrics as curves with flexible x-axes (epochs, steps, iterations, etc.)
-- **Multi-Split Support**: Handles multiple data splits (train/validation/evaluation) within each experiment
-- **Metric Querying**: Enables retrieval of specific metric values at particular points or complete training curves
-- **Type Flexibility**: Supports arbitrary metric types (loss, accuracy, custom evaluation metrics)
-- **Curve Validation**: Ensures metric completeness across expected training duration
+4. **High-Level API** (`experiment_db.py`)
+   - Unified interface for analysis
+   - Lazy evaluation support
+   - Memory-efficient streaming
 
-### 3. Hyperparameter Sweep Management
+## Usage Guide
 
-The system intelligently manages large-scale hyperparameter experiments:
+### Basic Setup
 
-- **Automatic Sweep Detection**: Identifies which hyperparameters vary across experiment suites
-- **Smart Grouping**: Groups runs by varying hyperparameters while excluding noise (paths, seeds, timestamps)
-- **Display Remapping**: Provides user-friendly parameter names (`model.weights` → `Init`) and values (`None` → `random`)
-- **Selective Filtering**: Enables filtering and selection of runs based on specific hyperparameter combinations
-- **Sweep Summarization**: Generates tables showing parameter combinations and run counts
+```python
+from pathlib import Path
+from dr_gen.analyze.experiment_db import ExperimentDB
+from dr_gen.analyze.models import AnalysisConfig
 
-### 4. Statistical Analysis Support
+# Configure analysis
+config = AnalysisConfig(
+    experiment_dir="./experiments",
+    metric_display_names={
+        "train/loss": "Training Loss",
+        "val/acc": "Validation Accuracy",
+    }
+)
 
-The system facilitates rigorous experimental analysis:
-
-- **Multi-Seed Aggregation**: Collects results across multiple random seeds for the same hyperparameter setting
-- **Training Dynamics Comparison**: Supports comparison of learning curves across different configurations
-- **Completeness Validation**: Built-in checks ensure metric completeness across expected training epochs
-- **Robust Error Handling**: Tracks and reports runs that fail to complete properly
-- **Statistical Preparation**: Organizes data for downstream statistical analysis and visualization
-
-## Design Philosophy
-
-### Hierarchical Data Organization
-
-The system follows a clear hierarchical structure:
-
-```
-RunGroup → RunData → SplitMetrics → MetricCurves → MetricCurve
-     ↓         ↓          ↓            ↓           ↓
-Collections Individual  Train/Val   Multiple    Single
-of runs    experiments  splits      metrics     curve
+# Create database
+db = ExperimentDB(config=config, base_path=Path(config.experiment_dir))
+db.load_experiments()
 ```
 
-### Smart Importance Filtering
+### Querying Metrics
 
-The **"important values"** concept in the `Hpm` class enables dynamic grouping based on which hyperparameters actually vary in an experiment suite. This automatically excludes irrelevant parameters like:
-- File paths (`paths.*`)
-- Random seeds (`seed`)
-- Checkpoint settings (`write_checkpoint`)
-- Runtime metadata
+```python
+# Get all metrics
+all_metrics = db.query_metrics()
 
-### Flexibility Over Simplicity
+# Filter by metric name
+train_metrics = db.query_metrics(metric_filter="train")
 
-The system prioritizes:
-- **Flexibility**: Multiple metric types, arbitrary x-axes, configurable remapping
-- **Robustness**: Comprehensive error handling, validation, graceful degradation
-- **Scalability**: Efficient handling of large experiment collections
+# Filter by specific runs
+specific_runs = db.query_metrics(run_filter=["run_001", "run_002"])
+```
 
-This design choice reflects its target use case for serious research rather than casual experimentation.
+### Analyzing Hyperparameters
 
-## Target Research Workflow
+```python
+# Find which hyperparameters vary across runs
+from dr_gen.analyze.dataframes import find_varying_hparams
+varying = find_varying_hparams(runs_df)
 
-This system is designed for **deep learning research workflows** where researchers:
+# Summarize metrics by hyperparameters
+summary = db.summarize_metrics(["lr", "batch_size"])
+```
 
-1. **Run Large Sweeps**: Execute hyperparameter sweeps across multiple random seeds
-2. **Compare Configurations**: Analyze training dynamics between different model/optimizer configurations  
-3. **Generate Statistics**: Produce statistical summaries and publication-ready analysis
-4. **Handle Failures**: Robustly manage incomplete or failed training runs in large experiment batches
-5. **Iterate Quickly**: Rapidly filter and analyze subsets of experiments during research
+### Working with Large Datasets
 
-## Key Components
+```python
+# Enable lazy evaluation
+db = ExperimentDB(config, base_path, lazy=True)
 
-- **`RunData`**: Individual experiment container with hyperparameters, metadata, and metrics
-- **`RunGroup`**: Collection manager for multiple experiments with sweep analysis
-- **`HpmGroup`**: Hyperparameter group tracker that identifies varying parameters
-- **`SplitMetrics`**: Multi-split metric manager for train/validation/evaluation data
-- **`MetricCurves`**: Time series container supporting multiple x-axes per metric
+# Build complex queries without loading data
+lazy_frame = db.lazy_query()
+filtered = lazy_frame.filter(pl.col("metric") == "val/acc")
 
-## Benefits
+# Stream results
+results = db.stream_metrics()
+```
 
-This architecture enables researchers to:
-- Focus on scientific questions rather than data wrangling
-- Systematically compare experimental results across large parameter spaces
-- Generate reliable statistical summaries from multi-seed experiments
-- Quickly identify and analyze successful configurations
-- Maintain organized records of experimental history for reproducibility
+## Migration from Legacy System
+
+### Converting Old Data
+
+The system includes utilities for migrating from the previous analysis system:
+
+```python
+from dr_gen.analyze.parsers import convert_legacy_format
+
+# Convert old format
+legacy_data = load_old_experiment()  # Your old loading code
+converted = convert_legacy_format(legacy_data)
+
+# Create new Run model
+run = Run(**converted)
+```
+
+### Key Differences
+
+1. **Data Models**: Pydantic models instead of custom classes
+2. **DataFrames**: Polars instead of Pandas for better performance
+3. **Configuration**: Environment variable support via Pydantic Settings
+4. **API**: Functional approach with immutable data structures
+
+## Configuration
+
+### Environment Variables
+
+The system supports configuration via environment variables:
+
+```bash
+export ANALYSIS_EXPERIMENT_DIR=/path/to/experiments
+export ANALYSIS_OUTPUT_DIR=/path/to/output
+```
+
+### Config File
+
+Create a `.env` file in your project root:
+
+```
+ANALYSIS_EXPERIMENT_DIR=./experiments
+ANALYSIS_OUTPUT_DIR=./analysis_output
+```
+
+### Programmatic Configuration
+
+```python
+config = AnalysisConfig(
+    experiment_dir="./custom/path",
+    output_dir="./custom/output",
+    metric_display_names={
+        "custom/metric": "Custom Metric Name"
+    }
+)
+```
+
+## Performance Considerations
+
+1. **Lazy Evaluation**: Use `lazy=True` for large datasets
+2. **Streaming**: Use `stream_metrics()` for memory-constrained environments
+3. **Categorical Data**: Hyperparameters are automatically converted to categoricals
+4. **Parallel Processing**: Polars uses all available cores by default
+
+## Examples
+
+See `examples/analyze_experiments.py` for complete working examples including:
+- Basic analysis workflows
+- Lazy evaluation for large datasets
+- Legacy data migration
+- Custom metric aggregations
+
+## API Reference
+
+### Models
+
+- `Hyperparameters`: Flexible hyperparameter storage with flattening
+- `Run`: Complete experiment run with computed properties
+- `AnalysisConfig`: Configuration with validation
+
+### Functions
+
+- `parse_jsonl_file()`: Parse JSONL with error handling
+- `load_runs_from_dir()`: Batch load experiments
+- `runs_to_dataframe()`: Convert runs to wide-format DataFrame
+- `runs_to_metrics_df()`: Convert to long-format metrics DataFrame
+- `find_varying_hparams()`: Detect varying hyperparameters
+- `query_metrics()`: Filter metrics with patterns
+- `summarize_by_hparams()`: Aggregate metrics by groups
+
+### ExperimentDB Methods
+
+- `load_experiments()`: Load all experiments from directory
+- `query_metrics()`: Query with filters
+- `summarize_metrics()`: Get summary statistics
+- `lazy_query()`: Get lazy frame for complex queries
+- `stream_metrics()`: Memory-efficient streaming
