@@ -7,13 +7,38 @@ from typing import Any
 
 import dr_util.file_utils as fu
 
-import dr_gen.utils.utils as gu
+from dr_gen.analyze import check_prefix_exclude
 from dr_gen.analyze.metric_curves import SplitMetrics
 
 # Constants for file parsing
 MIN_FILE_LINES = 2
 TRAIN_TIME_OFFSET_FROM_END = 2
 EPOCHS_KEY = "epochs"
+
+
+def _flatten_dict_tuple_keys(
+    d: dict[Any, Any], parent_key: tuple[Any, ...] = ()
+) -> dict[tuple[Any, ...], Any]:
+    """Recursively flatten a nested dictionary with tuple keys."""
+    items = {}
+    for k, v in d.items():
+        new_key = (*parent_key, k)
+        if isinstance(v, dict):
+            items.update(_flatten_dict_tuple_keys(v, new_key))
+        else:
+            items[new_key] = v
+    return items
+
+
+def _flatten_dict(in_dict: dict[Any, Any]) -> dict[str, Any]:
+    """Flatten a nested dictionary with dot-separated string keys."""
+    flat_tuple_keys = _flatten_dict_tuple_keys(in_dict)
+    return {".".join(k): v for k, v in flat_tuple_keys.items()}
+
+
+def _dict_to_tupledict(in_dict: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
+    """Convert dictionary to sorted tuple of tuples."""
+    return tuple(sorted(in_dict.items()))
 
 
 def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
@@ -108,7 +133,7 @@ class Hpm(MutableMapping):
         """
         if all_vals is None:
             all_vals = {}
-        self._all_values = gu.flatten_dict(all_vals)
+        self._all_values = _flatten_dict(all_vals)
         self.important_values = {}
         self.reset_important()
 
@@ -165,7 +190,7 @@ class Hpm(MutableMapping):
         """Exclude keys with specified prefixes from important values."""
         important_values = {}
         for k, v in self.important_values.items():
-            if gu.check_prefix_exclude(k, exclude_prefixes):
+            if check_prefix_exclude(k, exclude_prefixes):
                 continue
             important_values[k] = v
         self.important_values = important_values
@@ -182,7 +207,7 @@ class Hpm(MutableMapping):
         """Convert important values to a sorted tuple dictionary."""
         if important_vals is None:
             important_vals = self.important_values
-        return gu.dict_to_tupledict(important_vals)
+        return _dict_to_tupledict(important_vals)
 
     def as_strings(self):
         """Return important values as a list of key=value strings."""

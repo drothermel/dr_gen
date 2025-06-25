@@ -104,7 +104,7 @@ def test_run_serialization():
 
 def test_run_validation_error():
     """Test Run model validation errors."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Input should be a valid"):
         Run(
             run_id="exp005",
             hyperparameters="not_a_hyperparameters_object",  # type: ignore

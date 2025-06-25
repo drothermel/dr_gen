@@ -16,8 +16,8 @@ from dr_gen.analyze.models import AnalysisConfig, Hyperparameters, Run
 
 def test_runs_to_dataframe_empty():
     """Test converting empty list of runs."""
-    df = runs_to_dataframe([])
-    assert df.is_empty()
+    runs_df = runs_to_dataframe([])
+    assert runs_df.is_empty()
 
 
 def test_runs_to_dataframe_basic():
@@ -37,13 +37,13 @@ def test_runs_to_dataframe_basic():
         ),
     ]
 
-    df = runs_to_dataframe(runs)
-    assert len(df) == 2
-    assert "run_id" in df.columns
-    assert "lr" in df.columns
-    assert "batch_size" in df.columns
-    assert "metadata.seed" in df.columns
-    assert df["lr"].to_list() == [0.01, 0.02]
+    runs_df = runs_to_dataframe(runs)
+    assert len(runs_df) == 2
+    assert "run_id" in runs_df.columns
+    assert "lr" in runs_df.columns
+    assert "batch_size" in runs_df.columns
+    assert "metadata.seed" in runs_df.columns
+    assert runs_df["lr"].to_list() == [0.01, 0.02]
 
 
 def test_runs_to_metrics_df():
@@ -56,12 +56,12 @@ def test_runs_to_metrics_df():
         )
     ]
 
-    df = runs_to_metrics_df(runs)
-    assert len(df) == 5  # 3 train/loss + 2 val/acc
-    assert set(df.columns) == {"run_id", "metric", "epoch", "value"}
+    metrics_df = runs_to_metrics_df(runs)
+    assert len(metrics_df) == 5  # 3 train/loss + 2 val/acc
+    assert set(metrics_df.columns) == {"run_id", "metric", "epoch", "value"}
 
     # Check specific values
-    train_loss = df.filter(pl.col("metric") == "train/loss")
+    train_loss = metrics_df.filter(pl.col("metric") == "train/loss")
     assert len(train_loss) == 3
     assert train_loss["value"].to_list() == [0.5, 0.4, 0.3]
 
@@ -81,8 +81,8 @@ def test_find_varying_hparams():
         ),
     ]
 
-    df = runs_to_dataframe(runs)
-    varying = find_varying_hparams(df)
+    runs_df = runs_to_dataframe(runs)
+    varying = find_varying_hparams(runs_df)
     assert varying == ["lr"]  # Only lr varies
 
 
@@ -106,8 +106,8 @@ def test_group_by_hparams():
         ),
     ]
 
-    df = runs_to_dataframe(runs)
-    grouped = group_by_hparams(df, ["lr"])
+    runs_df = runs_to_dataframe(runs)
+    grouped = group_by_hparams(runs_df, ["lr"])
 
     assert len(grouped) == 2
     assert set(grouped.columns) == {"lr", "run_ids"}

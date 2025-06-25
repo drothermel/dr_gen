@@ -3,12 +3,25 @@ from typing import Any
 from omegaconf import DictConfig
 
 from dr_gen.analyze.run_data import Hpm
-from dr_gen.utils.utils import flatten_dict_tuple_keys
 
 DEFAULT_XNAME = "epoch"
 DEFAULT_METRIC_NAME = "loss"
 
 # TODO: This could live in dr_util
+
+
+def _flatten_dict_tuple_keys(
+    d: dict[Any, Any], parent_key: tuple[Any, ...] = ()
+) -> dict[tuple[Any, ...], Any]:
+    """Recursively flatten a nested dictionary with tuple keys."""
+    items = {}
+    for k, v in d.items():
+        new_key = (*parent_key, k)
+        if isinstance(v, dict):
+            items.update(_flatten_dict_tuple_keys(v, new_key))
+        else:
+            items[new_key] = v
+    return items
 
 
 class SplitMetrics:
@@ -72,7 +85,7 @@ class SplitMetrics:
         """Get all x-values as a flattened dictionary with tuple keys."""
         nested_xs = self.get_all_xs()
         # (metric_name, x_name): list
-        return flatten_dict_tuple_keys(nested_xs)
+        return _flatten_dict_tuple_keys(nested_xs)
 
     def get_all_vals(self):
         """Get all metric values organized by metric name and x-axis name."""
@@ -85,7 +98,7 @@ class SplitMetrics:
         """Get all metric values as a flattened dictionary with tuple keys."""
         nested_vals = self.get_all_vals()
         # (metric_name, x_name): list
-        return flatten_dict_tuple_keys(nested_vals)
+        return _flatten_dict_tuple_keys(nested_vals)
 
     def get_by_xval(self, xval, metric_name, x_name=DEFAULT_XNAME):
         """Get metric value at a specific x-value for a given metric."""

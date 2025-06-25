@@ -6,12 +6,29 @@ Eliminates overengineering while maintaining all core functionality.
 
 import random
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypedDict, Unpack
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+
+class PlotStyle(TypedDict, total=False):
+    """Type definition for plot styling options."""
+
+    figsize: tuple[int, int]
+    alpha: float
+    linewidth: float
+    grid: bool
+    legend: bool
+    bins: int
+    density: bool
+    title: str
+    xlabel: str
+    ylabel: str
+    suptitle: str
+
 
 # Default styling
 DEFAULT_STYLE = {
@@ -25,9 +42,9 @@ DEFAULT_STYLE = {
 }
 
 
-def merge_defaults(**kwargs: Any) -> dict[str, Any]:
+def merge_defaults(**kwargs: Unpack[PlotStyle]) -> PlotStyle:
     """Merge user kwargs with defaults."""
-    return {**DEFAULT_STYLE, **kwargs}
+    return {**DEFAULT_STYLE, **kwargs}  # type: ignore[typeddict-item]
 
 
 def sample_data(data: list[Any], n: int | None = None) -> list[Any]:
@@ -41,7 +58,7 @@ def plot_lines(
     curves: list[float] | list[list[float]],
     sample: int | None = None,
     ax: plt.Axes | None = None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Plot line curves - single curve or multiple curves."""
     style = merge_defaults(**kwargs)
@@ -88,7 +105,9 @@ def plot_lines(
 
 
 def plot_histogram(
-    vals: list[float] | list[list[float]], ax: plt.Axes | None = None, **kwargs: Any
+    vals: list[float] | list[list[float]],
+    ax: plt.Axes | None = None,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Plot histogram - single or multiple distributions."""
     style = merge_defaults(**kwargs)
@@ -137,7 +156,10 @@ def plot_histogram(
 
 
 def plot_cdf(
-    vals1: list[float], vals2: list[float], ax: plt.Axes | None = None, **kwargs: Any
+    vals1: list[float],
+    vals2: list[float],
+    ax: plt.Axes | None = None,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Plot comparative CDFs with KS statistics."""
     style = merge_defaults(**kwargs)
@@ -185,7 +207,7 @@ def plot_splits(
     split_data: list[list[list[float]]],
     splits: list[str] | None = None,
     ax: plt.Axes | None = None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Plot training/validation/eval splits with different line styles."""
     if splits is None:
@@ -246,7 +268,7 @@ def plot_summary(
     curves_list: list[list[float]],
     uncertainty: str = "std",
     ax: plt.Axes | None = None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Plot mean curve with uncertainty bands (std, sem, or minmax)."""
     style = merge_defaults(**kwargs)
@@ -318,7 +340,7 @@ def plot_grid(
     data_list: list[Any],
     subplot_shape: tuple[int, int] | None = None,
     sample: int | None = None,
-    **kwargs: Any,
+    **kwargs: Unpack[PlotStyle],
 ) -> plt.Figure:
     """Create grid of plots using specified plot function."""
     style = merge_defaults(**kwargs)
@@ -340,7 +362,7 @@ def plot_grid(
 
     for i, data in enumerate(data_list):
         if i < len(axes):
-            plot_func(data, ax=axes[i], **kwargs)
+            plot_func(data, ax=axes[i], **kwargs)  # type: ignore[arg-type]
             axes[i].set_title(f"Plot {i + 1}")
 
     # Hide unused subplots
@@ -356,6 +378,6 @@ def plot_grid(
     return fig
 
 
-def set_plot_defaults(**kwargs: Any) -> None:
+def set_plot_defaults(**kwargs: Unpack[PlotStyle]) -> None:
     """Update default plotting style."""
     DEFAULT_STYLE.update(kwargs)

@@ -1,9 +1,14 @@
+import uuid
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-import dr_gen.utils.utils as gu
 from dr_gen.analyze.run_data import RunData
+
+
+def _make_list(in_val: Any) -> list[Any]:  # noqa: ANN401
+    """Convert input to list if not already a list."""
+    return in_val if isinstance(in_val, list) else [in_val]
 
 
 def filter_entries_by_selection(all_entries, **kwargs: Any):  # noqa: ANN401
@@ -13,7 +18,7 @@ def filter_entries_by_selection(all_entries, **kwargs: Any):  # noqa: ANN401
         key_dict = dict(key_tuple)
         match = True
         for sel_key, sel_vals in kwargs.items():
-            sel_vals_list = gu.make_list(sel_vals)
+            sel_vals_list = _make_list(sel_vals)
             if sel_key not in key_dict or key_dict[sel_key] not in sel_vals_list:
                 match = False
                 break
@@ -102,7 +107,7 @@ class RunGroup:
         self,
     ) -> None:
         """Initialize RunGroup with default configuration and remapping settings."""
-        self.name = f"temp_rg_{gu.hash_from_time(5)}"
+        self.name = f"temp_rg_{str(uuid.uuid4())[:8]}"
 
         self.rid_to_file = []
         self.rid_to_run_data = {}
@@ -259,7 +264,7 @@ class RunGroup:
             # Made complicated by remapping display text from true
             # values
             def comp_hpm(kstr, vs, hpm_val) -> bool:
-                new_vs = [str(v) for v in gu.make_list(vs)]
+                new_vs = [str(v) for v in _make_list(vs)]
                 k = self.display_hpm_key_to_real_key(hpm_val, kstr)
                 k_not_found = False
                 if k in hpm_val:
