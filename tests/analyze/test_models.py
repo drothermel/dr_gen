@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from dr_gen.analyze.models import Hyperparameters, Run
+from dr_gen.analyze.models import AnalysisConfig, Hyperparameters, Run
 
 
 def test_hyperparameters_basic():
@@ -110,3 +110,35 @@ def test_run_validation_error():
             hyperparameters="not_a_hyperparameters_object",  # type: ignore
             metrics={},
         )
+
+
+def test_analysis_config_defaults():
+    """Test AnalysisConfig with default values."""
+    config = AnalysisConfig()
+    assert config.experiment_dir == "./experiments"
+    assert config.output_dir == "./analysis_output"
+    assert config.metric_display_names["train/loss"] == "Training Loss"
+    assert config.hparam_display_names["lr"] == "Learning Rate"
+
+
+def test_analysis_config_from_dict():
+    """Test AnalysisConfig from dictionary."""
+    config_dict = {
+        "experiment_dir": "/custom/path",
+        "output_dir": "/custom/output",
+        "metric_display_names": {"custom/metric": "Custom Metric"},
+    }
+    config = AnalysisConfig(**config_dict)
+    assert config.experiment_dir == "/custom/path"
+    assert config.output_dir == "/custom/output"
+    assert config.metric_display_names["custom/metric"] == "Custom Metric"
+
+
+def test_analysis_config_env_vars(monkeypatch):
+    """Test AnalysisConfig from environment variables."""
+    monkeypatch.setenv("ANALYSIS_EXPERIMENT_DIR", "/env/experiments")
+    monkeypatch.setenv("ANALYSIS_OUTPUT_DIR", "/env/output")
+
+    config = AnalysisConfig()
+    assert config.experiment_dir == "/env/experiments"
+    assert config.output_dir == "/env/output"
