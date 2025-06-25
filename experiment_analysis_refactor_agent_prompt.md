@@ -1,8 +1,8 @@
 # Agent Prompt for Experiment Analysis Refactor
 
 ## Current Progress
-Last Completed: Commit 18 - test: Display name mapping and reverse lookup
-Next Up: Commit 19 - Add ExperimentDB class
+Last Completed: Commit 19 - add: ExperimentDB class for unified analysis API
+Next Up: Commit 20 - Add data loading to ExperimentDB
 
 ## Task Overview
 You are implementing a refactor of the experiment analysis system according to the plan in `experiment_analysis_refactor_plan.md`. This refactor replaces the complex class hierarchy with Pydantic models and Polars DataFrames for better performance and maintainability.
