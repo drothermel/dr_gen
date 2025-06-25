@@ -78,3 +78,52 @@ def group_by_hparams(df: pl.DataFrame, hparams: list[str]) -> pl.DataFrame:
         return df
 
     return df.group_by(hparams).agg(pl.col("run_id").alias("run_ids"))
+
+
+def query_metrics(
+    metrics_df: pl.DataFrame,
+    metric_filter: str | None = None,
+    run_filter: list[str] | None = None,
+) -> pl.DataFrame:
+    """Query metrics DataFrame with optional filters.
+
+    Args:
+        metrics_df: Long-format metrics DataFrame
+        metric_filter: Regex pattern to filter metric names
+        run_filter: List of run_ids to include
+
+    Returns:
+        Filtered DataFrame
+    """
+    df = metrics_df
+
+    if metric_filter:
+        df = df.filter(pl.col("metric").str.contains(metric_filter))
+
+    if run_filter:
+        df = df.filter(pl.col("run_id").is_in(run_filter))
+
+    return df
+
+
+def summarize_by_hparams(
+    runs_df: pl.DataFrame, metrics_df: pl.DataFrame, hparams: list[str]
+) -> pl.DataFrame:
+    """Summarize metrics grouped by hyperparameters.
+
+    Returns DataFrame with mean/std/min/max for each metric.
+    """
+    if not hparams or runs_df.is_empty() or metrics_df.is_empty():
+        return pl.DataFrame()
+
+    # Join run info with metrics
+    joined = metrics_df.join(runs_df, on="run_id")
+
+    # Group and aggregate
+    return joined.group_by(hparams + ["metric"]).agg(
+        pl.col("value").mean().alias("mean"),
+        pl.col("value").std().alias("std"),
+        pl.col("value").min().alias("min"),
+        pl.col("value").max().alias("max"),
+        pl.col("run_id").n_unique().alias("n_runs"),
+    )
