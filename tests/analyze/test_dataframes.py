@@ -28,7 +28,7 @@ def test_runs_to_dataframe_basic():
             metadata={"seed": 43},
         ),
     ]
-    
+
     df = runs_to_dataframe(runs)
     assert len(df) == 2
     assert "run_id" in df.columns
@@ -47,11 +47,11 @@ def test_runs_to_metrics_df():
             metrics={"train/loss": [0.5, 0.4, 0.3], "val/acc": [0.8, 0.85]},
         )
     ]
-    
+
     df = runs_to_metrics_df(runs)
     assert len(df) == 5  # 3 train/loss + 2 val/acc
     assert set(df.columns) == {"run_id", "metric", "epoch", "value"}
-    
+
     # Check specific values
     train_loss = df.filter(pl.col("metric") == "train/loss")
     assert len(train_loss) == 3
