@@ -95,15 +95,15 @@ def query_metrics(
     Returns:
         Filtered DataFrame
     """
-    df = metrics_df
+    result = metrics_df
 
     if metric_filter:
-        df = df.filter(pl.col("metric").str.contains(metric_filter))
+        result = result.filter(pl.col("metric").str.contains(metric_filter))
 
     if run_filter:
-        df = df.filter(pl.col("run_id").is_in(run_filter))
+        result = result.filter(pl.col("run_id").is_in(run_filter))
 
-    return df
+    return result
 
 
 def summarize_by_hparams(
@@ -120,7 +120,7 @@ def summarize_by_hparams(
     joined = metrics_df.join(runs_df, on="run_id")
 
     # Group and aggregate
-    return joined.group_by(hparams + ["metric"]).agg(
+    return joined.group_by([*hparams, "metric"]).agg(
         pl.col("value").mean().alias("mean"),
         pl.col("value").std().alias("std"),
         pl.col("value").min().alias("min"),
