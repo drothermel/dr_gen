@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from dr_gen.analyze.parsers import parse_jsonl_file
+from dr_gen.analyze.parsers import load_runs_from_dir, parse_jsonl_file
 
 
 def test_parse_valid_jsonl(tmp_path: Path):
@@ -52,3 +52,56 @@ def test_parse_missing_file():
     assert len(records) == 0
     assert len(errors) == 1
     assert "File error" in errors[0]
+
+
+def test_load_runs_from_dir(tmp_path: Path):
+    """Test loading runs from directory."""
+    # Create test data
+    run1_data = {
+        "run_id": "exp001",
+        "hyperparameters": {"lr": 0.01},
+        "metrics": {"train/loss": [0.5, 0.4]},
+    }
+    run2_data = {
+        "run_id": "exp002",
+        "hyperparameters": {"lr": 0.02},
+        "metrics": {"train/loss": [0.6, 0.5]},
+    }
+
+    # Write test files
+    (tmp_path / "run1.jsonl").write_text(json.dumps(run1_data))
+    (tmp_path / "run2.jsonl").write_text(json.dumps(run2_data))
+    (tmp_path / "other.txt").write_text("not jsonl")
+
+    # Load runs
+    runs = load_runs_from_dir(tmp_path)
+    assert len(runs) == 2
+    assert runs[0].run_id == "exp001"
+    assert runs[0].hyperparameters.lr == 0.01
+    assert runs[1].run_id == "exp002"
+    assert runs[1].hyperparameters.lr == 0.02
+
+
+def test_load_runs_with_invalid_data(tmp_path: Path):
+    """Test loading runs handles invalid data gracefully."""
+    # Valid run
+    valid_data = {
+        "run_id": "valid",
+        "hyperparameters": {"lr": 0.01},
+        "metrics": {"loss": [0.5]},
+    }
+
+    # Invalid run (will use defaults)
+    invalid_data = {"other": "data"}
+
+    # Write mixed valid/invalid data
+    with (tmp_path / "mixed.jsonl").open("w") as f:
+        f.write(json.dumps(valid_data) + "\n")
+        f.write(json.dumps(invalid_data) + "\n")
+
+    runs = load_runs_from_dir(tmp_path)
+    # Both records create valid runs (2nd uses defaults)
+    assert len(runs) == 2
+    assert runs[0].run_id == "valid"
+    assert runs[0].hyperparameters.lr == 0.01
+    assert runs[1].run_id == "mixed"  # Uses filename as default
