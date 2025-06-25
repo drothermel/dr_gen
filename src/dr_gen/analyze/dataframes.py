@@ -145,7 +145,7 @@ def remap_display_names(
     if target == "metric" and "metric" in df.columns:
         mapping = config.metric_display_names
         return df.with_columns(
-            pl.col("metric").map_dict(mapping, default=pl.col("metric")).alias("metric")
+            pl.col("metric").replace(mapping, default=None).alias("metric")
         )
 
     # For hparams, remap column names

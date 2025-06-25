@@ -6,11 +6,12 @@ from dr_gen.analyze.dataframes import (
     find_varying_hparams,
     group_by_hparams,
     query_metrics,
+    remap_display_names,
     runs_to_dataframe,
     runs_to_metrics_df,
     summarize_by_hparams,
 )
-from dr_gen.analyze.models import Hyperparameters, Run
+from dr_gen.analyze.models import AnalysisConfig, Hyperparameters, Run
 
 
 def test_runs_to_dataframe_empty():
@@ -162,3 +163,45 @@ def test_summarize_by_hparams():
     assert "mean" in summary.columns
     assert "std" in summary.columns
     assert summary["n_runs"][0] == 2
+
+
+def test_remap_display_names_metrics():
+    """Test remapping metric display names."""
+    config = AnalysisConfig()
+
+    metrics_df = pl.DataFrame(
+        {
+            "run_id": ["exp1", "exp1", "exp2"],
+            "metric": ["train/loss", "val/acc", "train/loss"],
+            "value": [0.5, 0.9, 0.4],
+        }
+    )
+
+    remapped = remap_display_names(metrics_df, config, target="metric")
+
+    assert remapped["metric"].to_list() == [
+        "Training Loss",
+        "Validation Accuracy",
+        "Training Loss",
+    ]
+
+
+def test_remap_display_names_hparams():
+    """Test remapping hyperparameter column names."""
+    config = AnalysisConfig()
+
+    runs_df = pl.DataFrame(
+        {
+            "run_id": ["exp1", "exp2"],
+            "lr": [0.01, 0.02],
+            "batch_size": [32, 64],
+            "other_param": [1, 2],  # Not in mappings
+        }
+    )
+
+    remapped = remap_display_names(runs_df, config, target="hparam")
+
+    assert "Learning Rate" in remapped.columns
+    assert "Batch Size" in remapped.columns
+    assert "other_param" in remapped.columns  # Unchanged
+    assert remapped["Learning Rate"].to_list() == [0.01, 0.02]
