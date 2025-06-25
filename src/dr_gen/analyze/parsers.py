@@ -24,7 +24,7 @@ def parse_jsonl_file(filepath: Path) -> tuple[list[dict[str, Any]], list[str]]:
                     records.append(json.loads(line))
                 except json.JSONDecodeError as e:
                     errors.append(f"Line {line_num}: {e}")
-    except (OSError, IOError) as e:
+    except OSError as e:
         errors.append(f"File error: {e}")
 
     return records, errors
