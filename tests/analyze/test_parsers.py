@@ -105,3 +105,41 @@ def test_load_runs_with_invalid_data(tmp_path: Path):
     assert runs[0].run_id == "valid"
     assert runs[0].hyperparameters.lr == 0.01
     assert runs[1].run_id == "mixed"  # Uses filename as default
+
+
+def test_convert_legacy_format():
+    """Test converting legacy format to new Run format."""
+    from dr_gen.analyze.parsers import convert_legacy_format
+
+    legacy_data = {
+        "name": "old_experiment",
+        "config": {"lr": 0.01, "batch_size": 32},
+        "history": [
+            {"epoch": 0, "train/loss": 2.5, "val/acc": 0.5},
+            {"epoch": 1, "train/loss": 2.0, "val/acc": 0.7},
+        ],
+        "metadata": {"timestamp": "2024-01-01"},
+    }
+
+    converted = convert_legacy_format(legacy_data)
+
+    assert converted["run_id"] == "old_experiment"
+    assert converted["hyperparameters"]["lr"] == 0.01
+    assert converted["metrics"]["train/loss"] == [2.5, 2.0]
+    assert converted["metrics"]["val/acc"] == [0.5, 0.7]
+    assert converted["metadata"]["timestamp"] == "2024-01-01"
+
+
+def test_convert_legacy_format_edge_cases():
+    """Test legacy converter handles missing fields."""
+    from dr_gen.analyze.parsers import convert_legacy_format
+
+    # Minimal data
+    minimal = convert_legacy_format({})
+    assert minimal["run_id"] == "unknown"
+    assert minimal["hyperparameters"] == {}
+    assert minimal["metrics"] == {}
+
+    # Different hyperparameter location
+    with_hparams = convert_legacy_format({"hyperparameters": {"lr": 0.1}})
+    assert with_hparams["hyperparameters"]["lr"] == 0.1
