@@ -34,3 +34,23 @@ class ExperimentDB(BaseModel):
         self._runs_df = runs_to_dataframe(runs)
         self._metrics_df = runs_to_metrics_df(runs)
         self._errors = errors
+
+    def query_metrics(
+        self, metric_filter: str | None = None, run_filter: list[str] | None = None
+    ) -> pl.DataFrame:
+        """Query metrics with optional filters."""
+        from dr_gen.analyze.dataframes import query_metrics
+
+        if self._metrics_df is None and not self.lazy:
+            self.load_experiments()
+        return query_metrics(self._metrics_df, metric_filter, run_filter)
+
+    def summarize_metrics(self, hparams: list[str]) -> pl.DataFrame:
+        """Get summary statistics grouped by hyperparameters."""
+        from dr_gen.analyze.dataframes import summarize_by_hparams
+
+        if self._metrics_df is None and not self.lazy:
+            self.load_experiments()
+        if self._runs_df is None:
+            return pl.DataFrame()
+        return summarize_by_hparams(self._runs_df, self._metrics_df, hparams)
