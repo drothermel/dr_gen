@@ -1,16 +1,17 @@
 import pytest
-import torch
-from torch.nn import CrossEntropyLoss
 import timm
+import torch
 from omegaconf import OmegaConf
+from torch.nn import CrossEntropyLoss
 
 import dr_gen.models as mu
 
 # --------- Tests for create_optim and create_lrsched ---------
 
+
 @pytest.fixture
 def full_cfg():
-    cfg = OmegaConf.create(
+    return OmegaConf.create(
         {
             "epochs": 10,
             "optim": {
@@ -26,9 +27,7 @@ def full_cfg():
                 "momentum": 0.9,
                 "loss": "cross_entropy",
             },
-            "model": {
-                "name": "resnet18", "weights": None, "source": "torchvision"
-            },
+            "model": {"name": "resnet18", "weights": None, "source": "torchvision"},
             "device": "cpu",
             "metrics": {"loggers": []},
             "weight_type": "random",
@@ -37,8 +36,7 @@ def full_cfg():
             "md": None,
         }
     )
-    return cfg
-    
+
 
 @pytest.mark.parametrize(
     ("optim_type", "expected_class"),
@@ -113,13 +111,15 @@ def test_get_model_optim_lrsched(full_cfg) -> None:
     full_cfg.optim.name = "adamw"
     full_cfg.optim.lr_scheduler = "steplr"
     model, optimizer, lr_scheduler = mu.get_model_optim_lrsched(
-        full_cfg, num_classes=10,
+        full_cfg,
+        num_classes=10,
     )
     assert isinstance(model, torch.nn.Module)
     assert next(model.parameters()).device.type == "cpu"
     # Check that the optimizer is of the correct type
     assert isinstance(optimizer, torch.optim.AdamW)
     assert isinstance(lr_scheduler, torch.optim.lr_scheduler.StepLR)
+
 
 # --------- Test for get_criterion ---------
 
@@ -191,4 +191,3 @@ def test_checkpoint_model_no_write_dir(full_cfg) -> None:
     model = torch.nn.Linear(10, 2)
     full_cfg.write_checkpoint = None
     mu.checkpoint_model(full_cfg, model, "test_checkpoint")
-
