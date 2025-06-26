@@ -1,14 +1,14 @@
+from collections.abc import Callable
 from typing import Any
 
 import dr_util.data_utils as du
 import dr_util.determinism_utils as dtu
-
-# Constants for data splitting validation
-MAX_SUPPORTED_SPLITS = 2
 import timm
 import timm.data
 import torch
+from omegaconf import DictConfig
 from torch.utils.data import (
+    Dataset,
     RandomSampler,
     SequentialSampler,
     Subset,
@@ -18,12 +18,15 @@ from torchvision.transforms import v2 as transforms_v2
 
 import dr_gen.schemas as vu
 
+# Constants for data splitting validation
+MAX_SUPPORTED_SPLITS = 2
+
 DEFAULT_DATASET_CACHE_ROOT = "../data/"
 DEFAULT_DOWNLOAD = True
 
 
 # TODO: replace with timm
-def build_transforms(xfm_cfg: Any) -> Any:  # noqa: ANN401
+def build_transforms(xfm_cfg: DictConfig | None) -> Any:  # noqa: ANN401
     if xfm_cfg is None:
         return None
 
@@ -67,9 +70,9 @@ def get_dataset(
     dataset_name: str,
     source_split: str,
     root: str = DEFAULT_DATASET_CACHE_ROOT,
-    transform: Any = None,
+    transform: Callable[[Any], Any] | None = None,
     download: bool = DEFAULT_DOWNLOAD,
-) -> Any:
+) -> Dataset[Any]:
     if dataset_name in ["cifar10", "cifar100"]:
         ds = du.get_cifar_dataset(
             dataset_name,
@@ -84,7 +87,7 @@ def get_dataset(
 
 
 def _parse_and_validate_config(
-    cfg: Any,  # noqa: ANN401
+    cfg: DictConfig,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any], list[str]]:
     """Parses data configuration, identifies sources, and prepares for splitting."""
     vu.validate_dataset(cfg.data.name)
@@ -149,7 +152,7 @@ def _parse_and_validate_config(
 
 
 def _load_source_datasets(
-    cfg: Any,
+    cfg: DictConfig,
     unique_source_names_to_load: list[str],
 ) -> dict[str, Any]:
     """Loads raw datasets for each unique source. Transforms are NOT applied here."""
@@ -204,7 +207,6 @@ def _perform_source_splitting(
 
             ratio_for_target1 = target1_info["source_percent_allocation"]
 
-
             dataset_for_target1, dataset_for_target2 = du.split_data(
                 original_dataset_for_source,
                 ratio_for_target1,
@@ -219,7 +221,9 @@ def _perform_source_splitting(
     return datasets_after_source_split
 
 
-def _apply_use_percent(datasets_after_source_splitting, parsed_configs) -> dict[str, Any]:
+def _apply_use_percent(
+    datasets_after_source_splitting, parsed_configs
+) -> dict[str, Any]:
     """Applies 'use_percent' to further subset the datasets.
 
     Currently takes the first N elements of the (potentially shuffled by
@@ -237,7 +241,6 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs) -> dict[
             ):  # Ensure at least one sample if percent > 0
                 num_to_use = 1
 
-
             # Takes the first N elements. If the dataset_obj is already a result of
             # a seeded shuffle (from split_data),
             # this selection is deterministic on a consistently shuffled set.
@@ -249,7 +252,9 @@ def _apply_use_percent(datasets_after_source_splitting, parsed_configs) -> dict[
     return final_subsetted_datasets
 
 
-def _apply_transforms(cfg, datasets_to_be_transformed, parsed_configs, model) -> dict[str, Any]:
+def _apply_transforms(
+    cfg: DictConfig, datasets_to_be_transformed, parsed_configs, model
+) -> dict[str, Any]:
     """Applies transforms to the datasets."""
     datasets_with_transforms = {}
     for target_key, dataset_obj in datasets_to_be_transformed.items():
@@ -312,7 +317,7 @@ def _create_dataloaders_from_final_datasets(
     return data_loaders_map
 
 
-def get_dataloaders_refactored(cfg, main_torch_generator, model):
+def get_dataloaders_refactored(cfg: DictConfig, main_torch_generator, model):
     """Refactored function to create dataloaders, incorporating source_percent splits.
 
     (with data_split_seed) and use_percent subsampling, with a modular design.
@@ -363,5 +368,3 @@ def get_dataloaders_refactored(cfg, main_torch_generator, model):
         cfg.data.num_workers,
         main_torch_generator,
     )
-
-

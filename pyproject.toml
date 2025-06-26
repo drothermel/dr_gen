@@ -136,6 +136,7 @@ ignore = [
     "TRY003",   # Keep our thorough error messages
     "FBT001",   # Especially in ml code, allow bool fxn params
     "FBT002",   # Especially in ml code, allow bool fxn params
+    "LOG015",   # There's no reason to force our own logger
 ]
 
 [tool.ruff.lint.per-file-ignores]

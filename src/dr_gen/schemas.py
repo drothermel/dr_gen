@@ -12,7 +12,7 @@ SPLIT_NAMES = ["train", "val", "eval"]
 AVAIL_DATASETS = ["cifar10", "cifar100"]
 
 
-def check_contains(cls: Any, val: Any) -> bool:
+def check_contains(cls: type[Enum], val: Any) -> bool:  # noqa: ANN401
     try:
         cls(val)
     except ValueError:
@@ -30,7 +30,7 @@ class OptimizerTypes(Enum):
     RMSPROP = "rmsprop"
     ADAMW = "adamw"
 
-    def __contains__(self, val: Any) -> bool:
+    def __contains__(self, val: Any) -> bool:  # noqa: ANN401
         """Check if value is in optimizer types."""
         return check_contains(self, val)
 
@@ -41,7 +41,7 @@ class LRSchedTypes(Enum):
     STEP_LR = "steplr"
     EXPONENTIAL_LR = "exponentiallr"
 
-    def __contains__(self, val: Any) -> bool:
+    def __contains__(self, val: Any) -> bool:  # noqa: ANN401
         """Check if value is in scheduler types."""
         return check_contains(self, val)
 
@@ -51,7 +51,7 @@ class CriterionTypes(Enum):
 
     CROSS_ENTROPY = "cross_entropy"
 
-    def __contains__(self, val: Any) -> bool:
+    def __contains__(self, val: Any) -> bool:  # noqa: ANN401
         """Check if value is in criterion types."""
         return check_contains(self, val)
 
