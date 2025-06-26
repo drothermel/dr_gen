@@ -1,10 +1,32 @@
 import pytest
 import torch
+import timm
 from omegaconf import OmegaConf
 
 import dr_gen.models as mu
 
 # --------- Tests for create_optim and create_lrsched ---------
+
+@pytest.fixture
+def optim_cfg():
+    lrsched_params = {**mu.LRSCHED_DEFAULTS}
+    # If we need to supply extra params (e.g. step_size) we can add them:
+    cfg = OmegaConf.create(
+        {
+            "epochs": 10,
+            "lr": 0.01,
+            "optim": {
+                "lr_scheduler": "steplr",
+                "warmup_epochs": 5,
+                "warmup_start_lr": 0.0,
+                "lr_min": 0.0,
+                "cycle_limit": 1,
+                "step_size": 30,
+                "gamma": 0.9,
+            },
+        }
+    )
+    return cfg
 
 
 @pytest.mark.parametrize(
@@ -30,18 +52,15 @@ def test_create_optim(optim_type, expected_class) -> None:
     [
         (None, type(None)),
         ("steplr", torch.optim.lr_scheduler.StepLR),
-        ("exponentiallr", torch.optim.lr_scheduler.ExponentialLR),
+        ("timm_cosine", timm.scheduler.cosine_lr.CosineLRScheduler),
     ],
 )
-def test_create_lrsched(lrsched_type, expected_class) -> None:
+def test_create_lrsched(lrsched_type, expected_class, optim_cfg) -> None:
+    optim_cfg.optim.lr_scheduler = lrsched_type
     # Use a dummy optimizer
     model = torch.nn.Linear(10, 1)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    lrsched_params = {**mu.LRSCHED_DEFAULTS}
-    # If we need to supply extra params (e.g. step_size) we can add them:
-    if lrsched_type == "steplr":
-        lrsched_params["step_size"] = 5
-    lr_sched = mu.create_lrsched(lrsched_type, optimizer, lrsched_params)
+    lr_sched = mu.create_lrsched(optim_cfg, optimizer)
     assert isinstance(lr_sched, expected_class)
 
 
@@ -166,3 +185,71 @@ def test_checkpoint_model(tmp_path) -> None:
     chpt_data = torch.load(chpt_path, map_location="cpu", weights_only=False)
     for key in ["model", "optimizer", "lr_scheduler"]:
         assert key in chpt_data
+
+
+# --------- Test for checkpoint loading ---------
+
+
+def test_load_checkpoint_in_get_model_optim_lrsched(tmp_path) -> None:
+    # First create the same model architecture we'll load into
+    cfg = OmegaConf.create(
+        {
+            "model": {"name": "resnet18", "weights": None, "source": "timm"},
+            "optim": {"name": "sgd", "lr": 0.05, "momentum": 0.9},
+            "device": "cpu",
+            "metrics": {"loggers": []},
+            "weight_type": "random",
+        }
+    )
+
+    # Create initial model
+    model, optimizer, lr_scheduler = mu.get_model_optim_lrsched(cfg, num_classes=2)
+
+    # Step the scheduler to change its state
+    lr_scheduler.step()
+
+    # Save checkpoint
+    chpt_path = tmp_path / "test_checkpoint.pt"
+    checkpoint = {
+        "model": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "lr_scheduler": lr_scheduler.state_dict(),
+    }
+    torch.save(checkpoint, chpt_path)
+
+    # Create new config that loads the checkpoint
+    cfg_load = OmegaConf.create(
+        {
+            "model": {"name": "resnet18", "weights": None, "source": "timm"},
+            "optim": {"name": "sgd", "lr": 0.01, "momentum": 0.8},
+            "device": "cpu",
+            "load_checkpoint": str(chpt_path),
+            "metrics": {"loggers": []},
+            "weight_type": "random",
+        }
+    )
+
+    # Load model with checkpoint
+    loaded_model, loaded_optimizer, loaded_lr_scheduler = mu.get_model_optim_lrsched(
+        cfg_load, num_classes=2
+    )
+
+    # Verify model is loaded and optimizer/scheduler state is preserved
+    assert isinstance(loaded_model, torch.nn.Module)
+    assert loaded_optimizer is not None
+    assert loaded_lr_scheduler is not None
+    # The loaded optimizer should have the state from the checkpoint
+    assert len(loaded_optimizer.state_dict()["state"]) > 0
+
+
+def test_checkpoint_model_no_write_dir() -> None:
+    # Test that checkpoint_model returns early when no write_checkpoint is set
+    model = torch.nn.Linear(10, 2)
+    cfg = OmegaConf.create({})  # No write_checkpoint
+
+    # Should return without error
+    mu.checkpoint_model(cfg, model, "test_checkpoint")
+
+    # Also test with explicit None
+    cfg = OmegaConf.create({"write_checkpoint": None})
+    mu.checkpoint_model(cfg, model, "test_checkpoint2")

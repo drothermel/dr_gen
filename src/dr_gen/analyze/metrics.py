@@ -1,8 +1,9 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from omegaconf import DictConfig
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
-from dr_gen.analyze.parsing import Hpm
+    from dr_gen.analyze.parsing import Hpm
 
 DEFAULT_XNAME = "epoch"
 DEFAULT_METRIC_NAME = "loss"
@@ -29,7 +30,7 @@ class SplitMetrics:
 
     def __init__(
         self,
-        config: Hpm | DictConfig | dict[str, Any],
+        config: "Hpm | DictConfig | dict[str, Any]",
         split: str,
     ) -> None:
         """Initialize SplitMetrics for a given config and split."""
@@ -112,7 +113,7 @@ class MetricCurves:
 
     def __init__(
         self,
-        config: Hpm | DictConfig | dict[str, Any],
+        config: "Hpm | DictConfig | dict[str, Any]",
         split: str,
         metric_name: str,
     ) -> None:
@@ -176,7 +177,7 @@ class MetricCurve:
 
     def __init__(
         self,
-        config: Hpm | DictConfig | dict[str, Any],
+        config: "Hpm | DictConfig | dict[str, Any]",
         split: str,
         metric_name: str,
         x_name: str = DEFAULT_XNAME,

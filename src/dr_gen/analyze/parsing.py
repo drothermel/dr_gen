@@ -6,14 +6,16 @@ import json
 from collections import defaultdict
 from collections.abc import Iterator, MutableMapping
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import dr_util.file_utils as fu
 
 from dr_gen.analyze import check_prefix_exclude
 from dr_gen.analyze.metrics import SplitMetrics
 from dr_gen.analyze.schemas import Hyperparameters, Run
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # Constants for file parsing
 MIN_FILE_LINES = 2
