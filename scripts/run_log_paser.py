@@ -10,6 +10,9 @@ import numpy as np
 # A unique object to represent missing keys in configs for comparison during grouping
 _NotPresent = object()
 
+# Constants for dimensional validation
+EXPECTED_ARRAY_DIMENSIONS = 2
+
 # --- Configuration Key Blacklist ---
 # Keys containing any of these substrings will be ignored for varying HPM
 # checks and in the final HPM output.
@@ -25,14 +28,12 @@ def is_key_blacklisted(key, blacklist):
     """Checks if a key contains any of the substrings in the blacklist."""
     if key is None:
         return False
-    for pattern in blacklist:
-        if pattern in key:
-            return True
-    return False
+    return any(pattern in key for pattern in blacklist)
 
 
 def flatten_dict(d, parent_key="", sep="."):
     """Flattens a nested dictionary.
+
     E.g., {"a": 1, "b": {"c": 2}} becomes {"a": 1, "b.c": 2}.
     Preserves order if input is OrderedDict.
     """
@@ -51,6 +52,7 @@ def flatten_dict(d, parent_key="", sep="."):
 
 def parse_log_file(filepath):
     """Parses a single .jsonl log file.
+
     The first line is expected to be the JSON config.
     It handles potentially nested configs like
     {"type": "dict_config", "value": {...actual_config...}}.
@@ -71,7 +73,7 @@ def parse_log_file(filepath):
     metrics_data = defaultdict(lambda: defaultdict(list))
 
     try:
-        with open(filepath) as f:
+        with Path(filepath).open() as f:
             # First line is config
             try:
                 first_line = f.readline()
@@ -97,7 +99,7 @@ def parse_log_file(filepath):
                     f"{filepath}: {e}. Skipping this file."
                 )
                 return None, metrics_data
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError) as e:
                 print(
                     f"Warning: Error processing config from {filepath}: "
                     f"{e}. Skipping this file."
@@ -116,7 +118,7 @@ def parse_log_file(filepath):
             # Flatten the configuration
             try:
                 config = flatten_dict(raw_config)
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 print(
                     f"Warning: Could not flatten config for {filepath}: "
                     f"{e}. Skipping this file."
@@ -124,7 +126,7 @@ def parse_log_file(filepath):
                 return None, metrics_data
 
             # Process rest of the lines for metrics
-            for line_num, line_content in enumerate(f, start=2):
+            for _line_num, line_content in enumerate(f, start=2):
                 if not line_content.strip():
                     continue
                 try:
@@ -144,7 +146,7 @@ def parse_log_file(filepath):
 
                 except json.JSONDecodeError:
                     pass
-                except Exception:
+                except (KeyError, TypeError, ValueError):
                     pass
 
     except OSError as e:
@@ -155,8 +157,9 @@ def parse_log_file(filepath):
 
 
 def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
-    """Identifies varying FLATTENED config parameters (excluding 'seed' and
-    blacklisted keys) and groups runs.
+    """Identifies varying FLATTENED config parameters (excluding blacklisted keys).
+
+    Groups runs and identifies varying keys.
 
     Args:
         all_runs_data (list): A list of dictionaries, where each dict has
@@ -192,7 +195,7 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
     varying_config_keys = []
     # Sort super_keyset for consistent order of varying_config_keys and group names
-    for key in sorted(list(super_keyset)):
+    for key in sorted(super_keyset):
         # Exclude seed, and any blacklisted keys
         if (
             key == "seed"
@@ -272,6 +275,7 @@ def group_runs_and_identify_varying_keys(all_runs_data, key_blacklist):
 
 def aggregate_metrics_for_groups(grouped_runs):
     """Aggregates metrics for each run group into S x E NumPy arrays.
+
     This function's core logic for metrics aggregation remains the same.
 
     Args:
@@ -313,10 +317,11 @@ def aggregate_metrics_for_groups(grouped_runs):
                 if min_epochs == 0:
                     continue
 
-                truncated_metrics_by_seed = []
-                for series in metrics_by_seed_for_current_setting:
-                    if len(series) >= min_epochs:
-                        truncated_metrics_by_seed.append(series[:min_epochs])
+                truncated_metrics_by_seed = [
+                    series[:min_epochs]
+                    for series in metrics_by_seed_for_current_setting
+                    if len(series) >= min_epochs
+                ]
 
                 if not truncated_metrics_by_seed:
                     continue
@@ -324,7 +329,7 @@ def aggregate_metrics_for_groups(grouped_runs):
                 try:
                     aggregated_array = np.array(truncated_metrics_by_seed)
                     if (
-                        aggregated_array.ndim == 2
+                        aggregated_array.ndim == EXPECTED_ARRAY_DIMENSIONS
                         and aggregated_array.shape[1] == min_epochs
                     ):
                         current_group_split_metric_results[split][metric] = (
@@ -333,12 +338,14 @@ def aggregate_metrics_for_groups(grouped_runs):
                     else:
                         print(
                             f"Warning: Could not form valid S x E array for "
-                           f"{run_group_name}/{split}/{metric}. "
-                            f"Expected E={min_epochs}, got shape {aggregated_array.shape}. Skipping."
+                            f"{run_group_name}/{split}/{metric}. "
+                            f"Expected E={min_epochs}, got shape "
+                            f"{aggregated_array.shape}. Skipping."
                         )
-                except Exception as e:
+                except (ValueError, TypeError, AttributeError) as e:
                     print(
-                        f"Error: Failed to convert to NumPy array for {run_group_name}/{split}/{metric}: {e}. Skipping."
+                        f"Error: Failed to convert to NumPy array for "
+                        f"{run_group_name}/{split}/{metric}: {e}. Skipping."
                     )
 
         if current_group_split_metric_results:
@@ -359,7 +366,7 @@ def aggregate_metrics_for_groups(grouped_runs):
 # Main execution block
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Process .jsonl log files from a directory to aggregate and group metrics.",
+        description="Process .jsonl log files to aggregate and group metrics.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -376,7 +383,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    args.log_dir = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0_t2/"
+    args.log_dir = (
+        "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/"
+        "lr_wd_init_v0_t2/"
+    )
     args.output_pkl = (
         "/Users/daniellerothermel/drotherm/data/dr_gen/run_data_v1/lr_wd_init_v0_t2.pkl"
     )
@@ -404,11 +414,13 @@ if __name__ == "__main__":
 
     if not all_runs_data_with_flattened_configs:
         print(
-            "No valid log files with parsable and flattenable configurations found. Exiting."
+            "No valid log files with parsable and flattenable configurations "
+            "found. Exiting."
         )
         exit(0)
     print(
-        f"Successfully parsed and flattened configs for {len(all_runs_data_with_flattened_configs)} files."
+        f"Successfully parsed and flattened configs for "
+        f"{len(all_runs_data_with_flattened_configs)} files."
     )
 
     print(
@@ -426,7 +438,9 @@ if __name__ == "__main__":
         exit(0)
 
     print(
-        f"Identified {len(varying_keys)} varying config parameters (excluding 'seed', blacklisted keys, dot-separated): {varying_keys if varying_keys else 'None'}"
+        f"Identified {len(varying_keys)} varying config parameters "
+        f"(excluding 'seed', blacklisted keys, dot-separated): "
+        f"{varying_keys if varying_keys else 'None'}"
     )
     print(f"Formed {len(grouped_runs)} run groups: {list(grouped_runs.keys())}")
 
@@ -438,7 +452,8 @@ if __name__ == "__main__":
     final_output_to_pickle = {}
     if not aggregated_metrics_per_group and group_to_hpms:
         print(
-            "No metrics could be aggregated, but HPM groups were formed. Output will contain HPMs only for groups that were identified."
+            "No metrics could be aggregated, but HPM groups were formed. "
+            "Output will contain HPMs only for groups that were identified."
         )
         # Still create entries if only HPMs are available for a group
         for group_name, hpms in group_to_hpms.items():
@@ -449,12 +464,14 @@ if __name__ == "__main__":
 
     elif not aggregated_metrics_per_group and not group_to_hpms:
         print(
-            "No metrics could be aggregated and no HPM groups formed. Output .pkl will be empty."
+            "No metrics could be aggregated and no HPM groups formed. "
+            "Output .pkl will be empty."
         )
 
     else:
         print(
-            f"Successfully aggregated metrics for {len(aggregated_metrics_per_group)} groups."
+            f"Successfully aggregated metrics for "
+            f"{len(aggregated_metrics_per_group)} groups."
         )
         for group_name, metrics_data in aggregated_metrics_per_group.items():
             if group_name in group_to_hpms:
@@ -465,10 +482,13 @@ if __name__ == "__main__":
                     ],  # HPMs are already flattened, seed & blacklisted excluded
                 }
             else:
-                # This case should ideally not happen if group_name comes from aggregated_metrics_per_group
-                # which is derived from grouped_runs, which also populates group_to_hpms.
+                # This case should ideally not happen if group_name comes from
+                # aggregated_metrics_per_group
+                # which is derived from grouped_runs, which also populates
+                # group_to_hpms.
                 print(
-                    f"Warning: HPMs not found for metric group '{group_name}'. This group will be incomplete in output."
+                    f"Warning: HPMs not found for metric group '{group_name}'. "
+                    f"This group will be incomplete in output."
                 )
                 final_output_to_pickle[group_name] = {
                     "metrics": metrics_data,
@@ -478,20 +498,21 @@ if __name__ == "__main__":
         for group_name, hpms in group_to_hpms.items():
             if group_name not in final_output_to_pickle:
                 print(
-                    f"Info: Group '{group_name}' had HPMs but no aggregated metrics. Adding with empty metrics."
+                    f"Info: Group '{group_name}' had HPMs but no aggregated metrics. "
+                    f"Adding with empty metrics."
                 )
                 final_output_to_pickle[group_name] = {"metrics": {}, "hpms": hpms}
 
     print(f"\nSaving aggregated results to: {args.output_pkl}")
     try:
-        with open(args.output_pkl, "wb") as f_out:
+        with Path(args.output_pkl).open("wb") as f_out:
             pickle.dump(final_output_to_pickle, f_out)
         print("Successfully saved results.")
     except OSError as e:
         print(f"Error: Could not write to output file {args.output_pkl}: {e}")
     except pickle.PicklingError as e:
         print(f"Error: Could not pickle the results: {e}")
-    except Exception as e:
+    except (ValueError, TypeError, AttributeError) as e:
         print(f"An unexpected error occurred during saving: {e}")
 
     print("\nScript finished.")

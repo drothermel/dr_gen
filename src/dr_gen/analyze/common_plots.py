@@ -1,4 +1,5 @@
 import random
+from typing import Any
 
 import matplotlib.pyplot as plt
 
@@ -7,15 +8,15 @@ import dr_gen.analyze.plot_utils as pu
 from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 
 
-def len_to_inds(data_len):
+def len_to_inds(data_len: int) -> list[int]:
     return list(range(data_len))
 
 
-def data_to_inds(data):
+def data_to_inds(data: Any) -> list[int]:
     return len_to_inds(len(data))
 
 
-def default_grid_ind_labels(data):
+def default_grid_ind_labels(data: Any) -> list[list[str]]:
     data = make_list_of_lists(data)
     return [pu.default_ind_labels(dt) for dt in data]
 
@@ -108,9 +109,12 @@ def split_plot(
     ax=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # [split [curves [curve_data ...]]]
     split_curves = make_list_of_lols(split_curves, dim=1)
 
@@ -203,9 +207,12 @@ def split_sample_plot(
     n_sample=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # Initial Curves Goal: [split [curves [curve_data ...]]]
     #   -> assume missing dimension is "curves" not "split"
     split_curves_lists = make_list_of_lists(split_curves_lists, dim=1)
@@ -257,9 +264,12 @@ def split_sampled_summary_plot(
     n_sample=None,
     metric_name="Metric",
     x_name="Epoch",
-    splits=["train", "val", "eval"],
+    splits=None,
     **kwargs,
 ):
+    if splits is None:
+        splits = ["train", "val", "eval"]
+
     # Initial Curves Goal: [split [curves [curve_data ...]]]
     #   -> assume missing dimension is "curves" not "split"
     split_curves_lists = make_list_of_lists(split_curves_lists, dim=1)
@@ -297,11 +307,9 @@ def grid_sample_plot_wrapper(plot_func, curves, n_sample=None, n_grid=4, **kwarg
         nominal_subplot_shape=kwargs.get("subplot_shape", pu.DEFAULT_SUBPLOT_SHAPE),
         plot_size=kwargs.get("figsize", pu.DEFAULT_FIGSIZE),
     )
-    # Use this only for non-sampled grid
-    # kwargs_list = pu.get_kwargs_lists_for_grid(kwargs, n_grid)
 
     # Plot Grid
-    for grid_ind, ax in enumerate(axes.flatten()):
+    for _grid_ind, ax in enumerate(axes.flatten()):
         plot_func(
             curves,
             ax=ax,

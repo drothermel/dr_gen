@@ -1,11 +1,14 @@
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import timm
 import torch
 import torchvision
 from timm.optim import create_optimizer
 from timm.scheduler.cosine_lr import CosineLRScheduler
+from torch.nn.parameter import Parameter
 
 import dr_gen.schemas as vu
 from dr_gen.schemas import (
@@ -39,7 +42,9 @@ CRITERION_DEFAULTS = {
 # ================== cfg free ==================
 
 
-def create_optim(name, model_params, optim_params):
+def create_optim(
+    name: str, model_params: Iterator[Parameter], optim_params: dict[str, Any]
+) -> torch.optim.Optimizer:
     assert "lr" in optim_params
     match name:
         case "timm_sgd":
@@ -99,7 +104,7 @@ def create_optim(name, model_params, optim_params):
             )
 
 
-def create_lrsched(cfg, optimizer):
+def create_lrsched(cfg: Any, optimizer: torch.optim.Optimizer) -> Any:  # noqa: ANN401
     match cfg.optim.lr_scheduler:
         case None:
             return None
@@ -115,6 +120,7 @@ def create_lrsched(cfg, optimizer):
         case LRSchedTypes.STEP_LR.value:
             return torch.optim.lr_scheduler.StepLR(
                 optimizer,
+                step_size=cfg.optim.get("step_size", 30),
                 gamma=cfg.optim.gamma,
             )
 
@@ -123,7 +129,7 @@ def create_lrsched(cfg, optimizer):
 
 
 # Config Req: cfg.model.name
-def create_model(cfg, num_classes):
+def create_model(cfg: Any, num_classes: int) -> torch.nn.Module:  # noqa: ANN401
     assert "resnet" in cfg.model.name
     if cfg.model.source == "torchvision":
         weights_name = cfg.model.get("weights", None)
@@ -146,7 +152,6 @@ def create_model(cfg, num_classes):
         else:
             model_name = cfg.model.name
             pretrained = False
-        print(f">> Model: {model_name} pretrained: {pretrained}")
         model = timm.create_model(
             model_name,
             num_classes=num_classes,
@@ -158,9 +163,10 @@ def create_model(cfg, num_classes):
 
 
 # Config Req: cfg.optim.name, cfg.optim.lr
-def create_optim_lrsched(cfg, model):
-    #vu.validate_optimizer(cfg.optim.name)
-    #vu.validate_lrsched(cfg.optim.get("lr_scheduler", None))
+def create_optim_lrsched(
+    cfg: Any,
+    model: torch.nn.Module,
+) -> tuple[torch.optim.Optimizer, Any]:
     model_params = model.parameters()
 
     # ---------- Optim -----------
@@ -176,7 +182,11 @@ def create_optim_lrsched(cfg, model):
     return optimizer, lr_scheduler
 
 
-def get_model_optim_lrsched(cfg, num_classes, md=None):
+def get_model_optim_lrsched(
+    cfg: Any,
+    num_classes: int,
+    md: Any = None,  # noqa: ANN401
+) -> tuple[torch.nn.Module, torch.optim.Optimizer | None, Any]:
     model = create_model(cfg, num_classes)
     optimizer = None
     lr_scheduler = None
@@ -214,14 +224,7 @@ def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None, md=N
     chpt_dir = Path(cfg.write_checkpoint)
     chpt_dir.mkdir(parents=True, exist_ok=True)
     chpt_path = chpt_dir / f"{checkpoint_name}.pt"
-    chpt = {
-        k: v
-        for k, v in [
-            ("model", model.state_dict()),
-            ("optimizer", optim),
-            ("lr_scheduler", lrsched),
-        ]
-    }
+    chpt = {"model": model.state_dict(), "optimizer": optim, "lr_scheduler": lrsched}
     torch.save(chpt, chpt_path)
     if md is not None:
         md.log(f">> Saved checkpoint to: {chpt_path}")

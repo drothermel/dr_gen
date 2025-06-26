@@ -3,14 +3,24 @@ import math
 import numpy as np
 from scipy.stats import ks_2samp
 
+# Constants for dimensional validation and statistical analysis
+EXPECTED_2D_DIMENSIONS = 2
+EXPECTED_3D_DIMENSIONS = 3
+ALPHA_SIGNIFICANCE_LEVEL = 0.05
+PERCENTILE_2_5 = 2.5
+PERCENTILE_97_5 = 97.5
+PERCENTILE_25 = 25
+PERCENTILE_75 = 75
+DEFAULT_MAX_LIST_PRINT_LEN = 3
+
 # Modern NumPy random generator
 _RNG = np.random.default_rng()
 
 # --- Helpers for prepping data for bootstrapping ---
 
 
-def get_min_2D_data_shape(data_dict):
-    """Takes { exp_name: list_of_lists }
+def get_min_2d_data_shape(data_dict):
+    """Takes { exp_name: list_of_lists }.
 
     Finds the minimum lengths of outer (R) and inner (T) lists.
     Returns (min_R, min_T) or None if empty dict/lists found.
@@ -28,29 +38,34 @@ def get_min_2D_data_shape(data_dict):
                 return None  # Check timesteps list
             min_second = min(min_second, len(inner_list))
     # Safeguard: Ensure minimums were actually found
-    if min_first == math.inf or min_second == math.inf:
+    if math.inf in (min_first, min_second):
         return None
     return (int(min_first), int(min_second))  # (min_R, min_T)
 
 
-def make_uniform_2D_data_arrays_pair(data_a, data_b):
-    """Make numpy arrays, determine min common dimensions and crop"""
+def make_uniform_2d_data_arrays_pair(data_a, data_b):
+    """Make numpy arrays, determine min common dimensions and crop."""
     arr_a, arr_b = np.array(data_a, dtype=float), np.array(data_b, dtype=float)
-    assert arr_a.ndim == 2 and arr_b.ndim == 2 and arr_a.size != 0 and arr_b.size != 0
-    R = min(arr_a.shape[0], arr_b.shape[0])
-    T = min(arr_a.shape[1], arr_b.shape[1])
+    assert arr_a.ndim == EXPECTED_2D_DIMENSIONS
+    assert arr_b.ndim == EXPECTED_2D_DIMENSIONS
+    assert arr_a.size != 0
+    assert arr_b.size != 0
+    R = min(arr_a.shape[0], arr_b.shape[0])  # noqa: N806
+    T = min(arr_a.shape[1], arr_b.shape[1])  # noqa: N806
     return arr_a[:R, :T], arr_b[:R, :T], R, T
 
 
-def make_uniform_2D_data_arrays_dict(data_dict):
-    """Converts dict of lists of lists to dict of numpy arrays with uniform shape (min_R, min_T).
+def make_uniform_2d_data_arrays_dict(data_dict):
+    """Converts dict of lists of lists to dict of numpy arrays with uniform shape.
+
     Returns None if input is empty or contains empty lists.
+    Shape will be (min_R, min_T).
     """
-    min_dims = get_min_2D_data_shape(data_dict)
+    min_dims = get_min_2d_data_shape(data_dict)
     if min_dims is None:
         return None
 
-    R, L = min_dims  # Num runs, Length Runs
+    R, L = min_dims  # Num runs, Length Runs  # noqa: N806
     result_arrays = {}
     for key, outer_list in data_dict.items():
         truncated_data = [inner[:L] for inner in outer_list[:R]]
@@ -61,12 +76,12 @@ def make_uniform_2D_data_arrays_dict(data_dict):
 # --- Bootstrapping Functions ---
 
 
-# Takes (batch_dim, data_dim), returns (batch_dim, B, data_dim)
 def bootstrap_samples_batched(dataset, b=None):
     """Generates bootstrap samples for each row of a 2D array (the batch dimension).
+
     Samples elements with replacement from the second dimension (the data dimension).
     Input shape: (batch_dim, data_dim)
-    Output shape: (batch_dim, num_samples_b, data_dim)
+    Output shape: (batch_dim, num_samples_b, data_dim).
     """
     assert isinstance(dataset, np.ndarray)
     if len(dataset.shape) == 1:
@@ -74,15 +89,16 @@ def bootstrap_samples_batched(dataset, b=None):
     if b is None:
         return dataset[:, np.newaxis]  # Shape (B, 1, L)
 
-    B, L = dataset.shape  # Batch Size, Data Length
+    B, L = dataset.shape  # Batch Size, Data Length  # noqa: N806
     indices = _RNG.integers(0, L, size=(B, b, L))
     batch_indices = np.arange(B)[:, np.newaxis, np.newaxis]
-    bootstrap_result = dataset[batch_indices, indices]
-    return bootstrap_result
+    return dataset[batch_indices, indices]
 
 
 def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
     """Performs batched bootstrapping on timestep data across runs for multiple experiments.
+
+    "
 
     Standardizes experiments to (min_R, min_T), transposes to (min_T, min_R),
     stacks experiments, performs batched bootstrapping on the runs (R) for each
@@ -96,31 +112,27 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
                               for each timestep's distribution across runs.
 
     Returns:
-        dict or None: A dictionary mapping experiment names to 3D NumPy arrays of shape
-                      (T, B, R) - representing (min_timesteps, num_bootstraps, min_runs),
-                      containing the bootstrapped metric distributions for each timestep.
-                      Returns None if the initial data processing fails (e.g., empty lists).
+        dict or None: A dictionary mapping experiment names to 3D NumPy arrays
+                      of shape (T, B, R) - representing (min_timesteps, num_bootstraps,
+                      min_runs), containing the bootstrapped metric distributions for
+                      each timestep. Returns None if the initial data processing fails
+                      (e.g., empty lists).
     """
-    # Produces: { exp_name: np.ndarray(min_R, min_T) } or None
-    uniform_arrays = make_uniform_2D_data_arrays_dict(data_dict)
+    uniform_arrays = make_uniform_2d_data_arrays_dict(data_dict)
     if uniform_arrays is None or not uniform_arrays:
         return None
-    R, T = next(iter(uniform_arrays.values())).shape
+    R, T = next(iter(uniform_arrays.values())).shape  # noqa: N806
 
     # === Reshape to make one batched bootstrap samples call ===
     experiment_names = list(uniform_arrays.keys())
-    E = len(experiment_names)  # Number of experiments
+    E = len(experiment_names)  # Number of experiments  # noqa: N806
 
     # Consider that we have R sampled metrics for each timestep T
     #   Transpose each array from (min_R, min_T) to (min_T, min_R)
     transposed_arrays = [uniform_arrays[name].T for name in experiment_names]
 
-    # Stack transposed arrays along a new first dimension (experiments)
-    # Shape: (E, T, R)
     stacked_data = np.stack(transposed_arrays, axis=0)
 
-    # Reshape to create the batch dimension for bootstrapping
-    # Shape: (E * T, R)
     reshaped_data = stacked_data.reshape(-1, R)
 
     # == Perform Batched Bootstrapping ==
@@ -142,15 +154,20 @@ def bootstrap_experiment_timesteps(data_dict, num_bootstraps=None):
 
 def calc_stats_across_bootstrap_samples(timestep_data):
     """Calculates multiple base statistics for each bootstrap sample (vectorized).
+
     Takes a np array for a single timestep shape (B, R).
     Returns dict mapping stat names to 1D arrays (shape B,).
     """
-    B, R = timestep_data.shape  # Num bootstrap samples, Num Runs
+    B, R = timestep_data.shape  # Num bootstrap samples, Num Runs  # noqa: N806
     stats = {}
     # Use errstate to handle potential warnings (e.g., std dev of single value if R=1)
     std = np.std(timestep_data, axis=1, ddof=1)
     with np.errstate(invalid="ignore", divide="ignore"):
-        all_percentiles = np.percentile(timestep_data, [2.5, 25, 75, 97.5], axis=1)
+        all_percentiles = np.percentile(
+            timestep_data,
+            [PERCENTILE_2_5, PERCENTILE_25, PERCENTILE_75, PERCENTILE_97_5],
+            axis=1,
+        )
         stats["mean"] = np.mean(timestep_data, axis=1)
         stats["median"] = np.median(timestep_data, axis=1)
         stats["min"] = np.min(timestep_data, axis=1)
@@ -167,10 +184,11 @@ def calc_stats_across_bootstrap_samples(timestep_data):
 
 def summarize_distribution(dist):
     """Calculates summary stats (mean, std, CI) for a 1D bootstrap distribution.
+
     Takes: 1D array of data values
     Returns dict: 'point_estimate', 'spread', 'ci_95_lower', 'ci_95_upper'.
     """
-    B = len(dist)
+    B = len(dist)  # noqa: N806
     # Handle cases where stats are undefined or unreliable
     if B <= 1:
         summary = {
@@ -185,7 +203,7 @@ def summarize_distribution(dist):
         return summary
 
     # Use ddof=0 for population std dev
-    ci_lower, ci_upper = np.percentile(dist, [2.5, 97.5])
+    ci_lower, ci_upper = np.percentile(dist, [PERCENTILE_2_5, PERCENTILE_97_5])
     return {
         "point_estimate": np.mean(dist),  # Mean of the B values
         "spread": np.std(dist, ddof=0),  # Std Dev, ddof=0 for pop std dev
@@ -195,8 +213,12 @@ def summarize_distribution(dist):
 
 
 def calc_multi_stat_bootstrap_summary(bootstrapped_data):
-    """Calculates bootstrap summary statistics for multiple stats (per exp and timestep).
-    Takes: dict { exp_name: (T, B, R) numpy array }, timestep, bootstrap samples, replicas
+    """Calculates bootstrap summary statistics for multiple stats.
+
+    Per experiment and timestep.
+
+    Takes: dict { exp_name: (T, B, R) numpy array }, timestep,
+    bootstrap samples, replicas
     Returns:
       {
           'timestep': t,
@@ -208,14 +230,19 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
           'median_point_estimate': ...,
           'median_spread': ...,
           # ... etc. for all base statistics ...
-      }
+      }.
     """
     final_results = {}
     for exp_name, exp_data in bootstrapped_data.items():
         # Validate the data structure for the current experiment
-        if not isinstance(exp_data, np.ndarray) or exp_data.ndim != 3:
+        if (
+            not isinstance(exp_data, np.ndarray)
+            or exp_data.ndim != EXPECTED_3D_DIMENSIONS
+        ):
             continue
-        T, B, R = exp_data.shape  # Timesteps, Bootstrap samples, Runs/Replicates
+        T, B, R = (  # noqa: N806
+            exp_data.shape
+        )  # Timesteps, Bootstrap samples, Runs/Replicates
         if B <= 1 or R == 0:
             continue
 
@@ -241,10 +268,10 @@ def calc_multi_stat_bootstrap_summary(bootstrapped_data):
     return final_results
 
 
-
 def select_best_hpms(summary_stats_data):
-    """Selects the best hyperparameter set (experiment) and the best timestep
-    by maximizing the 'mean_point_estimate'.
+    """Selects the best hyperparameter set (experiment) and the best timestep.
+
+    By maximizing the 'mean_point_estimate'.
     Takes: the output of calc_multi_stat_bootstrap_summary
     Returns: (best_experiment_name (str), best_timestep (int)).
     """
@@ -254,7 +281,8 @@ def select_best_hpms(summary_stats_data):
 
     # Iterate through each experiment (hyperparameter set)
     for exp_name, timestep_data_list in summary_stats_data.items():
-        # Find the timestep summary with the maximum 'mean_point_estimate' for this experiment
+        # Find the timestep summary with the maximum 'mean_point_estimate' for
+        # this experiment
         best_ts_summary_for_exp = max(
             timestep_data_list, key=lambda ts: ts["mean_point_estimate"]
         )
@@ -273,10 +301,9 @@ def select_best_hpms(summary_stats_data):
 
 
 # Calculates point differences and bootstrap CIs for the differences.
-def calc_diff_stats_and_ci(
-    summary_stats_a, summary_stats_b
-):
+def calc_diff_stats_and_ci(summary_stats_a, summary_stats_b):
     """Calculates point differences and bootstrap CIs for the difference between statistics.
+
     The inputs are lists of timestep summary dicts for each exp.
     """
     stat_names = [
@@ -297,18 +324,17 @@ def calc_diff_stats_and_ci(
 
         # Calculate difference dist, confidence interval
         diff_dist = dist_a - dist_b
-        ci_lower, ci_upper = np.percentile(diff_dist, [2.5, 97.5])
+        ci_lower, ci_upper = np.percentile(diff_dist, [PERCENTILE_2_5, PERCENTILE_97_5])
         diff[f"{stat_name}_diff_ci_95"] = (ci_lower, ci_upper)
 
         # Null hypothesis: difference is zero. Reject if 0 is outside CI.
-        diff[f"{stat_name}_diff_reject_null_ci_95"] = not (
-            ci_lower <= 0 <= ci_upper
-        )
+        diff[f"{stat_name}_diff_reject_null_ci_95"] = not (ci_lower <= 0 <= ci_upper)
     return diff
 
 
 def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
     """Calculates bootstrap confidence interval for the KS statistic between matched samples.
+
     Takes: bootstrapped data for one timestep, shape (B, R).
     Returns: List of results per timestep.
     """
@@ -328,20 +354,22 @@ def calc_ks_stat_and_summary(bdata_a, bdata_b, num_bootstraps):
     }
 
 
-def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
+def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):  # noqa: N803
     """Performs a bootstrap permutation test using the KS statistic.
 
     Args:
         arr_a (np.ndarray): Standardized original data for exp A, shape (R).
         arr_b (np.ndarray): Standardized original data for exp B, shape (R).
         R (int): Number of runs.
-        num_permutations (int): Number of permutations to generate the null distribution.
+        num_permutations (int): Number of permutations to generate the null
+            distribution.
         alpha (float): Significance level for p-value comparison.
 
     Returns:
-        dict: Containing the observed KS, p-value, and null hypothesis rejection decision.
+        dict: Containing the observed KS, p-value, and null hypothesis rejection
+            decision.
     """
-        # Calculate the observed KS statistic on the original data
+    # Calculate the observed KS statistic on the original data
     observed_ks, _ = ks_2samp(arr_a, arr_b)
 
     # Combine original data for permutation and generate null dist
@@ -356,7 +384,7 @@ def perform_ks_permutation_test(arr_a, arr_b, R, num_permutations):
 
     # Calculate p-value: proportion of null KS stats >= observed KS stat
     p_value = np.mean(null_ks_dist >= observed_ks)
-    reject_null = p_value < 0.05
+    reject_null = p_value < ALPHA_SIGNIFICANCE_LEVEL
     return {
         "observed_ks": observed_ks,
         "p_value": p_value,
@@ -374,11 +402,10 @@ def compare_experiments_bootstrap(
     num_bootstraps=1000,
     num_permutations=1000,
 ):
-
     # Make data uniform and select best timestep
-    arr_a, arr_b, R, T = make_uniform_2D_data_arrays_pair(data_a_raw, data_b_raw)
-    arr_a = arr_a[:, timestep_a:timestep_a + 1]
-    arr_b = arr_b[:, timestep_b:timestep_b + 1]
+    arr_a, arr_b, R, T = make_uniform_2d_data_arrays_pair(data_a_raw, data_b_raw)  # noqa: N806
+    arr_a = arr_a[:, timestep_a : timestep_a + 1]
+    arr_b = arr_b[:, timestep_b : timestep_b + 1]
 
     # Bootstrap samples
     bdata_a = bootstrap_samples_batched(arr_a.T, b=num_bootstraps)  # Shape (T, B, R)
@@ -387,11 +414,15 @@ def compare_experiments_bootstrap(
     # Calculate statistics
     summary_a_list = calc_multi_stat_bootstrap_summary({"exp_A": bdata_a})["exp_A"]
     summary_b_list = calc_multi_stat_bootstrap_summary({"exp_B": bdata_b})["exp_B"]
-    assert len(summary_a_list) == len(summary_b_list) == 1
+    assert len(summary_a_list) == 1, (
+        f"Expected 1 summary for A, got {len(summary_a_list)}"
+    )
+    assert len(summary_b_list) == 1, (
+        f"Expected 1 summary for B, got {len(summary_b_list)}"
+    )
     summary_a = summary_a_list[0]
     summary_b = summary_b_list[0]
 
-    print(">> Compare setting A to setting B")
     exp_a_name = f"{hpm_a}_t{timestep_a}"
     exp_b_name = f"{hpm_b}_t{timestep_b}"
     print_bootstrap_summary_exp_results(
@@ -406,7 +437,9 @@ def compare_experiments_bootstrap(
     # Calculate difference results
     diff_results = calc_diff_stats_and_ci(summary_a, summary_b)
     ks_stat_results = calc_ks_stat_and_summary(
-        bdata_a.squeeze(), bdata_b.squeeze(), num_bootstraps=num_bootstraps,
+        bdata_a.squeeze(),
+        bdata_b.squeeze(),
+        num_bootstraps=num_bootstraps,
     )
     ks_permutation_test_results = perform_ks_permutation_test(
         arr_a.squeeze(), arr_b.squeeze(), R=R, num_permutations=num_permutations
@@ -431,23 +464,21 @@ def compare_experiments_bootstrap(
 
 # --- Utility Functions ---
 def print_bootstrap_summary_exp_results(
-    exp_name,
+    _exp_name,  # Unused but kept for API compatibility
     exp_result,
-    max_list_print_len=3,
+    _max_list_print_len=DEFAULT_MAX_LIST_PRINT_LEN,  # Unused but kept for API compatibility
 ):
-    print(f"--- Experiment: {exp_name} ---")
     for key, value in exp_result.items():
-        if key == "timestep": # Already printed
+        if key == "timestep":  # Already printed
             continue
 
-        if isinstance(value, np.ndarray) or isinstance(value, list):
+        if isinstance(value, np.ndarray | list):
             continue
         if isinstance(value, tuple):
-            print(f"    {key}: {value}", end="")
-        elif isinstance(value, (int, float, bool, str)) or value is None:
+            pass
+        elif isinstance(value, int | float | bool | str) or value is None:
             # Print primitive types directly
             if isinstance(value, float):
-                    print(f"    {key}: {value:.4f}") # Format floats
+                pass  # Format floats
             else:
-                    print(f"    {key}: {value}")
-    print("\n") # Add space between experiments
+                pass

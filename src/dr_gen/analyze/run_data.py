@@ -1,6 +1,11 @@
 from collections import defaultdict
 from collections.abc import MutableMapping
 from datetime import datetime
+from typing import Any
+
+# Constants for file parsing
+MIN_FILE_LINES = 2
+TRAIN_TIME_OFFSET_FROM_END = 2
 
 import dr_util.file_utils as fu
 
@@ -10,9 +15,9 @@ from dr_gen.analyze.metric_curves import SplitMetrics
 EPOCHS_KEY = "epochs"
 
 
-def parse_cfg_log_line(cfg_json):
+def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     errors = []
-    if cfg_json.get("type", None) != "dict_config":
+    if cfg_json.get("type") != "dict_config":
         errors.append(">> Config json doesn't have {type: dict_config}")
     if "value" not in cfg_json:
         errors.append(">> Config 'value' not set")
@@ -25,24 +30,26 @@ def parse_cfg_log_line(cfg_json):
     return cfg_json["value"], errors
 
 
-def get_train_time(train_time_json):
-    if train_time_json.get("type", None) == "str" and "value" in train_time_json:
-        return train_time_json["value"].strip("Training time ")
+def get_train_time(train_time_json: dict[str, Any]) -> str | None:
+    if train_time_json.get("type") == "str" and "value" in train_time_json:
+        return train_time_json["value"].strip("Training time ")  # type: ignore[no-any-return]
     return None
 
 
-def get_logged_strings(jsonl_contents):
-    all_strings = []
-    for jl in jsonl_contents:
-        if jl.get("type", None) == "str" and jl.get("value", "").strip() != "":
-            all_strings.append(jl["value"].strip())
-    return all_strings
+def get_logged_strings(jsonl_contents: list[dict[str, Any]]) -> list[str]:
+    return [
+        jl["value"].strip()
+        for jl in jsonl_contents
+        if jl.get("type", None) == "str" and jl.get("value", "").strip() != ""
+    ]
 
 
-def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
+def get_logged_metrics_infer_epoch(
+    hpm: Any, jsonl_contents: list[dict[str, Any]]
+) -> dict[str, SplitMetrics]:
     metrics_by_split = {}
 
-    epochs = defaultdict(int)
+    epochs: dict[str, int] = defaultdict(int)
     x_name = "epoch"
     for jl in jsonl_contents:
         if "agg_stats" not in jl or "data_name" not in jl:
@@ -65,7 +72,9 @@ def get_logged_metrics_infer_epoch(hpm, jsonl_contents):
     return metrics_by_split
 
 
-def validate_metrics(expected_epochs, metrics_by_split):
+def validate_metrics(
+    expected_epochs: list[int], metrics_by_split: dict[str, SplitMetrics]
+) -> list[str]:
     if expected_epochs is None or len(metrics_by_split) == 0:
         return [f"invalid input: {expected_epochs}, {len(metrics_by_split)}"]
 
@@ -87,8 +96,10 @@ def validate_metrics(expected_epochs, metrics_by_split):
 class Hpm(MutableMapping):
     def __init__(
         self,
-        all_vals={},
-    ):
+        all_vals=None,
+    ) -> None:
+        if all_vals is None:
+            all_vals = {}
         self._all_values = gu.flatten_dict(all_vals)
         self.important_values = {}
         self.reset_important()
@@ -96,17 +107,17 @@ class Hpm(MutableMapping):
     def __getitem__(self, key):
         return self._all_values[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         self._all_values[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key) -> None:
         del self._all_values[key]
         self.exclude_from_important([key])
 
     def __iter__(self):
         return iter(self.important_values)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.important_values)
 
     def __eq__(self, other):
@@ -117,14 +128,14 @@ class Hpm(MutableMapping):
     def __hash__(self):
         return hash(self.as_tupledict())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " ".join(self.as_strings())
 
     def get_from_all(self, key):
         return self._all_values.get(key, None)
 
     def reset_important(self):
-        self.important_values = {k: v for k, v in self._all_values.items()}
+        self.important_values = dict(self._all_values.items())
 
     def exclude_from_important(self, excludes):
         self.important_values = {
@@ -154,7 +165,9 @@ class Hpm(MutableMapping):
         # Use as_tupledict to get consistent sort order
         return [f"{k}={v}" for k, v in self.as_tupledict()]
 
-    def as_valstrings(self, remap_kvs={}):
+    def as_valstrings(self, remap_kvs=None):
+        if remap_kvs is None:
+            remap_kvs = {}
         vs = []
         for k, v in self.as_tupledict():
             vstr = str(v)
@@ -163,7 +176,7 @@ class Hpm(MutableMapping):
 
 
 class RunData:
-    def __init__(self, file_path, rid=None):
+    def __init__(self, file_path, rid=None) -> None:
         self.file_path = file_path
         self.id = rid
         self.hpms = None
@@ -178,7 +191,7 @@ class RunData:
         if contents is None:
             self.parse_errors.append(f">> Unable to load file: {self.file_path}")
             return
-        if len(contents) <= 2:
+        if len(contents) <= MIN_FILE_LINES:
             self.parse_errors.append(">> File two lines or less, unable to parse")
             return
 
@@ -191,7 +204,9 @@ class RunData:
 
         # Extract Run Metadata
         self.metadata["time_parsed"] = datetime.now()
-        self.metadata["train_time"] = get_train_time(contents[-2])
+        self.metadata["train_time"] = get_train_time(
+            contents[-TRAIN_TIME_OFFSET_FROM_END]
+        )
         self.metadata["log_strs"] = get_logged_strings(contents)
 
         # Extract and validate metrics

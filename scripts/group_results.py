@@ -18,8 +18,8 @@ def parse_sweep2_path_hyperparameters(path_string: str) -> tuple[dict, str]:
     hpm_start_idx_in_parts = parts.index(dataset_marker) + 1
     assert len(parts) >= hpm_start_idx_in_parts + 1
 
-    hpm_segments = parts[hpm_start_idx_in_parts:-2] # Ignores datetime and filename
-    datetime_str = parts[-2] # Second to last part is datetime
+    hpm_segments = parts[hpm_start_idx_in_parts:-2]  # Ignores datetime and filename
+    datetime_str = parts[-2]  # Second to last part is datetime
     hpm_dict["datetime"] = datetime_str
     key_num_regex = re.compile(
         r"^([a-zA-Z_]+)((?:[-+]?\d*\.\d+|[-+]?\d+)(?:[eE][-+]?\d+)?)$"
@@ -38,7 +38,7 @@ def parse_sweep2_path_hyperparameters(path_string: str) -> tuple[dict, str]:
 
                 hpm_dict[key_part] = num_val
                 processed_as_key_num = True
-                if key_part == "s": # Check if it's a seed parameter (e.g., "s0", "s1")
+                if key_part == "s":  # Check if it's a seed parameter (e.g., "s0", "s1")
                     is_seed_segment = True
             except ValueError:
                 # If num_part_str is not a valid number (e.g. "resnet8.a1_in1k" where
@@ -80,7 +80,6 @@ def file_path_to_name(fpath: Path) -> tuple[dict, str]:
     return hpm_dict, run_label
 
 
-
 sweep_name = "resnetstrikes_t0"
 root_dir = Path("/scratch/ddr8143/logs/cifar10/")
 dest_dir = Path(f"/scratch/ddr8143/data/run_results/cifar_sweeps/{sweep_name}")
@@ -89,10 +88,9 @@ for file in root_dir.rglob("*.jsonl"):
     if file.is_file():
         fpath = file.resolve()
         hpm_dict, fname = file_path_to_name(fpath)
-        all_json.append((
-            fpath,
-            {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict}
-        ))
+        all_json.append(
+            (fpath, {"run_name": fname, "seed": hpm_dict["s"], "hpms": hpm_dict})
+        )
 dest_dir.mkdir(parents=True, exist_ok=True)
 
 # Dump the metadata into a file

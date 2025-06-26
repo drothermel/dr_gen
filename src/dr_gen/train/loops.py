@@ -1,15 +1,18 @@
 import time
 from datetime import timedelta
+from typing import Any
 
 import torch
 import torch.nn as nn
-from dr_util.metrics import BATCH_KEY
+from dr_util.metrics import BATCH_KEY, Metrics
+from torch.optim.lr_scheduler import LRScheduler
+from torch.utils.data import DataLoader
 
 import dr_gen.train.evaluate as eu
 import dr_gen.train.model as mu
 
 
-def log_metrics(md, group_name, **kwargs):
+def log_metrics(md: Metrics | None, group_name: str, **kwargs: Any) -> None:  # noqa: ANN401
     assert md is not None, "There should be a metrics obj"
 
     loss = kwargs.get("loss")
@@ -17,7 +20,6 @@ def log_metrics(md, group_name, **kwargs):
     target = kwargs.get("target")
     mean_grad_norm = kwargs.get("mean_grad_norm")
     lr = kwargs.get("lr")
-
 
     if output is not None:
         md.log_data((BATCH_KEY, output.shape[0]), group_name)
@@ -37,12 +39,10 @@ def log_metrics(md, group_name, **kwargs):
         md.log_data(("lr", lr), group_name)
 
 
-def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
+def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):  # noqa: ARG001
     model.train()
-    for i, (image, target) in enumerate(dataloader):
-        # if i % 10 == 0:
-        #    md.log(f">> Sample: {i * image.shape[0]} / {len(dataloader.dataset)}")
-        image, target = image.to(cfg.device), target.to(cfg.device)
+    for _i, (image, target) in enumerate(dataloader):
+        image, target = image.to(cfg.device), target.to(cfg.device)  # noqa: PLW2901
         output = model(image)
         loss = criterion(output, target)
         optimizer.zero_grad()
@@ -58,12 +58,14 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):
             num_parameters = 0
             for p in model.parameters():
                 if p.grad is not None:
-                    param_norm = p.grad.data.norm(2) # L2 norm
-                    total_norm += param_norm.item() ** 2 # Sum of squares
+                    param_norm = p.grad.data.norm(2)  # L2 norm
+                    total_norm += param_norm.item() ** 2  # Sum of squares
                     num_parameters += 1
 
             if num_parameters > 0:
-                mean_grad_norm = (total_norm / num_parameters) ** 0.5 # Root of mean of squares
+                mean_grad_norm = (
+                    total_norm / num_parameters
+                ) ** 0.5  # Root of mean of squares
 
         optimizer.step()
         log_metrics(
@@ -81,8 +83,8 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
     model.eval()
     with torch.inference_mode():
         for image, target in dataloader:
-            image = image.to(cfg.device, non_blocking=True)
-            target = target.to(cfg.device, non_blocking=True)
+            image = image.to(cfg.device, non_blocking=True)  # noqa: PLW2901
+            target = target.to(cfg.device, non_blocking=True)  # noqa: PLW2901
             output = model(image)
             loss = criterion(output, target)
             log_metrics(
@@ -94,7 +96,16 @@ def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
             )
 
 
-def train_loop(cfg, train_dl, model, optim, lr_sched, val_dl=None, eval_dl=None, md=None):
+def train_loop(
+    cfg: Any,  # noqa: ANN401
+    train_dl: DataLoader[Any],
+    model: torch.nn.Module,
+    optim: torch.optim.Optimizer,
+    lr_sched: LRScheduler | None,
+    val_dl: DataLoader[Any] | None = None,
+    eval_dl: DataLoader[Any] | None = None,
+    md: Metrics | None = None,
+) -> None:
     assert md is not None  # Temporarily
     criterion = mu.get_criterion(cfg)
     mu.checkpoint_model(cfg, model, "init_model", md=md)
@@ -107,7 +118,7 @@ def train_loop(cfg, train_dl, model, optim, lr_sched, val_dl=None, eval_dl=None,
         # Train
         train_epoch(cfg, epoch, model, train_dl, criterion, optim, md=md)
         if lr_sched is not None:
-            lr_sched.step(epoch=epoch+1)
+            lr_sched.step(epoch=epoch + 1)
         md.agg_log("train")
 
         # Val

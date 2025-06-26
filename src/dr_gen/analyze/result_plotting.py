@@ -4,6 +4,10 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
+# Constants for validation
+EXPECTED_MATCHING_HPMS = 2
+EXPECTED_KEY_VALUE_PARTS = 2
+
 import dr_gen.analyze.bootstrapping as bu
 
 # === Helpers to Select Relevant Run Groups === #
@@ -50,7 +54,6 @@ def get_pretrained_vs_random_init_runs(
     Returns:
         Tuple of (pretrained_runs, random_runs)
     """
-    # {hpm: runs_metrics}
     all_hpms = rg.select_run_split_metrics_by_hpms(
         metric,
         split,
@@ -63,13 +66,14 @@ def get_pretrained_vs_random_init_runs(
         hpm: d for hpm, d in all_hpms.items() if hpm["model.weights"] != "DEFAULT"
     }
     if one_per:
-        assert len(hpms_pre) == len(hpms_rand) == 1
+        assert len(hpms_pre) == 1, f"Expected 1 pretrained HPM, got {len(hpms_pre)}"
+        assert len(hpms_rand) == 1, f"Expected 1 random HPM, got {len(hpms_rand)}"
     return hpms_pre, hpms_rand
 
 
 def select_matching_hpms(
-    hpms_A,
-    hpms_B,
+    hpms_a,
+    hpms_b,
     hpm_whitelist=None,
     ignore_key="model.weights",
 ):
@@ -77,10 +81,9 @@ def select_matching_hpms(
 
     # Group hpms by hash
     hpms_by_hash = defaultdict(list)
-    for hpm in [*hpms_A, *hpms_B]:
+    for hpm in [*hpms_a, *hpms_b]:
         # Verify hpm in whitelist
         if hpm_whitelist is not None and hpm not in hpm_whitelist:
-            print(hpm, "not in whitelist")
             continue
 
         # Get the hash which ignores key if specified
@@ -95,7 +98,7 @@ def select_matching_hpms(
 
     # Only use hpms where the hash has a value for group A and B
     for hash_hpms in hpms_by_hash.values():
-        if len(hash_hpms) == 2:
+        if len(hash_hpms) == EXPECTED_MATCHING_HPMS:
             hpms_to_use.update(hash_hpms)
 
     return hpms_to_use
@@ -121,8 +124,8 @@ def get_compare_runs_pretrain_vs_random(
 
     # Filter to only hpms that exist both splits of both settings
     hpms_to_use = select_matching_hpms(
-        hpms_A=hpms_val_pre.keys(),
-        hpms_B=hpms_val_rand.keys(),
+        hpms_a=hpms_val_pre.keys(),
+        hpms_b=hpms_val_rand.keys(),
         hpm_whitelist=[*hpms_eval_pre.keys(), *hpms_eval_rand.keys()],
         ignore_key="model.weights",  # the hpm we're comparing between
     )
@@ -134,8 +137,8 @@ def get_compare_runs_pretrain_vs_random(
 
 
 def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
-    """Finds the best hyperparameter set and timestep for a given group
-    based on validation data.
+    """Finds the best hyperparameter set and timestep for a given group based on validation data.
+
     tuple: (best_experiment_name, best_timestep) or (None, None) if failed.
     """
     if not group_val_data:
@@ -146,9 +149,6 @@ def find_best_hpm_for_group(group_val_data, group_name, num_bootstraps):
     )
     summary_stats_val = bu.calc_multi_stat_bootstrap_summary(bootstrapped_val)
     best_exp_name, best_timestep = bu.select_best_hpms(summary_stats_val)
-    print(
-        f">> Best HPM for {group_name}: {best_exp_name} (based on validation timestep {best_timestep})"
-    )
     return best_exp_name, best_timestep
 
 
@@ -165,94 +165,63 @@ def run_comparison_eval(
 ):
     val_a, eval_a = group_a_data
     val_b, eval_b = group_b_data
-    best_hpm_A, best_ts_A = find_best_hpm_for_group(
+    best_hpm_a, best_ts_a = find_best_hpm_for_group(
         val_a, group_a_name, val_num_bootstraps
     )
-    best_hpm_B, best_ts_B = find_best_hpm_for_group(
+    best_hpm_b, best_ts_b = find_best_hpm_for_group(
         val_b, group_b_name, val_num_bootstraps
     )
 
     # Check if best HPMs were found
-    if best_hpm_A is None or best_hpm_B is None:
-        print(f"Error: Could not find best HPM for group A ('{best_hpm_A}') or group B ('{best_hpm_B}')")
+    if best_hpm_a is None or best_hpm_b is None:
         # Return indicating failure but providing partial results if available
-        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
 
     # --- Perform comparison on evaluation data using ONLY the best HPMs found ---
     # Get the evaluation data for the *specific* best HPMs and timesteps
-    eval_data_A = eval_a.get(best_hpm_A)
-    eval_data_B = eval_b.get(best_hpm_B)
+    eval_data_a = eval_a.get(best_hpm_a)
+    eval_data_b = eval_b.get(best_hpm_b)
 
     # Ensure we have data for the best HPMs in the evaluation set
-    if eval_data_A is None or eval_data_B is None:
-        print(f"Error: Evaluation data not found for best HPM A ('{best_hpm_A}') or B ('{best_hpm_B}')")
-        return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, None)
+    if eval_data_a is None or eval_data_b is None:
+        return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, None)
 
     comparison_results = bu.compare_experiments_bootstrap(
-        eval_data_A, # just the best hpm data, all timesteps
-        eval_data_B, # just the best hpm data, all timesteps
-        hpm_a=best_hpm_A, # for naming
-        hpm_b=best_hpm_B, # for naming
-        timestep_a=best_ts_A, # to select best timestep from eval data
-        timestep_b=best_ts_B, # to select best timestep from eval data
+        eval_data_a,  # just the best hpm data, all timesteps
+        eval_data_b,  # just the best hpm data, all timesteps
+        hpm_a=best_hpm_a,  # for naming
+        hpm_b=best_hpm_b,  # for naming
+        timestep_a=best_ts_a,  # to select best timestep from eval data
+        timestep_b=best_ts_b,  # to select best timestep from eval data
         num_bootstraps=eval_num_bootstraps,
         num_permutations=num_permutations,
     )
-    return (best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results)
+    return (best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results)
 
 
 def print_results_report(
-    best_hpm_A, best_ts_A, best_hpm_B, best_ts_B, comparison_results
+    best_hpm_a, best_ts_a, best_hpm_b, best_ts_b, comparison_results
 ):
     """Prints a formatted report summarizing the analysis results.
 
     Args:
-        best_hpm_A (str): Name of the best HPM for Group A.
-        best_ts_A (int): Best validation timestep for Group A.
-        best_hpm_B (str): Name of the best HPM for Group B.
-        best_ts_B (int): Best validation timestep for Group B.
+        best_hpm_a (str): Name of the best HPM for Group A.
+        best_ts_a (int): Best validation timestep for Group A.
+        best_hpm_b (str): Name of the best HPM for Group B.
+        best_ts_b (int): Best validation timestep for Group B.
         comparison_results (dict): Results from the evaluation comparison.
     """
-    print("\n--- Results Report ---")
-    print("Best Hyperparameters (selected using Validation data):")
-    print(
-        f"  Group A: {best_hpm_A} (Best performance observed at validation timestep {best_ts_A})"
-    )
-    print(
-        f"  Group B: {best_hpm_B} (Best performance observed at validation timestep {best_ts_B})"
-    )
-
-    print("\nComparison on Evaluation Data (using selected HPMs):")
-
     # Report Difference Statistics
     final_diff_stats = comparison_results["difference_stats"]
-    mean_diff = final_diff_stats["mean_diff_point_estimate"]
-    mean_diff_ci = final_diff_stats["mean_diff_ci_95"]
-    mean_reject_null = final_diff_stats["mean_diff_reject_null_ci_95"]
-
-    print("\nPerformance Difference (Group A - Group B) at Final Evaluation Timestep:")
-    print(f"  Mean Metric Difference: {mean_diff:.4f}")
-    print(
-        f"  95% CI for Mean Difference: ({mean_diff_ci[0]:.4f}, {mean_diff_ci[1]:.4f})"
-    )
-    print(
-        f"  Statistically Significant Difference (via CI)? {'Yes' if mean_reject_null else 'No'}"
-    )
+    final_diff_stats["mean_diff_point_estimate"]
+    final_diff_stats["mean_diff_ci_95"]
+    final_diff_stats["mean_diff_reject_null_ci_95"]
 
     # Report KS Permutation Test Results
     final_ks_perm_stats = comparison_results["ks_permutation_test"]
-    ks_observed = final_ks_perm_stats.get("observed_ks", "N/A")
-    ks_p_value = final_ks_perm_stats.get("p_value", "N/A")
-    ks_reject_null = final_ks_perm_stats.get("reject_null", None)  # Default to None
-
-    print(
-        "\nKS Permutation Test (Comparing Distributions) at Final Evaluation Timestep:"
-    )
-    print(f"  Observed KS Statistic: {ks_observed:.4f}")
-    print(f"  P-value: {ks_p_value:.8f}")
-    print(
-        f"  Statistically Significant Difference (p < 0.05)? {'Yes' if ks_reject_null else 'No'}"
-    )
+    final_ks_perm_stats.get("observed_ks", "N/A")
+    final_ks_perm_stats.get("p_value", "N/A")
+    final_ks_perm_stats.get("reject_null", None)  # Default to None
 
 
 # ================  CSV Export  ===================
@@ -284,7 +253,9 @@ def parse_hpm_value(value_str):
 
 
 def parse_group_name(group_name_str):
-    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters."""
+    """Parses a group name string (e.g., "key1=val1 key2=val2") into a dictionary of hyperparameters.
+
+    """
     hpm_dict = {}
     # Split by space, handling potential multiple spaces and stripping whitespace
     parts = re.split(r"\s+", group_name_str.strip())
@@ -293,16 +264,12 @@ def parse_group_name(group_name_str):
             continue
         # Split by '=', ensuring only the first '=' is used
         key_value = part.split("=", 1)
-        if len(key_value) == 2:
+        if len(key_value) == EXPECTED_KEY_VALUE_PARTS:
             key, value_str = key_value
             hpm_dict[key] = parse_hpm_value(value_str)
         else:
             # Log a warning if a part cannot be parsed as key=value
-            print(
-                f"Warning: Could not parse part '{part}' as key=value in group name '{group_name_str}'"
-            )
-            # Optionally assign a default value or skip:
-            # hpm_dict[part] = None # Example: Assign None if parsing fails
+            pass
     return hpm_dict
 
 
@@ -329,14 +296,15 @@ def add_hpm_columns(df):
     hpm_df = pd.DataFrame(hpm_series.tolist(), index=df.index)
 
     # Join the new HPM columns to the original DataFrame
-    # Use suffixes if there's an unlikely column name collision, though joining on index should be fine
-    df_with_hpms = df.join(hpm_df)
-    return df_with_hpms
+    # Use suffixes if there's an unlikely column name collision, though joining
+    # on index should be fine
+    return df.join(hpm_df)
 
 
 def run_groups_to_df(valid_groups, min_steps):
-    """Builds intermediate NumPy arrays for columns based on valid groups and min_steps,
-    then concatenates them and creates the initial Pandas DataFrame.
+    """Builds intermediate NumPy arrays for columns based on valid groups and min_steps.
+
+    Then concatenates them and creates the initial Pandas DataFrame.
 
     Args:
         valid_groups (dict): Dictionary of valid group names to 2D NumPy arrays.
@@ -394,5 +362,4 @@ def run_groups_to_df(valid_groups, min_steps):
             "metric_value": final_metric_values,
         }
     )
-    hpm_df = add_hpm_columns(df)
-    return hpm_df
+    return add_hpm_columns(df)

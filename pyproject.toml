@@ -126,11 +126,16 @@ ignore = [
     "TD003",    # link to issue after todo
     "FIX002",   # throws on all TODOs
     "S101",     # asserts are part of our coding style
+    "PT015",    # asserts are part of our coding style
+    "B011",     # asserts are part of our coding style
     "ANN001",   # Missing function argument annotations (for experimental functions)
     "ANN201",   # Missing return type annotation (for experimental functions)
     "D100",     # Missing module docstring (OK for experimental modules)
     "D103",     # Missing docstring in public function (for WIP code)
     "D104",     # Missing public package docstring
+    "TRY003",   # Keep our thorough error messages
+    "FBT001",   # Especially in ml code, allow bool fxn params
+    "FBT002",   # Especially in ml code, allow bool fxn params
 ]
 
 [tool.ruff.lint.per-file-ignores]

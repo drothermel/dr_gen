@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -39,13 +40,22 @@ def transform_cfg():
 
 
 class DummyDataset(Dataset):
-    def __init__(self, data):
+    """Helper class for testing data loading functionality."""
+
+    def __init__(self, data) -> None:
+        """Initialize DummyDataset with provided data.
+
+        Args:
+            data: The data to store in the dataset.
+        """
         self.data = data
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return the length of the dataset."""
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Any:  # noqa: ANN401
+        """Get item at the specified index."""
         return self.data[idx]
 
 
@@ -71,7 +81,9 @@ def fake_cifar100_init(self, root, train, transform, target_transform, download)
 # Dummy implementations to override various helpers used in get_dataloaders
 
 
-def dummy_get_dataset(dataset_name, source_split, root, transform=None, download=False):
+def dummy_get_dataset(
+    dataset_name, source_split, root, transform=None, *, download=False
+):
     # Always return a DummyDataset of length 20
     return DummyDataset(list(range(20)))
 
@@ -100,7 +112,7 @@ def dummy_get_source(split, cfg):
 
 
 def dummy_get_split_source_config(cfg):
-    """For our dummy configuration assume:
+    """For our dummy configuration assume.
 
       - "train" uses source "source1" with 80% of the data (range: 0.0 to 0.8)
       - "val" uses the same source "source1" for the remaining 20% (range: 0.8 to 1.0)
@@ -110,7 +122,7 @@ def dummy_get_split_source_config(cfg):
     """
     sources_used = ["source1", "eval"]
 
-    def range_for_split(split):
+    def range_for_split(split) -> tuple[float, float]:
         mapping = {"train": (0.0, 0.8), "val": (0.8, 1.0), "eval": (0.0, 1.0)}
         return mapping[split]
 
@@ -140,7 +152,7 @@ def dummy_validate_split(split):
 
 
 @pytest.mark.parametrize(
-    "split, cfg, expected",
+    ("split", "cfg", "expected"),
     [
         # No configuration provided: should return the split.
         ("train", None, "train"),
@@ -167,7 +179,7 @@ def test_get_source(split, cfg, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "split, cfg, expected",
+    ("split", "cfg", "expected"),
     [
         # If no config is provided, default is returned.
         (None, None, du.DEFAULT_SOURCE_PERCENT),
@@ -297,8 +309,7 @@ def test_get_dataset_cifar100(tmp_path, monkeypatch) -> None:
 
 
 def test_get_dataset_invalid() -> None:
-    """Test that an invalid dataset name raises an assertion error.
-    """
+    """Test that an invalid dataset name raises an assertion error."""
     with pytest.raises(AssertionError):
         du.get_dataset("unknown_dataset", "train")
 
@@ -345,7 +356,7 @@ def test_get_dataloader_custom_config() -> None:
 
 
 def test_get_dataloader_invalid_split(monkeypatch) -> None:
-    """Test that get_dataloader raises an assertion error when an invalid split is provided.
+    """Test that get_dataloader raises an assertion error for invalid splits.
 
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """
@@ -363,18 +374,17 @@ def test_get_dataloader_invalid_split(monkeypatch) -> None:
 
 
 def test_get_split_source_config_defaults() -> None:
-    """When no configuration is provided, each split should use itself as the source
-    with the default percentage.
+    """Test default split source configuration.
 
+    When no configuration is provided, each split should use itself as the source
+    with the default percentage.
     """
     sources, ranges = du.get_split_source_config(cfg=None)
 
     # Each split uses itself as the source.
     expected_sources = list(vu.SPLIT_NAMES)
     # For each split, the range is (0, du.DEFAULT_SOURCE_PERCENT) i.e. (0, 1.0)
-    expected_ranges = {
-        split: (0, du.DEFAULT_SOURCE_PERCENT) for split in vu.SPLIT_NAMES
-    }
+    expected_ranges = dict.fromkeys(vu.SPLIT_NAMES, (0, du.DEFAULT_SOURCE_PERCENT))
 
     # Order may depend on SPLIT_NAMES; we compare sorted lists for safety.
     assert sorted(sources) == sorted(expected_sources)
@@ -384,7 +394,8 @@ def test_get_split_source_config_defaults() -> None:
 def test_get_split_source_config_custom() -> None:
     """Test when a custom configuration maps multiple splits to the same source.
 
-    For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
+    For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2
+    respectively,
     while 'eval' uses the default (its own name and 1.0).
     """
     cfg = OmegaConf.create(
@@ -398,14 +409,17 @@ def test_get_split_source_config_custom() -> None:
     )
     sources, ranges = du.get_split_source_config(cfg)
 
-    # For train: range is (0, 0.8); for val: since it uses the same source "official_train",
-    # its range is (0.8, 1.0). For eval: default is used (source "eval", range (0, 1.0)).
+    # For train: range is (0, 0.8); for val: since it uses the same source
+    # "official_train",
+    # its range is (0.8, 1.0). For eval: default is used (source "eval",
+    # range (0, 1.0)).
     expected_ranges = {
         "train": (0, 0.8),
         "val": (0.8, 1.0),
         "eval": (0, du.DEFAULT_SOURCE_PERCENT),
     }
-    # Since 'train' and 'val' share the same source, sources used should be ["official_train", "eval"].
+    # Since 'train' and 'val' share the same source, sources used
+    # should be ["official_train", "eval"].
     expected_sources = ["official_train", "eval"]
 
     assert sorted(sources) == sorted(expected_sources)
@@ -413,9 +427,10 @@ def test_get_split_source_config_custom() -> None:
 
 
 def test_get_split_source_config_over_usage() -> None:
-    """Test that an assertion error is raised if the total allocated percentage
-    for a shared source exceeds 100% (i.e. > 1.0).
+    """Test over-allocation error for shared sources.
 
+    Test that an assertion error is raised if the total allocated percentage
+    for a shared source exceeds 100% (i.e. > 1.0).
     """
     cfg = OmegaConf.create(
         {
@@ -426,7 +441,8 @@ def test_get_split_source_config_over_usage() -> None:
             }
         }
     )
-    # Since train (0.6) and val (0.6) sum to 1.2 (> 1.0), an AssertionError should be raised.
+    # Since train (0.6) and val (0.6) sum to 1.2 (> 1.0),
+    # an AssertionError should be raised.
     with pytest.raises(
         AssertionError, match=">> Using more than 100% of official_train"
     ):
@@ -438,7 +454,9 @@ def test_get_split_source_config_over_usage() -> None:
 
 # Test for get_dataloaders
 def test_get_dataloaders(monkeypatch) -> None:
-    """This test constructs a dummy configuration (via OmegaConf) and then patches
+    """Test get_dataloaders with mocked dependencies.
+
+    This test constructs a dummy configuration (via OmegaConf) and then patches
     out helper functions so that get_dataloaders returns predictable DataLoaders.
 
     We then check that each returned DataLoader has the expected batch_size and
@@ -468,7 +486,8 @@ def test_get_dataloaders(monkeypatch) -> None:
             "eval": {"batch_size": 2},
             "data": {
                 "name": "dummy",  # Dummy dataset name
-                # For "train" and "val" we use the same source "source1" but different percentages.
+                # For "train" and "val" we use the same source "source1"
+                # but different percentages.
                 "train": {"source_percent": 0.8, "source": "source1"},
                 "val": {"source_percent": 0.2, "source": "source1"},
                 # For "eval" use a separate source and default full percent.
@@ -486,7 +505,8 @@ def test_get_dataloaders(monkeypatch) -> None:
     # Check that we have DataLoaders for each expected split.
     assert set(dls.keys()) == {"train", "val", "eval"}
 
-    # For each split, check that the DataLoader is an instance of torch.utils.data.DataLoader
+    # For each split, check that the DataLoader is an instance of
+    # torch.utils.data.DataLoader
     # and that its batch_size matches what is specified in the configuration.
     for split, dl in dls.items():
         assert isinstance(dl, DataLoader)
@@ -499,15 +519,18 @@ def test_get_dataloaders(monkeypatch) -> None:
 
     # Optionally, verify that the dataset lengths (after subsetting) are as expected.
     # For "train" and "val", the dummy dataset length is 20 so:
-    #   "train" should use approximately 80% (i.e. 16 samples) and "val" the remaining 20% (i.e. 4 samples).
+    #   "train" should use approximately 80% (i.e. 16 samples) and
+    #   "val" the remaining 20% (i.e. 4 samples).
     # For "eval", since the full dataset is used, length should be 20.
     # Note that due to floor rounding, you may have minor differences.
     train_dl = dls["train"]
     val_dl = dls["val"]
     eval_dl = dls["eval"]
 
-    # Access the sampler length by checking the length of the dataset that the sampler iterates over.
-    # For "train" and "val", our dummy_get_dataloader calls get_dataloader with a subset.
+    # Access the sampler length by checking the length of the dataset
+    # that the sampler iterates over.
+    # For "train" and "val", our dummy_get_dataloader calls
+    # get_dataloader with a subset.
     train_indices = list(train_dl.sampler)
     val_indices = list(val_dl.sampler)
     eval_indices = list(eval_dl.sampler)  # full dataset sampler

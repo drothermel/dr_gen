@@ -87,7 +87,7 @@ def format_plot_element(plc, ax):
 def get_multi_curve_summary_stats(data_list, axis=0):
     data_list = make_list_of_lists(data_list)
     curve_len = len(data_list[0])
-    assert all([len(dl) == curve_len for dl in data_list]), (
+    assert all(len(dl) == curve_len for dl in data_list), (
         ">> All curves must be same length"
     )
 
@@ -173,7 +173,7 @@ def add_min_max_shade_to_plot(
 
     colors = [extract_color(ax, total=data_n, ind=i) for i in range(data_n)]
 
-    for i, dl in enumerate(data_list):
+    for i, _dl in enumerate(data_list):
         dstats = data_stats[i]
         x = dstats["x_vals"]
         ax.fill_between(x, dstats["min"], dstats["max"], color=colors[i], alpha=0.1)
@@ -198,7 +198,7 @@ def add_std_shade_to_plot(
         data_stats = [get_multi_curve_summary_stats(dl) for dl in data_list]
 
     colors = [extract_color(ax, total=data_n, ind=i) for i in range(data_n)]
-    for i, dl in enumerate(data_list):
+    for i, _dl in enumerate(data_list):
         dstats = data_stats[i]
         x = dstats["x_vals"]
         std_low = [m - s for m, s in zip(dstats["mean"], dstats["std"], strict=False)]
@@ -225,7 +225,7 @@ def add_sem_shade_to_plot(
         data_stats = [get_multi_curve_summary_stats(dl) for dl in data_list]
 
     colors = [extract_color(ax, total=data_n, ind=i) for i in range(data_n)]
-    for i, dl in enumerate(data_list):
+    for i, _dl in enumerate(data_list):
         dstats = data_stats[i]
         x = dstats["x_vals"]
         sem_low = [m - s for m, s in zip(dstats["mean"], dstats["sem"], strict=False)]
@@ -328,10 +328,7 @@ def make_cdfs_plot(vals, cdfs, ax=None, **kwargs):
 def make_summary_plot(data_lists, ax=None, **kwargs):
     assert len(data_lists) > 0, ">> Empty data lists"
     n_data = len(data_lists)
-    if "plc" in kwargs:
-        plc = kwargs["plc"]
-    else:
-        plc = get_plt_cfg(**kwargs)
+    plc = kwargs["plc"] if "plc" in kwargs else get_plt_cfg(**kwargs)
 
     plt_show, ax = get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     data_stats = [get_multi_curve_summary_stats(dl) for dl in data_lists]
@@ -412,7 +409,7 @@ def get_grid_shape(nominal_subplot_shape, data_len):
         sp_x = data_len
     elif sp_y is None:
         sp_y = data_len
-    assert all([size is not None for size in [sp_x, sp_y]])
+    assert all(size is not None for size in [sp_x, sp_y])
     return sp_x, sp_y
 
 
@@ -428,8 +425,7 @@ def make_grid_figure(
         sp_y,
         figsize=(fs_y * sp_y, fs_x * sp_x),
     )
-    axes = np.atleast_2d(axes)  # Make indexing easy
-    return axes
+    return np.atleast_2d(axes)  # Make indexing easy
 
 
 def annotate_grid_figure(axes, plc):

@@ -20,7 +20,8 @@ def test_find_max_diff_point_basic() -> None:
 
 
 def test_find_max_diff_point_monotonicity() -> None:
-    # Create random arrays and verify that the computed CDFs are non-decreasing and go from 0 to 1.
+    # Create random arrays and verify that the computed CDFs are non-decreasing
+    # and go from 0 to 1.
     # Note: Using legacy NumPy random API for test reproducibility
     np.random.seed(42)  # noqa: NPY002
     vals1 = np.random.rand(100)  # noqa: NPY002
