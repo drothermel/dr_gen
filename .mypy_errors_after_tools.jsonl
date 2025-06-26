@@ -1,0 +1,965 @@
+{"type": "metadata", "error_count": 964}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 78, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 94, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 105, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 148, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 176, "column": null, "level": "error", "message": "List comprehension has incompatible type List[None]; expected List[str]", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 192, "column": null, "level": "error", "message": "Statement is unreachable", "error_code": "unreachable"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 199, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 211, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 420, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 441, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 15, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 52, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 58, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 87, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 113, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 124, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 128, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 132, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 143, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 160, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 186, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 213, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 240, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 262, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 274, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 283, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 315, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 328, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 393, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 406, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 416, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 431, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 74, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 107, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 139, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 202, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 278, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 302, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 34, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_hpm\" (hint: \"rid_to_hpm: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 35, "column": null, "level": "error", "message": "Need type annotation for \"varying_kvs\" (hint: \"varying_kvs: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 50, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 59, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 76, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 107, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_file\" (hint: \"rid_to_file: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 108, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_run_data\" (hint: \"rid_to_run_data: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 109, "column": null, "level": "error", "message": "Need type annotation for \"ignored_rids\" (hint: \"ignored_rids: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"error_rids\" (hint: \"error_rids: set[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 146, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 156, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 165, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 168, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 175, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 189, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 197, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 208, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 237, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 261, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 305, "column": null, "level": "error", "message": "Need type annotation for \"hpm_split_metrics\"", "error_code": "var-annotated"}
+{"file": "src/dr_gen/data/viz.py", "line": 8, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/viz.py", "line": 14, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 6, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Missing type parameters for generic type \"tuple\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/utils/display.py", "line": 51, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 95, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 110, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 120, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 130, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 140, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 78, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 94, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 105, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 148, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 176, "column": null, "level": "error", "message": "List comprehension has incompatible type List[None]; expected List[str]", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 192, "column": null, "level": "error", "message": "Statement is unreachable", "error_code": "unreachable"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 199, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 211, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 420, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 441, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 15, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 52, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 58, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 87, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 113, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 124, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 128, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 132, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 143, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 160, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 186, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 213, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 240, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 262, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 274, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 283, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 315, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 328, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 393, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 406, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 416, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 431, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 74, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 107, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 139, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 202, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 278, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 302, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 34, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_hpm\" (hint: \"rid_to_hpm: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 35, "column": null, "level": "error", "message": "Need type annotation for \"varying_kvs\" (hint: \"varying_kvs: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 50, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 59, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 76, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 107, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_file\" (hint: \"rid_to_file: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 108, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_run_data\" (hint: \"rid_to_run_data: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 109, "column": null, "level": "error", "message": "Need type annotation for \"ignored_rids\" (hint: \"ignored_rids: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"error_rids\" (hint: \"error_rids: set[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 146, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 156, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 165, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 168, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 175, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 189, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 197, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 208, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 237, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 261, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 305, "column": null, "level": "error", "message": "Need type annotation for \"hpm_split_metrics\"", "error_code": "var-annotated"}
+{"file": "src/dr_gen/data/viz.py", "line": 8, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/viz.py", "line": 14, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 6, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Missing type parameters for generic type \"tuple\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/utils/display.py", "line": 51, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 95, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 110, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 120, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 130, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 140, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 74, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 107, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 139, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 202, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 278, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 302, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 34, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_hpm\" (hint: \"rid_to_hpm: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 35, "column": null, "level": "error", "message": "Need type annotation for \"varying_kvs\" (hint: \"varying_kvs: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 50, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 59, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 76, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 107, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_file\" (hint: \"rid_to_file: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 108, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_run_data\" (hint: \"rid_to_run_data: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 109, "column": null, "level": "error", "message": "Need type annotation for \"ignored_rids\" (hint: \"ignored_rids: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"error_rids\" (hint: \"error_rids: set[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 146, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 156, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 165, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 168, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 175, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 189, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 197, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 208, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 237, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 261, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 305, "column": null, "level": "error", "message": "Need type annotation for \"hpm_split_metrics\"", "error_code": "var-annotated"}
+{"file": "scripts/train.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/train.py", "line": 29, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/train.py", "line": 76, "column": null, "level": "error", "message": "Argument 4 to \"train_loop\" has incompatible type \"Optimizer | None\"; expected \"Optimizer\"", "error_code": "arg-type"}
+{"file": "scripts/group_results.py", "line": 12, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/group_results.py", "line": 39, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"float\", target has type \"str\")", "error_code": "assignment"}
+{"file": "scripts/group_results.py", "line": 61, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 10, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 48, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 99, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 121, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 131, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 133, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 133, "column": null, "level": "error", "message": "Missing type parameters for generic type \"list\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 203, "column": null, "level": "error", "message": "Returning Any from function declared to return \"str | None\"", "error_code": "no-any-return"}
+{"file": "scripts/plot_hpm_data.py", "line": 211, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 226, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 237, "column": null, "level": "error", "message": "Need type annotation for \"user_selected_hpms\" (hint: \"user_selected_hpms: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "scripts/plot_hpm_data.py", "line": 321, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 387, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 27, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 34, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 53, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 73, "column": null, "level": "error", "message": "Need type annotation for \"metrics_data\"", "error_code": "var-annotated"}
+{"file": "scripts/run_log_paser.py", "line": 159, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 276, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 294, "column": null, "level": "error", "message": "Need type annotation for \"current_group_split_metric_results\"", "error_code": "var-annotated"}
+{"file": "scripts/template_scripts.py", "line": 10, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_hpm_A\" for \"print_results_report\"; did you mean \"_best_hpm_a\" or \"_best_hpm_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_ts_A\" for \"print_results_report\"; did you mean \"_best_ts_a\" or \"_best_ts_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_hpm_B\" for \"print_results_report\"; did you mean \"_best_hpm_a\" or \"_best_hpm_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_ts_B\" for \"print_results_report\"; did you mean \"_best_ts_a\" or \"_best_ts_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval_sweep.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 78, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 94, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 105, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 148, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 176, "column": null, "level": "error", "message": "List comprehension has incompatible type List[None]; expected List[str]", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 192, "column": null, "level": "error", "message": "Statement is unreachable", "error_code": "unreachable"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 199, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 211, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 232, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 247, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 286, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 306, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 348, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 372, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 384, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 396, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Overlap between argument names and ** TypedDict items: \"n_sample\", \"n_grid\"", "error_code": "misc"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 408, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 420, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/common_plots.py", "line": 441, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 15, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 52, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 58, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 87, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 113, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 124, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 128, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 132, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 143, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 160, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 186, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 213, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 240, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 262, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 274, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 283, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 315, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 328, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 393, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 406, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 416, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/plot_utils.py", "line": 431, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 74, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 107, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 139, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 202, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 278, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 302, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 34, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_hpm\" (hint: \"rid_to_hpm: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 35, "column": null, "level": "error", "message": "Need type annotation for \"varying_kvs\" (hint: \"varying_kvs: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 50, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 59, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 76, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 107, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_file\" (hint: \"rid_to_file: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 108, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_run_data\" (hint: \"rid_to_run_data: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 109, "column": null, "level": "error", "message": "Need type annotation for \"ignored_rids\" (hint: \"ignored_rids: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"error_rids\" (hint: \"error_rids: set[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 146, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 156, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 165, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 168, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 175, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 189, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 197, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 208, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 237, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 261, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 305, "column": null, "level": "error", "message": "Need type annotation for \"hpm_split_metrics\"", "error_code": "var-annotated"}
+{"file": "src/dr_gen/data/viz.py", "line": 8, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/viz.py", "line": 14, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 6, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 42, "column": null, "level": "error", "message": "Missing type parameters for generic type \"tuple\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/utils/display.py", "line": 51, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 65, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 83, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 95, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 110, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 120, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 130, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/display.py", "line": 140, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 74, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 107, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 139, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 202, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 278, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/result_plotting.py", "line": 302, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 9, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 34, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_hpm\" (hint: \"rid_to_hpm: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 35, "column": null, "level": "error", "message": "Need type annotation for \"varying_kvs\" (hint: \"varying_kvs: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 38, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 50, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 59, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 76, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 107, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_file\" (hint: \"rid_to_file: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 108, "column": null, "level": "error", "message": "Need type annotation for \"rid_to_run_data\" (hint: \"rid_to_run_data: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 109, "column": null, "level": "error", "message": "Need type annotation for \"ignored_rids\" (hint: \"ignored_rids: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"error_rids\" (hint: \"error_rids: set[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 146, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 156, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 165, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 168, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 175, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 189, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 197, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 208, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 237, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 261, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 284, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 298, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_group.py", "line": 305, "column": null, "level": "error", "message": "Need type annotation for \"hpm_split_metrics\"", "error_code": "var-annotated"}
+{"file": "scripts/train.py", "line": 16, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/train.py", "line": 29, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/train.py", "line": 76, "column": null, "level": "error", "message": "Argument 4 to \"train_loop\" has incompatible type \"Optimizer | None\"; expected \"Optimizer\"", "error_code": "arg-type"}
+{"file": "scripts/group_results.py", "line": 12, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/group_results.py", "line": 39, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"float\", target has type \"str\")", "error_code": "assignment"}
+{"file": "scripts/group_results.py", "line": 61, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 10, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 48, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 99, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 121, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 131, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 133, "column": null, "level": "error", "message": "Missing type parameters for generic type \"dict\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 133, "column": null, "level": "error", "message": "Missing type parameters for generic type \"list\"", "error_code": "type-arg"}
+{"file": "scripts/plot_hpm_data.py", "line": 157, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 203, "column": null, "level": "error", "message": "Returning Any from function declared to return \"str | None\"", "error_code": "no-any-return"}
+{"file": "scripts/plot_hpm_data.py", "line": 211, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 226, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 237, "column": null, "level": "error", "message": "Need type annotation for \"user_selected_hpms\" (hint: \"user_selected_hpms: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "scripts/plot_hpm_data.py", "line": 321, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/plot_hpm_data.py", "line": 387, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 27, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 34, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 53, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 73, "column": null, "level": "error", "message": "Need type annotation for \"metrics_data\"", "error_code": "var-annotated"}
+{"file": "scripts/run_log_paser.py", "line": 159, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 276, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/run_log_paser.py", "line": 294, "column": null, "level": "error", "message": "Need type annotation for \"current_group_split_metric_results\"", "error_code": "var-annotated"}
+{"file": "scripts/template_scripts.py", "line": 10, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_hpm_A\" for \"print_results_report\"; did you mean \"_best_hpm_a\" or \"_best_hpm_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_ts_A\" for \"print_results_report\"; did you mean \"_best_ts_a\" or \"_best_ts_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_hpm_B\" for \"print_results_report\"; did you mean \"_best_hpm_a\" or \"_best_hpm_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval.py", "line": 73, "column": null, "level": "error", "message": "Unexpected keyword argument \"best_ts_B\" for \"print_results_report\"; did you mean \"_best_ts_a\" or \"_best_ts_b\"?", "error_code": "call-arg"}
+{"file": "scripts/test_eval_sweep.py", "line": 46, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/utils.py", "line": 29, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/schemas.py", "line": 35, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"OptimizerTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 46, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"LRSchedTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/schemas.py", "line": 56, "column": null, "level": "error", "message": "Argument 1 to \"check_contains\" has incompatible type \"CriterionTypes\"; expected \"type[Enum]\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 28, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 80, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 85, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 102, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 127, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/utils/metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 86, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 91, "column": null, "level": "error", "message": "Non-overlapping equality check (left operand type: \"int\", right operand type: \"list[int]\")", "error_code": "comparison-overlap"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 97, "column": null, "level": "error", "message": "Missing type parameters for generic type \"MutableMapping\"", "error_code": "type-arg"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 112, "column": null, "level": "error", "message": "Need type annotation for \"important_values\" (hint: \"important_values: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 115, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 119, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 123, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 136, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 150, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 158, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 173, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 181, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 187, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 192, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 206, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 216, "column": null, "level": "error", "message": "Need type annotation for \"metadata\" (hint: \"metadata: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 217, "column": null, "level": "error", "message": "Need type annotation for \"metrics_by_split\" (hint: \"metrics_by_split: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 219, "column": null, "level": "error", "message": "Need type annotation for \"parse_errors\" (hint: \"parse_errors: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 237, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"Hpm\", variable has type \"None\")", "error_code": "assignment"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 247, "column": null, "level": "error", "message": "Argument 1 to \"get_logged_metrics_infer_epoch\" has incompatible type \"None\"; expected \"Hpm\"", "error_code": "arg-type"}
+{"file": "src/dr_gen/analyze/run_data.py", "line": 252, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 26, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 56, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 62, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 64, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 71, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 111, "column": null, "level": "error", "message": "Need type annotation for \"curves\" (hint: \"curves: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 134, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[int | float | str]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 139, "column": null, "level": "error", "message": "Returning Any from function declared to return \"list[float]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 158, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 179, "column": null, "level": "error", "message": "Need type annotation for \"x_vals\" (hint: \"x_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 180, "column": null, "level": "error", "message": "Need type annotation for \"metric_vals\" (hint: \"metric_vals: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 181, "column": null, "level": "error", "message": "Need type annotation for \"x2met\" (hint: \"x2met: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "src/dr_gen/analyze/metric_curves.py", "line": 228, "column": null, "level": "error", "message": "Returning Any from function declared to return \"float\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 86, "column": null, "level": "error", "message": "Returning Any from function declared to return \"Dataset[Any]\"", "error_code": "no-any-return"}
+{"file": "src/dr_gen/data/load_data.py", "line": 224, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 255, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 303, "column": null, "level": "error", "message": "Incompatible types in assignment (expression has type \"SequentialSampler\", variable has type \"RandomSampler\")", "error_code": "assignment"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/data/load_data.py", "line": 320, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 46, "column": null, "level": "error", "message": "Missing return statement", "error_code": "return"}
+{"file": "src/dr_gen/train/model.py", "line": 163, "column": null, "level": "error", "message": "Returning Any from function declared to return Module", "error_code": "no-any-return"}
+{"file": "src/dr_gen/train/model.py", "line": 212, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/model.py", "line": 221, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "src/dr_gen/train/loops.py", "line": 112, "column": null, "level": "error", "message": "Item \"None\" of \"LRScheduler | None\" has no attribute \"step\"", "error_code": "union-attr"}
+{"file": "tests/analyze/test_ks_stats.py", "line": 43, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/analyze/test_metric_curves.py", "line": 11, "column": null, "level": "error", "message": "Need type annotation for \"DUMMY_CONFIG\" (hint: \"DUMMY_CONFIG: dict[<type>, <type>] = ...\")", "error_code": "var-annotated"}
+{"file": "tests/analyze/test_metric_curves.py", "line": 51, "column": null, "level": "error", "message": "Argument 1 to \"add_curve\" of \"MetricCurve\" has incompatible type \"list[int]\"; expected \"list[int | float | str]\"", "error_code": "arg-type"}
+{"file": "tests/analyze/test_metric_curves.py", "line": 102, "column": null, "level": "error", "message": "Argument 1 to \"add_x_v\" of \"MetricCurve\" has incompatible type \"list[int]\"; expected \"float | str\"", "error_code": "arg-type"}
+{"file": "tests/analyze/test_metric_curves.py", "line": 106, "column": null, "level": "error", "message": "Argument 1 to \"get_by_xval\" of \"MetricCurve\" has incompatible type \"list[int]\"; expected \"float | str\"", "error_code": "arg-type"}
+{"file": "tests/data/test_load_data.py", "line": 20, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 26, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 42, "column": null, "level": "error", "message": "Missing type parameters for generic type \"Dataset\"", "error_code": "type-arg"}
+{"file": "tests/data/test_load_data.py", "line": 45, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 57, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 63, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 72, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 91, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 95, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 100, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 104, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 108, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 114, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 125, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 132, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 142, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 177, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 210, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 218, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 226, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 233, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 242, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 249, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 256, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 281, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 296, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 358, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 456, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/data/test_load_data.py", "line": 514, "column": null, "level": "error", "message": "Item \"list[Any]\" of \"dict[str | bytes | int | Enum | float | bool, Any] | list[Any] | str | Any | None\" has no attribute \"get\"", "error_code": "union-attr"}
+{"file": "tests/data/test_load_data.py", "line": 514, "column": null, "level": "error", "message": "Item \"None\" of \"dict[str | bytes | int | Enum | float | bool, Any] | list[Any] | str | Any | None\" has no attribute \"get\"", "error_code": "union-attr"}
+{"file": "tests/data/test_load_data.py", "line": 514, "column": null, "level": "error", "message": "Item \"str\" of \"dict[str | bytes | int | Enum | float | bool, Any] | list[Any] | str | Any | None\" has no attribute \"get\"", "error_code": "union-attr"}
+{"file": "tests/train/test_loops.py", "line": 20, "column": null, "level": "error", "message": "Need type annotation for \"logs\" (hint: \"logs: list[<type>] = ...\")", "error_code": "var-annotated"}
+{"file": "tests/train/test_loops.py", "line": 22, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 26, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 30, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 34, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 42, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 48, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 52, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 58, "column": null, "level": "error", "message": "Missing type parameters for generic type \"Dataset\"", "error_code": "type-arg"}
+{"file": "tests/train/test_loops.py", "line": 77, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 84, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 90, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 117, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 127, "column": null, "level": "error", "message": "Argument 1 to \"log_metrics\" has incompatible type \"DummyMetrics\"; expected \"Metrics | None\"", "error_code": "arg-type"}
+{"file": "tests/train/test_loops.py", "line": 144, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 166, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 178, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_loops.py", "line": 193, "column": null, "level": "error", "message": "Missing positional arguments \"model\", \"optim\", \"lr_sched\" in call to \"train_loop\"", "error_code": "call-arg"}
+{"file": "tests/train/test_loops.py", "line": 193, "column": null, "level": "error", "message": "Argument \"md\" to \"train_loop\" has incompatible type \"DummyMetrics\"; expected \"Metrics | None\"", "error_code": "arg-type"}
+{"file": "tests/train/test_model.py", "line": 23, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_model.py", "line": 41, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/train/test_model.py", "line": 49, "column": null, "level": "error", "message": "Too many arguments for \"create_lrsched\"", "error_code": "call-arg"}
+{"file": "tests/train/test_model.py", "line": 69, "column": null, "level": "error", "message": "Item \"Tensor\" of \"Tensor | Module\" has no attribute \"out_features\"", "error_code": "union-attr"}
+{"file": "tests/train/test_model.py", "line": 151, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 25, "column": null, "level": "error", "message": "Function is missing a return type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 36, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 60, "column": null, "level": "error", "message": "Function is missing a type annotation", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 67, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 72, "column": null, "level": "error", "message": "Cannot assign to a method", "error_code": "method-assign"}
+{"file": "tests/utils/test_metrics.py", "line": 82, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 95, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 114, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 137, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 148, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 164, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 176, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
+{"file": "tests/utils/test_metrics.py", "line": 183, "column": null, "level": "error", "message": "Function is missing a type annotation for one or more arguments", "error_code": "no-untyped-def"}
