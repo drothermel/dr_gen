@@ -1,0 +1,1 @@
+../../dr_ref/python_package_refs/pydantic-reference.md

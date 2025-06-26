@@ -3,11 +3,6 @@ import torch
 from omegaconf import OmegaConf
 
 import dr_gen.train.model as mu
-from dr_gen.schemas import (
-    CriterionTypes,
-    LRSchedTypes,
-    OptimizerTypes,
-)
 
 # --------- Tests for create_optim and create_lrsched ---------
 
@@ -15,9 +10,9 @@ from dr_gen.schemas import (
 @pytest.mark.parametrize(
     ("optim_type", "expected_class"),
     [
-        (OptimizerTypes.SGD.value, torch.optim.SGD),
-        (OptimizerTypes.RMSPROP.value, torch.optim.RMSprop),
-        (OptimizerTypes.ADAMW.value, torch.optim.AdamW),
+        ("sgd", torch.optim.SGD),
+        ("rmsprop", torch.optim.RMSprop),
+        ("adamw", torch.optim.AdamW),
     ],
 )
 def test_create_optim(optim_type, expected_class) -> None:
@@ -34,8 +29,8 @@ def test_create_optim(optim_type, expected_class) -> None:
     ("lrsched_type", "expected_class"),
     [
         (None, type(None)),
-        (LRSchedTypes.STEP_LR.value, torch.optim.lr_scheduler.StepLR),
-        (LRSchedTypes.EXPONENTIAL_LR.value, torch.optim.lr_scheduler.ExponentialLR),
+        ("steplr", torch.optim.lr_scheduler.StepLR),
+        ("exponentiallr", torch.optim.lr_scheduler.ExponentialLR),
     ],
 )
 def test_create_lrsched(lrsched_type, expected_class) -> None:
@@ -44,7 +39,7 @@ def test_create_lrsched(lrsched_type, expected_class) -> None:
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     lrsched_params = {**mu.LRSCHED_DEFAULTS}
     # If we need to supply extra params (e.g. step_size) we can add them:
-    if lrsched_type == LRSchedTypes.STEP_LR.value:
+    if lrsched_type == "steplr":
         lrsched_params["step_size"] = 5
     lr_sched = mu.create_lrsched(lrsched_type, optimizer, lrsched_params)
     assert isinstance(lr_sched, expected_class)
@@ -77,10 +72,10 @@ def test_create_optim_lrsched() -> None:
         {
             "model": {"name": "resnet18", "weights": None},
             "optim": {
-                "name": OptimizerTypes.SGD.value,
+                "name": "sgd",
                 "lr": 0.05,
                 "momentum": 0.9,
-                "lr_scheduler": LRSchedTypes.STEP_LR.value,
+                "lr_scheduler": "steplr",
                 "step_size": 3,
             },
             "device": "cpu",
@@ -107,7 +102,7 @@ def test_get_model_optim_lrsched() -> None:
         {
             "model": {"name": "resnet18", "weights": None},
             "optim": {
-                "name": OptimizerTypes.ADAMW.value,
+                "name": "adamw",
                 "lr": 0.001,
                 # no lr_scheduler provided so create_optim_lrsched will be used
             },
@@ -134,7 +129,7 @@ def test_get_criterion() -> None:
     cfg = OmegaConf.create(
         {
             "optim": {
-                "loss": CriterionTypes.CROSS_ENTROPY.value,
+                "loss": "cross_entropy",
                 # Using default CRITERION_DEFAULTS so no extra params provided
             }
         }
