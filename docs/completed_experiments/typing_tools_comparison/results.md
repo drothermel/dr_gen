@@ -1,3 +1,20 @@
+<!-- METHODOLOGICAL NOTES:
+- Baseline measurement discrepancy: Results show 221 baseline mypy errors, but round1_experiment_results.md 
+  shows 1046 baseline errors. This 5x difference indicates:
+  a) Different measurement scope (plan/results use src/ only, round1 may include scripts/tests)
+  b) Different measurement methodology between experiments
+  c) Possible code changes between experiments
+- Tool application scope: All tools were applied only to src/ directory (29 files)
+- Execution completeness: Only 3 out of 11 planned configurations were tested:
+  - autotyping-safe (✓)
+  - autotyping-aggressive (✓)
+  - infer-types-default (✓)
+  - Missing: conservative variants, individual extractors (8 configurations)
+- Measurement methodology: Results show direct error counts, likely from different measurement
+  approach than mp command used in round1
+- Reset methodology: Used git checkout between tests as planned
+-->
+
 # Automated Typing Tools Comparison Experiment Results
 
 ## Configuration 1: autotyping-safe

@@ -1,3 +1,17 @@
+<!-- METHODOLOGICAL NOTES:
+- Baseline measurement: Shows 1046 mypy errors using mp command on src/ directory
+- Tool application scope: All tools applied only to src/ directory
+- Measurement methodology: Used mp command which writes to .mypy_errors.jsonl file
+- Measurement discrepancy: This experiment shows 1046 baseline errors while 
+  automated_typing_experiment_results.md shows 221 baseline errors (5x difference)
+- Possible explanations for discrepancy:
+  a) Different mypy configuration or version between experiments
+  b) Code changes between experiments 
+  c) Different measurement commands (mp vs direct mypy output parsing)
+- Execution completeness: Tested 4 configurations as shown
+- File outputs: Generated .mypy_errors_baseline.jsonl and stage-specific measurements
+-->
+
 # Round 1 Typing Tool Experiment Results
 
 **Date:** June 23, 2025  

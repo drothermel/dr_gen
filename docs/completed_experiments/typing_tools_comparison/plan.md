@@ -1,3 +1,14 @@
+<!-- METHODOLOGICAL NOTES:
+- Baseline measurement discrepancy: The plan references ~211 mypy errors from previous analysis, 
+  but the actual experiment measured 1046 baseline errors. This 5x difference suggests either:
+  a) Different measurement methodology between planning and execution
+  b) Code changes between planning and execution 
+  c) Different scope (e.g., src/ only vs entire codebase)
+- Tool application scope: All tools were applied only to src/ directory, not scripts/ or tests/
+- Execution completeness: Only 4 out of 11 planned configurations were tested
+- Measurement methodology: Used mp command which writes to .mypy_errors.jsonl file
+-->
+
 # Automated Typing Tools Comparison Experiment
 
 ## Objective

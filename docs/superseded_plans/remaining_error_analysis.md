@@ -1,5 +1,34 @@
 # Remaining MyPy Error Analysis (211 Errors)
 
+> ⚠️ **INCOMPLETE ANALYSIS - BASED ON INCORRECT BASELINE**
+> 
+> This analysis was conducted without establishing the true baseline error count and is therefore incomplete.
+> 
+> **Key Methodological Issues:**
+> 1. **Missing Baseline**: This analyzes "211 remaining errors" but doesn't document what the original count was
+> 2. **No Tool Attribution**: Doesn't specify which errors were fixed by which tools (infer-types vs MonkeyType)
+> 3. **Incomplete Context**: The 211 errors appear to be after some fixes, but the methodology isn't documented
+> 4. **No External Library Filtering**: Analysis includes errors from external libraries that should have been filtered
+> 
+> **Why This Matters:**
+> - Cannot calculate the actual effectiveness of typing tools without before/after metrics
+> - The "remaining" errors might include unfixable external library issues
+> - Success metrics (78% mechanical, etc.) may be misleading without proper context
+> 
+> **What Was Missing:**
+> 1. Original baseline error count (was actually 395)
+> 2. Which tool fixed which errors
+> 3. External library error filtering
+> 4. Proper experimental methodology
+> 
+> **Correct Analysis Approach:**
+> 1. Establish baseline (395 errors)
+> 2. Filter external library errors
+> 3. Run each tool and measure its specific impact
+> 4. Analyze truly remaining fixable errors
+> 
+> See Round 3 documentation for properly conducted analysis.
+
 ## Error Type Distribution
 
 ### Mechanical Fixes (High Success Rate) - 165 errors (78%)

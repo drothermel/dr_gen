@@ -1,5 +1,27 @@
 # Phase 2: Runtime Type Collection with MonkeyType - Detailed Execution Plan
 
+> ⚠️ **SUPERSEDED DOCUMENT - METHODOLOGICAL ISSUES**
+> 
+> This plan was based on incorrect baseline assumptions and has been superseded by Round 3 planning.
+> 
+> **Key Methodological Issues:**
+> 1. **Incorrect Error Counting**: This plan assumed ~50-100 remaining errors after Phase 1, but the actual baseline was 395 errors
+> 2. **Wrong Success Metrics**: The 60% reduction target (50→20) was based on the incorrect baseline
+> 3. **Incomplete Analysis**: Did not account for errors from external libraries that needed to be filtered first
+> 4. **Order of Operations**: Should have established correct baseline before planning tool experiments
+> 
+> **Why This Matters:**
+> - The effectiveness of MonkeyType cannot be properly evaluated without accurate before/after metrics
+> - The plan's assumptions about "remaining errors" were off by ~4-8x
+> - Success criteria were meaningless with the wrong starting point
+> 
+> **Correct Approach (Round 3):**
+> 1. Establish true baseline (395 errors)
+> 2. Filter external library errors first
+> 3. Then evaluate tools on the real remaining errors
+> 
+> See `round3_monkeytype_plan.md` for the corrected approach.
+
 ## Pre-Execution State
 - **Expected starting point**: ~50-100 mypy errors (after Phase 1 `infer-types`)
 - **Hypothesis**: MonkeyType can capture complex ML pipeline types that static analysis missed
