@@ -5,7 +5,7 @@ from dr_gen.analyze.log_file_data import LogFileData
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="analyze")
-def run(cfg: DictConfig):
+def run(cfg: DictConfig) -> None:
     print()
     print(f">> Analyze: {cfg.log_file}")
     print()
@@ -27,12 +27,12 @@ def run(cfg: DictConfig):
 
     print(">> All xs:")
     for k, v in lfd.get_all_xs_flat().items():
-        print(f"  - {str(k):50} | {v[:3]}")
+        print(f"  - {k!s:50} | {v[:3]}")
     print()
 
     print(">> All vals:")
     for k, v in lfd.get_all_vals_flat().items():
-        print(f"  - {str(k):50} | {v[:3]}")
+        print(f"  - {k!s:50} | {v[:3]}")
     print()
 
     print(">> End run!")

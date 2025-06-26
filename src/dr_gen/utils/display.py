@@ -51,7 +51,7 @@ def get_filter_function(table, **kwargs):
             k = k.lower()
             v = [v] if not isinstance(v, list) else v
             vstrs = [str(vv) for vv in v]
-            ind = field_index.get(k, None)
+            ind = field_index.get(k)
             if ind is None:
                 continue
             if vals[ind] not in vstrs:

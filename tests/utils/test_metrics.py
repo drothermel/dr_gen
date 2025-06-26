@@ -1,18 +1,19 @@
 import pytest
-from omegaconf import OmegaConf
 from dr_util.metrics import (
     BATCH_KEY,
-    add_sum,
     add_list,
-    agg_passthrough,
-    agg_none,
+    add_sum,
     agg_batch_weighted_list_avg,
+    agg_none,
+    agg_passthrough,
 )
+from omegaconf import OmegaConf
+
 from dr_gen.utils.metrics import (
+    GenMetrics,
+    GenMetricsSubgroup,
     GenMetricType,
     agg_avg_list,
-    GenMetricsSubgroup,
-    GenMetrics,
 )
 
 # ---------------------------------------------------
@@ -63,13 +64,13 @@ def subgroup_with_fake_add(dummy_cfg):
     subgroup.data = {}
     calls = []
 
-    def fake_add_tuple(key, value):
+    def fake_add_tuple(key, value) -> None:
         calls.append((key, value))
         # For testing, accumulate values in a list per key.
         subgroup.data.setdefault(key, []).append(value)
 
-    subgroup._add_tuple = fake_add_tuple  # override the internal method
-    subgroup._recorded_calls = calls  # attach for inspection
+    subgroup._add_tuple = fake_add_tuple  # override the internal method  # noqa: SLF001
+    subgroup._recorded_calls = calls  # attach for inspection  # noqa: SLF001
     return subgroup
 
 
@@ -78,10 +79,11 @@ def subgroup_with_fake_add(dummy_cfg):
 # ---------------------------------------------------
 
 
-def test_init_data_values(dummy_cfg):
+def test_init_data_values(dummy_cfg) -> None:
     # Create an instance and manually set its data_structure
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
-    subgroup._init_data()  # This calls _init_data_values and _init_data_fxns
+    # This calls _init_data_values and _init_data_fxns
+    subgroup._init_data()  # noqa: SLF001
 
     # Check that the data values are set correctly
     assert subgroup.data["metric_int"] == 0
@@ -90,9 +92,9 @@ def test_init_data_values(dummy_cfg):
     assert subgroup.data["metric_avg"] == []
 
 
-def test_init_data_fxns(dummy_cfg):
+def test_init_data_fxns(dummy_cfg) -> None:
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
-    subgroup._init_data_fxns()
+    subgroup._init_data_fxns()  # noqa: SLF001
 
     # Check that the add and aggregation functions are set as expected.
     # (We compare function objects here.)
@@ -109,13 +111,13 @@ def test_init_data_fxns(dummy_cfg):
     assert subgroup.agg_fxns["metric_avg"] == agg_avg_list
 
 
-def test_clear_data(dummy_cfg):
+def test_clear_data(dummy_cfg) -> None:
     subgroup = GenMetricsSubgroup(dummy_cfg, "test")
     subgroup.data_structure = {
         "metric_int": GenMetricType.INT.value,
         "metric_list": GenMetricType.LIST.value,
     }
-    subgroup._init_data()  # Initialize data
+    subgroup._init_data()  # Initialize data  # noqa: SLF001
 
     # Simulate updates to the data
     subgroup.data["metric_int"] = 42
@@ -132,22 +134,23 @@ def test_clear_data(dummy_cfg):
 # ---------------------------------------------------
 
 
-def test_add_tuple_dispatch(subgroup_with_fake_add):
+def test_add_tuple_dispatch(subgroup_with_fake_add) -> None:
     # Call add with a tuple; expected behavior:
     #   - The tuple version asserts that the input has exactly 2 items.
-    #   - It calls _add_tuple(key, val) and, if ns is provided, also _add_tuple(BATCH_KEY, ns).
+    #   - It calls _add_tuple(key, val) and, if ns is provided,
+    #     also _add_tuple(BATCH_KEY, ns).
     subgroup_with_fake_add.add(("metric_int", 5), ns=10)
     # Verify that _add_tuple was called with ("metric_int", 5) and (BATCH_KEY, 10)
-    assert ("metric_int", 5) in subgroup_with_fake_add._recorded_calls
-    assert (BATCH_KEY, 10) in subgroup_with_fake_add._recorded_calls
+    assert ("metric_int", 5) in subgroup_with_fake_add._recorded_calls  # noqa: SLF001
+    assert (BATCH_KEY, 10) in subgroup_with_fake_add._recorded_calls  # noqa: SLF001
 
 
-def test_add_dict_dispatch(subgroup_with_fake_add):
+def test_add_dict_dispatch(subgroup_with_fake_add) -> None:
     # Call add with a dict. It should iterate over the key-value pairs.
     subgroup_with_fake_add.add({"metric_list": 3, "metric_int": 2}, ns=20)
     # Check that both key-value pairs were passed to _add_tuple,
     # plus an additional call for the batch key.
-    recorded = subgroup_with_fake_add._recorded_calls
+    recorded = subgroup_with_fake_add._recorded_calls  # noqa: SLF001
     assert ("metric_list", 3) in recorded
     assert ("metric_int", 2) in recorded
     assert (BATCH_KEY, 20) in recorded
@@ -158,7 +161,7 @@ def test_add_dict_dispatch(subgroup_with_fake_add):
 # ---------------------------------------------------
 
 
-def test_gen_metrics_log_data(dummy_cfg):
+def test_gen_metrics_log_data(dummy_cfg) -> None:
     # Create a dummy config that includes two groups: train and val.
     metrics = GenMetrics(dummy_cfg)
     # Log some data to the "train" group.
@@ -170,14 +173,14 @@ def test_gen_metrics_log_data(dummy_cfg):
     assert group_data.get(BATCH_KEY) == [10]
 
 
-def test_gen_metrics_log_data_invalid_group(dummy_cfg):
+def test_gen_metrics_log_data_invalid_group(dummy_cfg) -> None:
     metrics = GenMetrics(dummy_cfg)
     # Log data to an invalid group should raise an assertion.
     with pytest.raises(AssertionError, match=">> Invalid group name:"):
         metrics.log_data({"metric_int": 5}, "invalid_group")
 
 
-def test_gen_metrics_clear_data(dummy_cfg):
+def test_gen_metrics_clear_data(dummy_cfg) -> None:
     metrics = GenMetrics(dummy_cfg)
     metrics.log_data({"metric_list": 2}, "val", ns=None)
     metrics.log_data({"metric_list": 4}, "train", ns=10)

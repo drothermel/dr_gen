@@ -1,9 +1,10 @@
 import random
+
 import matplotlib.pyplot as plt
 
-from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 import dr_gen.analyze.ks_stats as ks
 import dr_gen.analyze.plot_utils as pu
+from dr_gen.utils.utils import make_list, make_list_of_lists, make_list_of_lols
 
 
 def len_to_inds(data_len):
@@ -21,7 +22,7 @@ def default_grid_ind_labels(data):
 
 def default_grid_sample_titles(title, orig_data, sampled):
     titles = []
-    for orig, samp in zip(orig_data, sampled):
+    for orig, samp in zip(orig_data, sampled, strict=False):
         titles.append(f"{title} | Sampled {len(samp)} / {len(orig)}")
     return titles
 
@@ -41,10 +42,10 @@ def line_plot(curve, ax=None, **kwargs):
         kwargs["labels"] = kwargs.get("labels", pu.default_ind_labels(curve))
 
     # Plot: len(curve) lines
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     pu.make_line_plot(curve, ax=ax, **kwargs)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 # Handles one or many vals lists
@@ -53,10 +54,10 @@ def histogram_plot(vals, ax=None, **kwargs):
     vals = make_list(vals)
 
     # Plot
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     pu.make_histogram_plot(vals, ax=ax, **kwargs)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 def cdf_plot(vals1, vals2, ax=None, **kwargs):
@@ -71,10 +72,10 @@ def cdf_plot(vals1, vals2, ax=None, **kwargs):
     kwargs["title"] = kwargs.get("title", "CDF" + "s" if len(cdfs) > 1 else "")
     kwargs["labels"] = kwargs.get("labels", [f"CDF {i}" for i in range(len(cdfs))])
 
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     pu.make_cdfs_plot(vals, cdfs, ax=ax, **kwargs)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 def cdf_histogram_plot(vals1, vals2, ax=None, **kwargs):
@@ -120,7 +121,7 @@ def split_plot(
     kwargs["ylabel"] = kwargs.get("ylabel", metric_name)
 
     # Plot by split
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     n_curves = len(split_curves[0])
     line_styles = {
         "train": "--",
@@ -146,7 +147,7 @@ def split_plot(
             colors = pu.extract_colors(ax, n_curves)
     pu.format_plot_element(plc, ax)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 # ---------------- Individual Sampled Plots ------------------
@@ -244,10 +245,10 @@ def multi_line_sampled_summary_plot(curves_lists, ax=None, n_sample=None, **kwar
     kwargs["title"] = kwargs.get("title", f"Multi Line Summary Plot{sample_str}")
 
     # n_data lines, summary over curves plotted
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     pu.make_summary_plot(sampled_curves_lists, ax, **kwargs)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 def split_sampled_summary_plot(
@@ -280,10 +281,10 @@ def split_sampled_summary_plot(
     kwargs["ylabel"] = kwargs.get("ylabel", metric_name)
 
     # n_splits lines, summary over curves plotted
-    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize", None))
+    plt_show, ax = pu.get_subplot_axis(ax, figsize=kwargs.get("figsize"))
     pu.make_summary_plot(sampled_split_curves_lists, ax, **kwargs)
     if plt_show:
-        plt.show()  # noqa: E701
+        plt.show()
 
 
 # -------------------- Grid Plots: Sample from Set -------------------------

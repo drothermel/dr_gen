@@ -1,8 +1,9 @@
 import numpy as np
-from dr_gen.analyze.ks_stats import find_max_diff_point, calculate_ks_for_run_sets
+
+from dr_gen.analyze.ks_stats import calculate_ks_for_run_sets, find_max_diff_point
 
 
-def test_find_max_diff_point_basic():
+def test_find_max_diff_point_basic() -> None:
     # Use two small lists to test basic functionality.
     vals1 = [1, 2, 3]
     vals2 = [2, 3, 4]
@@ -18,11 +19,12 @@ def test_find_max_diff_point_basic():
     assert np.isclose(computed_max_diff, results["ks_stat"])
 
 
-def test_find_max_diff_point_monotonicity():
+def test_find_max_diff_point_monotonicity() -> None:
     # Create random arrays and verify that the computed CDFs are non-decreasing and go from 0 to 1.
-    np.random.seed(42)
-    vals1 = np.random.rand(100)
-    vals2 = np.random.rand(150)
+    # Note: Using legacy NumPy random API for test reproducibility
+    np.random.seed(42)  # noqa: NPY002
+    vals1 = np.random.rand(100)  # noqa: NPY002
+    vals2 = np.random.rand(150)  # noqa: NPY002
     results = find_max_diff_point(vals1, vals2)
 
     cdf1 = results["cdf1"]
@@ -37,11 +39,12 @@ def test_find_max_diff_point_monotonicity():
     assert np.isclose(cdf2[-1], 1.0)
 
 
-def test_calculate_ks_for_run_sets(capsys):
+def test_calculate_ks_for_run_sets(capsys) -> None:
     # Generate two different samples using a normal distribution.
-    np.random.seed(0)
-    vals1 = np.random.normal(loc=0, scale=1, size=1000)
-    vals2 = np.random.normal(loc=0.5, scale=1, size=1000)
+    # Note: Using legacy NumPy random API for test reproducibility
+    np.random.seed(0)  # noqa: NPY002
+    vals1 = np.random.normal(loc=0, scale=1, size=1000)  # noqa: NPY002
+    vals2 = np.random.normal(loc=0.5, scale=1, size=1000)  # noqa: NPY002
 
     results = calculate_ks_for_run_sets(vals1, vals2)
 

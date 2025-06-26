@@ -28,7 +28,6 @@ build-backend = "hatchling.build"
 dev = [
     "jupyterlab>=4.3.5",
     "jupyterlab-vim>=4.1.4",
-    "pytest>=8.3.4",
     "ruff>=0.9.6",
     "mypy>=1.16.0",
     "tomlkit>=0.12.0",
@@ -42,13 +41,12 @@ test = [
     "pytest-benchmark>=4.0", # Performance benchmarking
 ]
 test-ml = [
-    "pytest-pytorch>=0.2",   # PyTorch test utilities
-    "pytest-randomly>=3.0",  # Randomize test order
+    "pytest-pytorch>=0.2",
+    "pytest-randomly>=3.0"
 ]
 all = [
     {include-group = "dev"},
     {include-group = "test"},
-    {include-group = "test-ml"},
 ]
 
 [tool.uv.sources]
@@ -77,7 +75,6 @@ extend-select = [
     "C90",  # mccabe compexity
     "D",    # pydocstyle
     "DTZ",  # flake8-datetimez (timezone-awareness)
-    "DOC",  # pydoclint (docstring validation)
     "E",    # pycodestyle
     "ERA",  # eradicate
     "EXE",  # flake8-executable
@@ -130,8 +127,6 @@ ignore = [
     "FIX002",   # throws on all TODOs
     "S101",     # asserts are part of our coding style
     "ANN001",   # Missing function argument annotations (for experimental functions)
-    "ANN101",   # Missing type annotation for self in method
-    "ANN102",   # Missing type annotation for cls in classmethod
     "ANN201",   # Missing return type annotation (for experimental functions)
     "D100",     # Missing module docstring (OK for experimental modules)
     "D103",     # Missing docstring in public function (for WIP code)
@@ -149,9 +144,10 @@ ignore = [
 "scripts/**/*.py" = [
     "T201",     # print() is fine in scripts
 ]
-
-[tool.ruff.lint.extend-ignore]
-"*_notebook.py" = ["E402", "F401"]  # Import order/unused imports OK
+"*_notebook.py" = [
+    "E402", # Import order OK in notebooks
+    "F401", # Unused imports OK in notebooks
+]  
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15  # Higher threshold for ML
@@ -225,10 +221,6 @@ markers = [
     "serial: marks tests that must run serially",
     "integration: marks integration tests",
 ]
-
-# Coverage integration
-plugins = ["pytest-cov"]
-
 
 [tool.coverage.report]
 exclude_lines = [

@@ -1,12 +1,11 @@
-from hydra import compose, initialize
-from omegaconf import OmegaConf
-
-import torch
-from torch.utils.data import Dataset, DataLoader, SequentialSampler
-from torchvision.transforms import v2 as transforms_v2
+from unittest.mock import Mock
 
 import pytest
-from unittest.mock import Mock
+import torch
+from hydra import compose, initialize
+from omegaconf import OmegaConf
+from torch.utils.data import DataLoader, Dataset, SequentialSampler
+from torchvision.transforms import v2 as transforms_v2
 
 import dr_gen.data.load_data as du
 import dr_gen.schemas as vu
@@ -101,8 +100,8 @@ def dummy_get_source(split, cfg):
 
 
 def dummy_get_split_source_config(cfg):
-    """
-    For our dummy configuration assume:
+    """For our dummy configuration assume:
+
       - "train" uses source "source1" with 80% of the data (range: 0.0 to 0.8)
       - "val" uses the same source "source1" for the remaining 20% (range: 0.8 to 1.0)
       - "eval" uses source "eval" with full data (range: 0.0 to 1.0)
@@ -163,7 +162,7 @@ def dummy_validate_split(split):
         ),
     ],
 )
-def test_get_source(split, cfg, expected):
+def test_get_source(split, cfg, expected) -> None:
     assert du.get_source(split, cfg) == expected
 
 
@@ -196,7 +195,7 @@ def test_get_source(split, cfg, expected):
         ("eval", OmegaConf.create({"data": {"eval": {"source_percent": 1.0}}}), 1.0),
     ],
 )
-def test_get_source_percent(split, cfg, expected):
+def test_get_source_percent(split, cfg, expected) -> None:
     result = du.get_source_percent(split, cfg)
     assert result == expected
 
@@ -204,7 +203,7 @@ def test_get_source_percent(split, cfg, expected):
 # ---------------------- Test Transforms -----------------------------
 
 
-def test_basic_transforms(transform_cfg):
+def test_basic_transforms(transform_cfg) -> None:
     """Test if base transforms (ToImage and ToDtype) are always included."""
     transforms = du.build_transforms(transform_cfg)
     assert isinstance(transforms, transforms_v2.Compose)
@@ -212,14 +211,14 @@ def test_basic_transforms(transform_cfg):
     assert isinstance(transforms.transforms[1], transforms_v2.ToDtype)
 
 
-def test_random_crop(transform_cfg):
+def test_random_crop(transform_cfg) -> None:
     """Test if RandomCrop is included when enabled."""
     transform_cfg.random_crop = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.RandomCrop) for t in transforms.transforms)
 
 
-def test_random_horizontal_flip(transform_cfg):
+def test_random_horizontal_flip(transform_cfg) -> None:
     """Test if RandomHorizontalFlip is included when enabled."""
     transform_cfg.random_horizontal_flip = True
     transforms = du.build_transforms(transform_cfg)
@@ -228,21 +227,21 @@ def test_random_horizontal_flip(transform_cfg):
     )
 
 
-def test_color_jitter(transform_cfg):
+def test_color_jitter(transform_cfg) -> None:
     """Test if ColorJitter is included when enabled."""
     transform_cfg.color_jitter = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.ColorJitter) for t in transforms.transforms)
 
 
-def test_normalize(transform_cfg):
+def test_normalize(transform_cfg) -> None:
     """Test if Normalize is included when enabled."""
     transform_cfg.normalize = True
     transforms = du.build_transforms(transform_cfg)
     assert any(isinstance(t, transforms_v2.Normalize) for t in transforms.transforms)
 
 
-def test_full_pipeline(transform_cfg):
+def test_full_pipeline(transform_cfg) -> None:
     """Test if all transformations are included when enabled."""
     transform_cfg.random_crop = True
     transform_cfg.random_horizontal_flip = True
@@ -267,9 +266,9 @@ def test_full_pipeline(transform_cfg):
 # ------------ Test Simple Dataset and Dataloader Creation -------------
 
 
-def test_get_dataset_cifar10(tmp_path, monkeypatch):
-    """
-    Test that get_dataset returns a CIFAR10 dataset when requested.
+def test_get_dataset_cifar10(tmp_path, monkeypatch) -> None:
+    """Test that get_dataset returns a CIFAR10 dataset when requested.
+
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
@@ -282,9 +281,9 @@ def test_get_dataset_cifar10(tmp_path, monkeypatch):
     assert dataset.train is True
 
 
-def test_get_dataset_cifar100(tmp_path, monkeypatch):
-    """
-    Test that get_dataset returns a CIFAR100 dataset.
+def test_get_dataset_cifar100(tmp_path, monkeypatch) -> None:
+    """Test that get_dataset returns a CIFAR100 dataset.
+
     We override the __init__ to bypass data validation.
     """
     from torchvision import datasets
@@ -297,9 +296,8 @@ def test_get_dataset_cifar100(tmp_path, monkeypatch):
     assert dataset.train is False
 
 
-def test_get_dataset_invalid():
-    """
-    Test that an invalid dataset name raises an assertion error.
+def test_get_dataset_invalid() -> None:
+    """Test that an invalid dataset name raises an assertion error.
     """
     with pytest.raises(AssertionError):
         du.get_dataset("unknown_dataset", "train")
@@ -308,9 +306,9 @@ def test_get_dataset_invalid():
 # --- Tests for get_dataloader ---
 
 
-def test_get_dataloader_default_config():
-    """
-    Test get_dataloader with no custom configuration.
+def test_get_dataloader_default_config() -> None:
+    """Test get_dataloader with no custom configuration.
+
     It should use the default batch size and number of workers.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -325,9 +323,9 @@ def test_get_dataloader_default_config():
     assert dataloader.num_workers == du.DEFAULT_NUM_WORKERS
 
 
-def test_get_dataloader_custom_config():
-    """
-    Test get_dataloader when passing a custom OmegaConf configuration.
+def test_get_dataloader_custom_config() -> None:
+    """Test get_dataloader when passing a custom OmegaConf configuration.
+
     The batch size and num_workers should be taken from the configuration.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -346,9 +344,9 @@ def test_get_dataloader_custom_config():
     assert dataloader.num_workers == 2
 
 
-def test_get_dataloader_invalid_split(monkeypatch):
-    """
-    Test that get_dataloader raises an assertion error when an invalid split is provided.
+def test_get_dataloader_invalid_split(monkeypatch) -> None:
+    """Test that get_dataloader raises an assertion error when an invalid split is provided.
+
     We patch vu.validate_split to only consider 'train', 'val', and 'eval' as valid.
     """
     dummy_data = DummyDataset(list(range(10)))
@@ -364,10 +362,10 @@ def test_get_dataloader_invalid_split(monkeypatch):
 # ---------------------- Test Source Calcs -----------------------------
 
 
-def test_get_split_source_config_defaults():
-    """
-    When no configuration is provided, each split should use itself as the source
+def test_get_split_source_config_defaults() -> None:
+    """When no configuration is provided, each split should use itself as the source
     with the default percentage.
+
     """
     sources, ranges = du.get_split_source_config(cfg=None)
 
@@ -383,9 +381,9 @@ def test_get_split_source_config_defaults():
     assert ranges == expected_ranges
 
 
-def test_get_split_source_config_custom():
-    """
-    Test when a custom configuration maps multiple splits to the same source.
+def test_get_split_source_config_custom() -> None:
+    """Test when a custom configuration maps multiple splits to the same source.
+
     For instance, both 'train' and 'val' use "official_train" with 0.8 and 0.2 respectively,
     while 'eval' uses the default (its own name and 1.0).
     """
@@ -414,10 +412,10 @@ def test_get_split_source_config_custom():
     assert ranges == expected_ranges
 
 
-def test_get_split_source_config_over_usage():
-    """
-    Test that an assertion error is raised if the total allocated percentage
+def test_get_split_source_config_over_usage() -> None:
+    """Test that an assertion error is raised if the total allocated percentage
     for a shared source exceeds 100% (i.e. > 1.0).
+
     """
     cfg = OmegaConf.create(
         {
@@ -439,10 +437,10 @@ def test_get_split_source_config_over_usage():
 
 
 # Test for get_dataloaders
-def test_get_dataloaders(monkeypatch):
-    """
-    This test constructs a dummy configuration (via OmegaConf) and then patches
+def test_get_dataloaders(monkeypatch) -> None:
+    """This test constructs a dummy configuration (via OmegaConf) and then patches
     out helper functions so that get_dataloaders returns predictable DataLoaders.
+
     We then check that each returned DataLoader has the expected batch_size and
     that dataloaders are provided for the correct splits.
     """

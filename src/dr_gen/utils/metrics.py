@@ -5,11 +5,11 @@ from dr_util.metrics import (
     BATCH_KEY,
     Metrics,
     MetricsSubgroup,
-    add_sum,
     add_list,
-    agg_passthrough,
-    agg_none,
+    add_sum,
     agg_batch_weighted_list_avg,
+    agg_none,
+    agg_passthrough,
     create_logger,
 )
 

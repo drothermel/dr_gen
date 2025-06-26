@@ -1,12 +1,11 @@
+import pytest
 import torch
 import torch.nn as nn
-import pytest
+from dr_util.metrics import BATCH_KEY
 from omegaconf import OmegaConf
 
-from dr_util.metrics import BATCH_KEY
-
-import dr_gen.train.loops as te
 import dr_gen.train.evaluate as eu
+import dr_gen.train.loops as te
 import dr_gen.train.model as mu
 
 
@@ -14,7 +13,7 @@ import dr_gen.train.model as mu
 # Dummy Metrics Logger
 # ----------------------
 class DummyMetrics:
-    def __init__(self):
+    def __init__(self) -> None:
         self.logs = []  # collect all log calls for inspection
 
     def log_data(self, data, group_name, ns=None):
@@ -50,14 +49,14 @@ def dummy_checkpoint_model(cfg, model, name, optim=None, lrsched=None, md=None):
 
 # A dummy dataset that returns a fixed tensor and target.
 class DummyDataset(torch.utils.data.Dataset):
-    def __init__(self, num_samples=4):
+    def __init__(self, num_samples: int = 4) -> None:
         self.num_samples = num_samples
         self.classes = [0, 1, 2, 4, 5]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.num_samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         # Return a dummy "image" (e.g. 3x32x32) and a target label (0)
         return torch.randn(3, 32, 32), torch.tensor(0)
 
@@ -72,14 +71,13 @@ def dummy_dataloader():
 @pytest.fixture
 def dummy_model():
     # Use a simple model (flatten + linear) for testing.
-    model = nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
-    return model
+    return nn.Sequential(nn.Flatten(), nn.Linear(3 * 32 * 32, 10))
 
 
 @pytest.fixture
 def dummy_cfg(tmp_path):
     # Create a dummy OmegaConf configuration.
-    cfg = OmegaConf.create(
+    return OmegaConf.create(
         {
             "device": "cpu",
             "epochs": 2,
@@ -92,19 +90,19 @@ def dummy_cfg(tmp_path):
                 "loss": "cross_entropy",
             },
             "model": {
-                "name": "resnet18",  # Not used because we override model creation in tests.
+                "name": "resnet18",
+                # Not used because we override model creation in tests.
                 "weights": None,
             },
             "write_checkpoint": str(tmp_path / "checkpoints"),
         }
     )
-    return cfg
 
 
 # ----------------------
 # Tests for log_metrics
 # ----------------------
-def test_log_metrics(dummy_cfg):
+def test_log_metrics(dummy_cfg) -> None:
     md = DummyMetrics()
     # Monkey-patch the accuracy function used in log_metrics.
     original_accuracy = eu.accuracy
@@ -131,7 +129,7 @@ def test_log_metrics(dummy_cfg):
 # ----------------------
 # Tests for train_epoch
 # ----------------------
-def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
+def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model) -> None:
     md = DummyMetrics()
     # Use a simple criterion and optimizer.
     criterion = nn.CrossEntropyLoss()
@@ -153,7 +151,7 @@ def test_train_epoch(dummy_cfg, dummy_dataloader, dummy_model):
 # ----------------------
 # Tests for eval_model
 # ----------------------
-def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model):
+def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model) -> None:
     md = DummyMetrics()
     criterion = nn.CrossEntropyLoss()
     # Run evaluation and get back the metrics object.
@@ -165,9 +163,10 @@ def test_eval_model(dummy_cfg, dummy_dataloader, dummy_model):
 # ----------------------
 # Test for train_loop
 # ----------------------
-def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch):
+def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch) -> None:
     md = DummyMetrics()
-    # Override model utility functions so that no real file I/O or complex behavior occurs.
+    # Override model utility functions so that no real file I/O or
+    # complex behavior occurs.
     monkeyatch_set = [
         (mu, "checkpoint_model", dummy_checkpoint_model),
     ]
@@ -190,7 +189,7 @@ def test_train_loop(dummy_cfg, dummy_dataloader, dummy_model, monkeypatch):
 
     # Verify that aggregation logs were recorded for "train" and "val".
     agg_logs = [entry for entry in logs if entry[0] == "agg_log"]
-    groups_logged = set(entry[1] for entry in agg_logs)
+    groups_logged = {entry[1] for entry in agg_logs}
     assert "train" in groups_logged
     assert "val" in groups_logged
 

@@ -1,13 +1,15 @@
+from pathlib import Path
+
+import numpy as np  # Needed for potential NaN comparisons if runs fail
+import pandas as pd  # For CSV export
+
 import dr_gen.analyze.result_plotting as rplt
 from dr_gen.analyze.run_group import RunGroup
-import numpy as np  # Needed for potential NaN comparisons if runs fail
-import pandas as pd # For CSV export
-import os # For path joining
 
 # Define the path to the run data
-RUN_DATA_PATH = '/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0'
+RUN_DATA_PATH = "/Users/daniellerothermel/drotherm/data/dr_gen/cifar10/cluster_runs/lr_wd_init_v0"
 # Define the output path for the results CSV
-OUTPUT_CSV_PATH = '/Users/daniellerothermel/Desktop/comparison_summary_v0.csv'
+OUTPUT_CSV_PATH = "/Users/daniellerothermel/Desktop/comparison_summary_v0.csv"
 
 # Define HPMs to select runs for comparison
 # Use lists for hyperparameters where multiple values should be considered
@@ -21,7 +23,7 @@ hpm_specs_hpm_select = {
 print(f"Loading run data from: {RUN_DATA_PATH}")
 rg = RunGroup()
 rg.load_runs_from_base_dir(RUN_DATA_PATH)
-print(f"Loaded runs.")
+print("Loaded runs.")
 
 # --- Select Run Groups ---
 print("Selecting runs for pretrained vs. random initialization comparison...")
@@ -76,25 +78,25 @@ rplt.print_results_report(
 print(f"\nSaving results summary to {OUTPUT_CSV_PATH}...")
 # Prepare data row for CSV
 csv_data = {
-    'group_A_name': 'Pretrained',
-    'group_B_name': 'Random Init',
-    'best_hpm_A': best_hpm_A,
-    'best_val_timestep_A': best_ts_A,
-    'best_hpm_B': best_hpm_B,
-    'best_val_timestep_B': best_ts_B,
-    'bootstraps_A': comparison_results['bootstraps_A'],
-    'bootstraps_B': comparison_results['bootstraps_B'],
-    'original_A': comparison_results['original_A'],
-    'original_B': comparison_results['original_B'],
+    "group_A_name": "Pretrained",
+    "group_B_name": "Random Init",
+    "best_hpm_A": best_hpm_A,
+    "best_val_timestep_A": best_ts_A,
+    "best_hpm_B": best_hpm_B,
+    "best_val_timestep_B": best_ts_B,
+    "bootstraps_A": comparison_results["bootstraps_A"],
+    "bootstraps_B": comparison_results["bootstraps_B"],
+    "original_A": comparison_results["original_A"],
+    "original_B": comparison_results["original_B"],
 }
 
 # Flatten summary, difference, and test statistics, excluding distributions
 stats_to_flatten = {
-    'summary_A_': comparison_results.get('summary_A', {}),
-    'summary_B_': comparison_results.get('summary_B', {}),
-    'diff_': comparison_results.get('difference_stats', {}),
-    'ks_ci_': comparison_results.get('ks_ci_test', {}),
-    'ks_perm_': comparison_results.get('ks_permutation_test', {})
+    "summary_A_": comparison_results.get("summary_A", {}),
+    "summary_B_": comparison_results.get("summary_B", {}),
+    "diff_": comparison_results.get("difference_stats", {}),
+    "ks_ci_": comparison_results.get("ks_ci_test", {}),
+    "ks_perm_": comparison_results.get("ks_permutation_test", {})
 }
 
 for prefix, stats_dict in stats_to_flatten.items():
@@ -114,19 +116,19 @@ for prefix, stats_dict in stats_to_flatten.items():
 #print(csv_data['bootstraps_A'])
 #print(csv_data['bootstraps_A'].tolist())
 #print(str(csv_data['bootstraps_A'].tolist()))
-for key in ['bootstraps', 'original']:
-    b_a = comparison_results[f'{key}_A']
+for key in ["bootstraps", "original"]:
+    b_a = comparison_results[f"{key}_A"]
     if isinstance(b_a, np.ndarray):
-        csv_data[f'{key}_A'] = str(b_a.tolist())
-    b_b = comparison_results[f'{key}_B']
+        csv_data[f"{key}_A"] = str(b_a.tolist())
+    b_b = comparison_results[f"{key}_B"]
     if isinstance(b_b, np.ndarray):
-        csv_data[f'{key}_B'] = str(b_b.tolist())
+        csv_data[f"{key}_B"] = str(b_b.tolist())
 
 # Create DataFrame
 results_df = pd.DataFrame([csv_data])
 
 # Ensure directory exists
-os.makedirs(os.path.dirname(OUTPUT_CSV_PATH), exist_ok=True)
+Path(OUTPUT_CSV_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 # Save to CSV
 results_df.to_csv(OUTPUT_CSV_PATH, index=False)

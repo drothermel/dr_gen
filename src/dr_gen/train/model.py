@@ -1,16 +1,17 @@
 from pathlib import Path
+from types import SimpleNamespace
+
+import timm
 import torch
 import torchvision
-import timm
-from timm.scheduler.cosine_lr import CosineLRScheduler
 from timm.optim import create_optimizer
-from types import SimpleNamespace
+from timm.scheduler.cosine_lr import CosineLRScheduler
 
 import dr_gen.schemas as vu
 from dr_gen.schemas import (
-    OptimizerTypes,
-    LRSchedTypes,
     CriterionTypes,
+    LRSchedTypes,
+    OptimizerTypes,
 )
 
 # Match the torch defaults
@@ -43,10 +44,10 @@ def create_optim(name, model_params, optim_params):
     match name:
         case "timm_sgd":
             args = SimpleNamespace()
-            args.weight_decay = optim_params['weight_decay']
-            args.lr = optim_params['lr']
-            args.opt = 'sgd'
-            args.momentum = optim_params['momentum']
+            args.weight_decay = optim_params["weight_decay"]
+            args.lr = optim_params["lr"]
+            args.opt = "sgd"
+            args.momentum = optim_params["momentum"]
             return create_optimizer(args, model_params)
         case OptimizerTypes.SGD.value:
             return torch.optim.SGD(
