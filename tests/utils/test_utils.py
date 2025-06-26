@@ -1,6 +1,8 @@
 import json
 
-from dr_gen.utils.utils import flatten_dict_tuple_keys
+from dr_gen.analyze.metrics import (
+    _flatten_dict_tuple_keys as flatten_dict_tuple_keys,
+)
 
 
 def test_flatten_dict_tuple_keys() -> None:

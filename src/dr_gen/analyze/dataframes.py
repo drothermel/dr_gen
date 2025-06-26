@@ -2,7 +2,7 @@
 
 import polars as pl
 
-from dr_gen.analyze.models import AnalysisConfig, Run
+from dr_gen.analyze.schemas import AnalysisConfig, Run
 
 
 def runs_to_dataframe(runs: list[Run]) -> pl.DataFrame:

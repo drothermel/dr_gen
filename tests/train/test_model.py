@@ -2,7 +2,7 @@ import pytest
 import torch
 from omegaconf import OmegaConf
 
-import dr_gen.train.model as mu
+import dr_gen.models as mu
 
 # --------- Tests for create_optim and create_lrsched ---------
 

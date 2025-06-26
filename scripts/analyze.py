@@ -1,7 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 
-from dr_gen.analyze.log_file_data import LogFileData
+from dr_gen.analyze.parsing import RunData
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="analyze")
@@ -14,7 +14,7 @@ def run(cfg: DictConfig) -> None:
         print(">> No log file means nothing to analyze, set cfg.log_file")
         return
 
-    lfd = LogFileData(cfg.log_file)
+    lfd = RunData(cfg.log_file)
     print(f">> Parse Errors: {len(lfd.parse_errors)}")
     for pe in lfd.parse_errors:
         print(f"  - {pe}")

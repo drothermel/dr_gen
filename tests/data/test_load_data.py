@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import v2 as transforms_v2
 
-import dr_gen.data.load_data as du
+import dr_gen.data as du
 
 
 class DummyDataset(Dataset):

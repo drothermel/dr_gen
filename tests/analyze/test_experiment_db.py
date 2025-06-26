@@ -2,8 +2,8 @@
 
 import json
 
-from dr_gen.analyze.experiment_db import ExperimentDB
-from dr_gen.analyze.models import AnalysisConfig
+from dr_gen.analyze.database import ExperimentDB
+from dr_gen.analyze.schemas import AnalysisConfig
 
 
 def test_experiment_db_init(tmp_path):

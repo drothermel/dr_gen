@@ -1,19 +1,49 @@
+"""JSONL parsing utilities and run data extraction for experiment analysis."""
+
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from collections.abc import Iterator, MutableMapping
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import dr_util.file_utils as fu
 
-import dr_gen.utils.utils as gu
-from dr_gen.analyze.metric_curves import SplitMetrics
+from dr_gen.analyze import check_prefix_exclude
+from dr_gen.analyze.metrics import SplitMetrics
+from dr_gen.analyze.schemas import Hyperparameters, Run
 
 # Constants for file parsing
 MIN_FILE_LINES = 2
 TRAIN_TIME_OFFSET_FROM_END = 2
 EPOCHS_KEY = "epochs"
+
+
+def _flatten_dict_tuple_keys(
+    d: dict[Any, Any], parent_key: tuple[Any, ...] = ()
+) -> dict[tuple[Any, ...], Any]:
+    """Recursively flatten a nested dictionary with tuple keys."""
+    items = {}
+    for k, v in d.items():
+        new_key = (*parent_key, k)
+        if isinstance(v, dict):
+            items.update(_flatten_dict_tuple_keys(v, new_key))
+        else:
+            items[new_key] = v
+    return items
+
+
+def _flatten_dict(in_dict: dict[Any, Any]) -> dict[str, Any]:
+    """Flatten a nested dictionary with dot-separated string keys."""
+    flat_tuple_keys = _flatten_dict_tuple_keys(in_dict)
+    return {".".join(k): v for k, v in flat_tuple_keys.items()}
+
+
+def _dict_to_tupledict(in_dict: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
+    """Convert dictionary to sorted tuple of tuples."""
+    return tuple(sorted(in_dict.items()))
 
 
 def parse_cfg_log_line(cfg_json: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
@@ -93,6 +123,93 @@ def validate_metrics(
     return errors
 
 
+def parse_jsonl_file(filepath: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    """Parse a JSONL file and return valid records and errors.
+
+    Returns:
+        Tuple of (valid_records, error_messages)
+    """
+    records = []
+    errors = []
+
+    try:
+        with filepath.open() as f:
+            for line_num, line_raw in enumerate(f, 1):
+                line = line_raw.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    errors.append(f"Line {line_num}: {e}")
+    except OSError as e:
+        errors.append(f"File error: {e}")
+
+    return records, errors
+
+
+def load_runs_from_dir(directory: Path, pattern: str = "*.jsonl") -> list[Run]:
+    """Load all runs from JSONL files in a directory.
+
+    Args:
+        directory: Directory containing JSONL files
+        pattern: Glob pattern for files to load
+
+    Returns:
+        List of validated Run models
+    """
+    runs = []
+    for filepath in sorted(directory.glob(pattern)):
+        records, _ = parse_jsonl_file(filepath)
+        for record in records:
+            try:
+                hp = Hyperparameters(**record.get("hyperparameters", {}))
+                run = Run(
+                    run_id=record.get("run_id", filepath.stem),
+                    hyperparameters=hp,
+                    metrics=record.get("metrics", {}),
+                    metadata=record.get("metadata", {}),
+                )
+                runs.append(run)
+            except Exception:  # noqa: BLE001, S112
+                continue
+    return runs
+
+
+def convert_legacy_format(legacy_data: dict) -> dict:
+    """Convert legacy experiment format to new Run model format.
+
+    Args:
+        legacy_data: Dictionary in old analysis system format
+
+    Returns:
+        Dictionary compatible with Run model
+    """
+    # Extract hyperparameters from various legacy locations
+    hparams = {}
+    if "config" in legacy_data:
+        hparams.update(legacy_data["config"])
+    if "hyperparameters" in legacy_data:
+        hparams.update(legacy_data["hyperparameters"])
+
+    # Convert metrics from epoch-based to list format
+    metrics = {}
+    if "history" in legacy_data:
+        for epoch_data in legacy_data["history"]:
+            for key, value in epoch_data.items():
+                if key != "epoch":
+                    if key not in metrics:
+                        metrics[key] = []
+                    metrics[key].append(value)
+
+    return {
+        "run_id": legacy_data.get("run_id", legacy_data.get("name", "unknown")),
+        "hyperparameters": hparams,
+        "metrics": metrics,
+        "metadata": legacy_data.get("metadata", {}),
+    }
+
+
 # Hashable: can serve as key to a dictionary
 class Hpm(MutableMapping):
     """A mutable mapping for hyperparameters with important value tracking."""
@@ -108,7 +225,7 @@ class Hpm(MutableMapping):
         """
         if all_vals is None:
             all_vals = {}
-        self._all_values = gu.flatten_dict(all_vals)
+        self._all_values = _flatten_dict(all_vals)
         self.important_values = {}
         self.reset_important()
 
@@ -165,7 +282,7 @@ class Hpm(MutableMapping):
         """Exclude keys with specified prefixes from important values."""
         important_values = {}
         for k, v in self.important_values.items():
-            if gu.check_prefix_exclude(k, exclude_prefixes):
+            if check_prefix_exclude(k, exclude_prefixes):
                 continue
             important_values[k] = v
         self.important_values = important_values
@@ -182,7 +299,7 @@ class Hpm(MutableMapping):
         """Convert important values to a sorted tuple dictionary."""
         if important_vals is None:
             important_vals = self.important_values
-        return gu.dict_to_tupledict(important_vals)
+        return _dict_to_tupledict(important_vals)
 
     def as_strings(self):
         """Return important values as a list of key=value strings."""
