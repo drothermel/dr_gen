@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampl
 from torch.utils.data.dataloader import default_collate
 from torchvision.transforms import v2 as transforms_v2
 
-from dr_gen.constants import AVAIL_DATASETS
+from dr_gen.config import AVAIL_DATASETS
 
 # Default values
 DEFAULT_DATASET_CACHE_ROOT = "../data/"

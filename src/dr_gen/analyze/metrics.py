@@ -2,7 +2,7 @@ from typing import Any
 
 from omegaconf import DictConfig
 
-from dr_gen.analyze.run_data import Hpm
+from dr_gen.analyze.parsing import Hpm
 
 DEFAULT_XNAME = "epoch"
 DEFAULT_METRIC_NAME = "loss"

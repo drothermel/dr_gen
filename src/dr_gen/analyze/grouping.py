@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from dr_gen.analyze.run_data import RunData
+from dr_gen.analyze.parsing import RunData
 
 
 def _make_list(in_val: Any) -> list[Any]:  # noqa: ANN401

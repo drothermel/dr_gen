@@ -1,6 +1,6 @@
 import pytest
 
-from dr_gen.analyze.metric_curves import (
+from dr_gen.analyze.metrics import (
     DEFAULT_XNAME,
     MetricCurve,
     MetricCurves,

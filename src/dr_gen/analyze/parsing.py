@@ -1,14 +1,19 @@
+"""JSONL parsing utilities and run data extraction for experiment analysis."""
+
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from collections.abc import Iterator, MutableMapping
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import dr_util.file_utils as fu
 
 from dr_gen.analyze import check_prefix_exclude
-from dr_gen.analyze.metric_curves import SplitMetrics
+from dr_gen.analyze.metrics import SplitMetrics
+from dr_gen.analyze.schemas import Hyperparameters, Run
 
 # Constants for file parsing
 MIN_FILE_LINES = 2
@@ -116,6 +121,93 @@ def validate_metrics(
                 if len(vs) != expected_epochs:
                     errors.append(f"wrong_vs_len: {split} {metric_name} {x_name}")
     return errors
+
+
+def parse_jsonl_file(filepath: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    """Parse a JSONL file and return valid records and errors.
+
+    Returns:
+        Tuple of (valid_records, error_messages)
+    """
+    records = []
+    errors = []
+
+    try:
+        with filepath.open() as f:
+            for line_num, line_raw in enumerate(f, 1):
+                line = line_raw.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    errors.append(f"Line {line_num}: {e}")
+    except OSError as e:
+        errors.append(f"File error: {e}")
+
+    return records, errors
+
+
+def load_runs_from_dir(directory: Path, pattern: str = "*.jsonl") -> list[Run]:
+    """Load all runs from JSONL files in a directory.
+
+    Args:
+        directory: Directory containing JSONL files
+        pattern: Glob pattern for files to load
+
+    Returns:
+        List of validated Run models
+    """
+    runs = []
+    for filepath in sorted(directory.glob(pattern)):
+        records, _ = parse_jsonl_file(filepath)
+        for record in records:
+            try:
+                hp = Hyperparameters(**record.get("hyperparameters", {}))
+                run = Run(
+                    run_id=record.get("run_id", filepath.stem),
+                    hyperparameters=hp,
+                    metrics=record.get("metrics", {}),
+                    metadata=record.get("metadata", {}),
+                )
+                runs.append(run)
+            except Exception:  # noqa: BLE001, S112
+                continue
+    return runs
+
+
+def convert_legacy_format(legacy_data: dict) -> dict:
+    """Convert legacy experiment format to new Run model format.
+
+    Args:
+        legacy_data: Dictionary in old analysis system format
+
+    Returns:
+        Dictionary compatible with Run model
+    """
+    # Extract hyperparameters from various legacy locations
+    hparams = {}
+    if "config" in legacy_data:
+        hparams.update(legacy_data["config"])
+    if "hyperparameters" in legacy_data:
+        hparams.update(legacy_data["hyperparameters"])
+
+    # Convert metrics from epoch-based to list format
+    metrics = {}
+    if "history" in legacy_data:
+        for epoch_data in legacy_data["history"]:
+            for key, value in epoch_data.items():
+                if key != "epoch":
+                    if key not in metrics:
+                        metrics[key] = []
+                    metrics[key].append(value)
+
+    return {
+        "run_id": legacy_data.get("run_id", legacy_data.get("name", "unknown")),
+        "hyperparameters": hparams,
+        "metrics": metrics,
+        "metadata": legacy_data.get("metadata", {}),
+    }
 
 
 # Hashable: can serve as key to a dictionary

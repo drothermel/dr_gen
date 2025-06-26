@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from dr_gen.analyze.models import AnalysisConfig, Hyperparameters, Run
+from dr_gen.analyze.schemas import AnalysisConfig, Hyperparameters, Run
 
 
 def test_hyperparameters_basic():

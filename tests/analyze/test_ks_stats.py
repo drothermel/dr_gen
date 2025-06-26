@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats as sps
 
-from dr_gen.analyze.ks_stats import ks_analysis
+from dr_gen.analyze.stats import ks_analysis
 
 
 def test_ks_analysis_basic() -> None:

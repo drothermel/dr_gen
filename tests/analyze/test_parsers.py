@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from dr_gen.analyze.parsers import load_runs_from_dir, parse_jsonl_file
+from dr_gen.analyze.parsing import load_runs_from_dir, parse_jsonl_file
 
 
 def test_parse_valid_jsonl(tmp_path: Path):
@@ -109,7 +109,7 @@ def test_load_runs_with_invalid_data(tmp_path: Path):
 
 def test_convert_legacy_format():
     """Test converting legacy format to new Run format."""
-    from dr_gen.analyze.parsers import convert_legacy_format
+    from dr_gen.analyze.parsing import convert_legacy_format
 
     legacy_data = {
         "name": "old_experiment",
@@ -132,7 +132,7 @@ def test_convert_legacy_format():
 
 def test_convert_legacy_format_edge_cases():
     """Test legacy converter handles missing fields."""
-    from dr_gen.analyze.parsers import convert_legacy_format
+    from dr_gen.analyze.parsing import convert_legacy_format
 
     # Minimal data
     minimal = convert_legacy_format({})

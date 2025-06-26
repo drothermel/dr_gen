@@ -1,6 +1,6 @@
 import json
 
-from dr_gen.analyze.metric_curves import (
+from dr_gen.analyze.metrics import (
     _flatten_dict_tuple_keys as flatten_dict_tuple_keys,
 )
 
