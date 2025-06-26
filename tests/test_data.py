@@ -1,7 +1,6 @@
 """Tests for simplified data loading functionality."""
 
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 import torch
@@ -31,18 +30,20 @@ class DummyDataset(Dataset):
 @pytest.fixture
 def transform_cfg():
     """Returns a base configuration mock with all transformations disabled."""
-    cfg = Mock()
-    cfg.random_crop = False
-    cfg.crop_size = (32, 32)
-    cfg.crop_padding = 4
-    cfg.random_horizontal_flip = False
-    cfg.random_horizontal_flip_prob = 0.5
-    cfg.color_jitter = False
-    cfg.jitter_brightness = 0.2
-    cfg.normalize = False
-    cfg.normalize_mean = [0.5, 0.5, 0.5]
-    cfg.normalize_std = [0.5, 0.5, 0.5]
-    return cfg
+    return OmegaConf.create(
+        {
+            "random_crop": False,
+            "crop_size": (32, 32),
+            "crop_padding": 4,
+            "random_horizontal_flip": False,
+            "random_horizontal_flip_prob": 0.5,
+            "color_jitter": False,
+            "jitter_brightness": 0.2,
+            "normalize": False,
+            "normalize_mean": [0.5, 0.5, 0.5],
+            "normalize_std": [0.5, 0.5, 0.5],
+        }
+    )
 
 
 # Test dataset loading

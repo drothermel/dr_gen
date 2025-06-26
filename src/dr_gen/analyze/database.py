@@ -6,8 +6,8 @@ import polars as pl
 from pydantic import BaseModel, ConfigDict
 
 from dr_gen.analyze.dataframes import runs_to_dataframe, runs_to_metrics_df
-from dr_gen.analyze.schemas import AnalysisConfig
 from dr_gen.analyze.parsing import load_runs_from_dir
+from dr_gen.analyze.schemas import AnalysisConfig
 
 
 class ExperimentDB(BaseModel):
