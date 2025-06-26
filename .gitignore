@@ -188,6 +188,12 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Typing experiment artifacts
+.mypy_errors*.jsonl
+experiments/
+monkeytype.sqlite3
+typing_tool_application.log
+
 # Pyre type checker
 .pyre/
 

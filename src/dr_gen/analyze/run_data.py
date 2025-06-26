@@ -151,17 +151,17 @@ class Hpm(MutableMapping):
         """Get a value from all values, returning None if not found."""
         return self._all_values.get(key, None)
 
-    def reset_important(self):
+    def reset_important(self) -> None:
         """Reset important values to include all values."""
         self.important_values = dict(self._all_values.items())
 
-    def exclude_from_important(self, excludes):
+    def exclude_from_important(self, excludes) -> None:
         """Exclude specified keys from important values."""
         self.important_values = {
             k: v for k, v in self.important_values.items() if k not in excludes
         }
 
-    def exclude_prefixes_from_important(self, exclude_prefixes):
+    def exclude_prefixes_from_important(self, exclude_prefixes) -> None:
         """Exclude keys with specified prefixes from important values."""
         important_values = {}
         for k, v in self.important_values.items():
@@ -170,7 +170,7 @@ class Hpm(MutableMapping):
             important_values[k] = v
         self.important_values = important_values
 
-    def set_important(self, keys):
+    def set_important(self, keys) -> None:
         """Set important values to only the specified keys."""
         self.important_values = {k: self._all_values[k] for k in keys}
 
@@ -219,7 +219,7 @@ class RunData:
         self.parse_errors = []
         self.parse_log_file()
 
-    def parse_log_file(self):
+    def parse_log_file(self) -> None:
         """Parse the log file and extract hyperparameters, metadata, and metrics."""
         contents = fu.load_file(self.file_path)
         if contents is None:

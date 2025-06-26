@@ -47,16 +47,16 @@ class HpmGroup:
         """Get sorted list of hyperparameter keys that vary across runs."""
         return sorted(self.varying_kvs.keys())
 
-    def add_hpm(self, hpm, rid):
+    def add_hpm(self, hpm, rid) -> None:
         """Add a hyperparameter configuration for a specific run ID."""
         self.rid_to_hpm[rid] = hpm
 
-    def reset_all_hpms(self):
+    def reset_all_hpms(self) -> None:
         """Reset important keys for all stored hyperparameter configurations."""
         for hpm in self.rid_to_hpm.values():
             hpm.reset_important()
 
-    def update_important_keys_by_varying(self, exclude_prefixes=None):
+    def update_important_keys_by_varying(self, exclude_prefixes=None) -> None:
         """Update important keys based on which hyperparameters vary across runs."""
         # Start with a clean slate
         if exclude_prefixes is None:
@@ -186,7 +186,7 @@ class RunGroup:
             potential_rids = set(potential_rids)
         return list(self.rids & potential_rids)
 
-    def ignore_rid(self, rid):
+    def ignore_rid(self, rid) -> None:
         """Mark a run as ignored and remove it from active tracking."""
         if rid not in self.rid_to_run_data:
             return
@@ -194,7 +194,7 @@ class RunGroup:
         del self.rid_to_run_data[rid]
         del self.hpm_group.rid_to_hpm[rid]
 
-    def load_run(self, rid, file_path):
+    def load_run(self, rid, file_path) -> None:
         """Load run data from file and add to group if parsing succeeds."""
         run_data = RunData(file_path, rid=rid)
         if len(run_data.parse_errors) > 0:
@@ -205,7 +205,7 @@ class RunGroup:
         self.rid_to_run_data[rid] = run_data
         self.hpm_group.add_hpm(run_data.hpms, rid)
 
-    def load_runs_from_base_dir(self, base_dir):
+    def load_runs_from_base_dir(self, base_dir) -> None:
         """Load all JSONL run files from a base directory recursively."""
         for fp in Path(base_dir).rglob("*.jsonl"):
             if not fp.is_file():
@@ -215,7 +215,7 @@ class RunGroup:
             self.load_run(rid, fp)
         self.update_hpm_sweep_info()
 
-    def update_hpm_sweep_info(self):
+    def update_hpm_sweep_info(self) -> None:
         """Update hyperparameter sweep information based on current runs."""
         self.hpm_group.update_important_keys_by_varying(
             exclude_prefixes=self.sweep_exclude_key_prefixes,
@@ -313,7 +313,7 @@ class RunGroup:
                 hpm_split_metrics[hpm][split] = runs_metrics
         return hpm_split_metrics
 
-    def ignore_runs_by_hpms(self, **kwargs: Any):  # noqa: ANN401
+    def ignore_runs_by_hpms(self, **kwargs: Any) -> None:  # noqa: ANN401
         """Mark runs matching hyperparameter filters as ignored."""
         runs_to_ignore = self.select_run_data_by_hpms(**kwargs)
         for runs_list in runs_to_ignore.values():

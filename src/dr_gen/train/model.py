@@ -218,7 +218,9 @@ def get_criterion(cfg):
             return torch.nn.CrossEntropyLoss(**crit_params)
 
 
-def checkpoint_model(cfg, model, checkpoint_name, optim=None, lrsched=None, md=None):
+def checkpoint_model(
+    cfg, model, checkpoint_name, optim=None, lrsched=None, md=None
+) -> None:
     if cfg.get("write_checkpoint", None) is None:
         return
 

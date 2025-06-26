@@ -107,7 +107,7 @@ def get_filter_function(table, **kwargs: Any):  # noqa: ANN401
     return filter_function
 
 
-def print_drop_cols(table, cols):
+def print_drop_cols(table, cols) -> None:
     """Print table with specified columns dropped.
 
     Args:
@@ -117,7 +117,7 @@ def print_drop_cols(table, cols):
     get_fields_for_drop_cols(table, cols)
 
 
-def print_sorted(table, sort_fields):
+def print_sorted(table, sort_fields) -> None:
     """Print table sorted by specified fields.
 
     Args:
@@ -127,7 +127,7 @@ def print_sorted(table, sort_fields):
     sortby, sort_key = get_sortby_sort_key(table, sort_fields)
 
 
-def print_filtered(table, **kwargs: Any):  # noqa: ANN401
+def print_filtered(table, **kwargs: Any) -> None:  # noqa: ANN401
     """Print filtered table.
 
     Args:
@@ -137,7 +137,7 @@ def print_filtered(table, **kwargs: Any):  # noqa: ANN401
     get_filter_function(table, **kwargs)
 
 
-def print_table(table, drop_cols=None, sort_cols=None, **filter_kwargs: Any):  # noqa: ANN401
+def print_table(table, drop_cols=None, sort_cols=None, **filter_kwargs: Any) -> None:  # noqa: ANN401
     """Print table with optional column dropping, sorting, and filtering.
 
     Args:

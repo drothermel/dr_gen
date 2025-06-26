@@ -71,13 +71,13 @@ class GenMetricsSubgroup(MetricsSubgroup):
                     self.add_fxns[key] = add_list
                     self.agg_fxns[key] = agg_avg_list
 
-    def clear_data(self):
+    def clear_data(self) -> None:
         """Clear all data in the subgroup."""
         self._init_data_values()
 
     ## Override these to handle batch size better ##
     @singledispatchmethod
-    def add(self, data, ns=None):  # noqa: ARG002 (unused args)
+    def add(self, data, ns=None) -> None:  # noqa: ARG002 (unused args)
         """Add data to the metrics subgroup."""
         assert False, f">> Unexpected data type: {type(data)}"
 
@@ -112,7 +112,7 @@ class GenMetrics(Metrics):
         self.groups = {name: GenMetricsSubgroup(cfg, name) for name in self.group_names}
         self.loggers = [create_logger(cfg, lt) for lt in cfg.metrics.loggers]
 
-    def log_data(self, data, group_name, ns=None):
+    def log_data(self, data, group_name, ns=None) -> None:
         """Log data to the specified group.
 
         Args:
@@ -124,7 +124,7 @@ class GenMetrics(Metrics):
             assert False, f">> Invalid group name: {group_name}"
         self.groups[group_name].add(data, ns=ns)
 
-    def clear_data(self, group_name=None):
+    def clear_data(self, group_name=None) -> None:
         """Clear data from specified group or all groups.
 
         Args:
@@ -134,7 +134,7 @@ class GenMetrics(Metrics):
             if group_name == gname or group_name is None:
                 group.clear_data()
 
-    def agg_log(self, data_name):
+    def agg_log(self, data_name) -> None:
         """Aggregate and log data with error handling.
 
         Args:

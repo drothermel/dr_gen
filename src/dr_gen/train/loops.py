@@ -39,7 +39,7 @@ def log_metrics(md: Metrics | None, group_name: str, **kwargs: Any) -> None:  # 
         md.log_data(("lr", lr), group_name)
 
 
-def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):  # noqa: ARG001
+def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None) -> None:  # noqa: ARG001
     model.train()
     for _i, (image, target) in enumerate(dataloader):
         image, target = image.to(cfg.device), target.to(cfg.device)  # noqa: PLW2901
@@ -79,7 +79,7 @@ def train_epoch(cfg, epoch, model, dataloader, criterion, optimizer, md=None):  
         )
 
 
-def eval_model(cfg, model, dataloader, criterion, name="val", md=None):
+def eval_model(cfg, model, dataloader, criterion, name="val", md=None) -> None:
     model.eval()
     with torch.inference_mode():
         for image, target in dataloader:

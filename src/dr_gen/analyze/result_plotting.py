@@ -201,7 +201,7 @@ def run_comparison_eval(
 
 def print_results_report(
     _best_hpm_a, _best_ts_a, _best_hpm_b, _best_ts_b, comparison_results
-):
+) -> None:
     """Prints a formatted report summarizing the analysis results.
 
     Args:

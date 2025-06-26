@@ -75,7 +75,7 @@ def default_grid_sample_titles(title, orig_data, sampled):
 # Handles one or many curves
 # Nearly identical to make_line_plot but included to make example
 #    pattern clear.
-def line_plot(curve, ax=None, **kwargs: Unpack[PlotKwargs]):
+def line_plot(curve, ax=None, **kwargs: Unpack[PlotKwargs]) -> None:
     # [curve_data...] or [curves [curve_data ...]]
     curve = make_list(curve)
 
@@ -91,7 +91,7 @@ def line_plot(curve, ax=None, **kwargs: Unpack[PlotKwargs]):
 
 
 # Handles one or many vals lists
-def histogram_plot(vals, ax=None, **kwargs: Unpack[PlotKwargs]):
+def histogram_plot(vals, ax=None, **kwargs: Unpack[PlotKwargs]) -> None:
     # [vals...] or [sets [vals ...]]
     vals = make_list(vals)
 
@@ -102,7 +102,7 @@ def histogram_plot(vals, ax=None, **kwargs: Unpack[PlotKwargs]):
         plt.show()
 
 
-def cdf_plot(vals1, vals2, ax=None, **kwargs: Unpack[PlotKwargs]):
+def cdf_plot(vals1, vals2, ax=None, **kwargs: Unpack[PlotKwargs]) -> None:
     results = ks.calculate_ks_for_run_sets(vals1, vals2)
     vals = results["all_vals"]
     cdfs = [results["cdf1"], results["cdf2"]]
@@ -120,7 +120,7 @@ def cdf_plot(vals1, vals2, ax=None, **kwargs: Unpack[PlotKwargs]):
         plt.show()
 
 
-def cdf_histogram_plot(vals1, vals2, **kwargs: Unpack[PlotKwargs]):
+def cdf_histogram_plot(vals1, vals2, **kwargs: Unpack[PlotKwargs]) -> None:
     results = ks.calculate_ks_for_run_sets(vals1, vals2)
     vals = results["all_vals"]
     cdfs = [results["cdf1"], results["cdf2"]]
@@ -152,7 +152,7 @@ def split_plot(
     x_name="Epoch",
     splits=None,
     **kwargs: Unpack[PlotKwargs],
-):
+) -> None:
     if splits is None:
         splits = ["train", "val", "eval"]
 
@@ -231,7 +231,7 @@ def sample_from_dim(data, n_sample, dim=1):
 
 def multi_line_sample_plot(
     curves, ax=None, n_sample=None, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     # Initial Curves: [curves [curve_data ...]]
     # Sampled       : [sampled_curves [curve_data ...]]
     curves = make_list_of_lists(curves)
@@ -252,7 +252,7 @@ def split_sample_plot(
     x_name="Epoch",
     splits=None,
     **kwargs: Unpack[PlotKwargs],
-):
+) -> None:
     if splits is None:
         splits = ["train", "val", "eval"]
 
@@ -285,7 +285,7 @@ def split_sample_plot(
 
 def multi_line_sampled_summary_plot(
     curves_lists, ax=None, n_sample=None, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     # Initial Curves: [summary_line [curves [curve_data ...]]
     curves_lists = make_list_of_lols(curves_lists, dim=0)
     # Sampled       : [summary_line [sampled_curves [curve_data ...]]
@@ -311,7 +311,7 @@ def split_sampled_summary_plot(
     x_name="Epoch",
     splits=None,
     **kwargs: Unpack[PlotKwargs],
-):
+) -> None:
     if splits is None:
         splits = ["train", "val", "eval"]
 
@@ -347,7 +347,7 @@ def split_sampled_summary_plot(
 
 def grid_sample_plot_wrapper(
     plot_func, curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     # Setup Grid and Args
     axes = pu.make_grid_figure(
         n_grid,
@@ -371,7 +371,7 @@ def grid_sample_plot_wrapper(
 
 def multi_line_sample_plot_grid(
     curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     grid_sample_plot_wrapper(
         multi_line_sample_plot,
         curves,
@@ -383,7 +383,7 @@ def multi_line_sample_plot_grid(
 
 def multi_line_sampled_summary_plot_grid(
     curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     grid_sample_plot_wrapper(
         multi_line_sampled_summary_plot,
         curves,
@@ -395,7 +395,7 @@ def multi_line_sampled_summary_plot_grid(
 
 def spilt_sample_plot_grid(
     curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     grid_sample_plot_wrapper(
         split_sample_plot,
         curves,
@@ -407,7 +407,7 @@ def spilt_sample_plot_grid(
 
 def spilt_sampled_summary_plot_grid(
     curves, n_sample=None, n_grid=4, **kwargs: Unpack[PlotKwargs]
-):
+) -> None:
     grid_sample_plot_wrapper(
         split_sampled_summary_plot,
         curves,
@@ -417,7 +417,7 @@ def spilt_sampled_summary_plot_grid(
     )
 
 
-def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Unpack[PlotKwargs]):
+def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Unpack[PlotKwargs]) -> None:
     n_curves = len(curves)
 
     # Setup Grid and Args
@@ -438,5 +438,5 @@ def grid_seq_plot_wrapper(plot_func, curves, **kwargs: Unpack[PlotKwargs]):
     plt.show()
 
 
-def histogram_plot_grid(vals, **kwargs: Unpack[PlotKwargs]):
+def histogram_plot_grid(vals, **kwargs: Unpack[PlotKwargs]) -> None:
     grid_seq_plot_wrapper(histogram_plot, vals, **kwargs)

@@ -26,7 +26,7 @@ def validate_run_cfg(cfg):
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
-def run(cfg: DictConfig):
+def run(cfg: DictConfig) -> None:
     if not validate_run_cfg(cfg):
         return
 

@@ -5,7 +5,7 @@ import torch
 from torchvision.transforms.v2 import functional as f
 
 
-def plot_first_from_dl(dl):
+def plot_first_from_dl(dl) -> None:
     feats, labels = next(iter(dl))
     plot([feats[0].squeeze()])
 

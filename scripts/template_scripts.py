@@ -7,7 +7,7 @@ from dr_gen.utils.metrics import GenMetrics
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
-def run(cfg: DictConfig):
+def run(cfg: DictConfig) -> None:
     if not validate_cfg(cfg, "uses_metrics", get_schema):
         return
 
