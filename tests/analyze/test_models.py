@@ -4,19 +4,19 @@ import json
 
 import pytest
 
-from dr_gen.analyze.schemas import AnalysisConfig, Hyperparameters, Run
+from dr_gen.analyze.schemas import AnalysisConfig, Hpms, Run
 
 
 def test_hyperparameters_basic():
     """Test basic hyperparameter creation and access."""
-    hp = Hyperparameters(learning_rate=0.01, batch_size=32)
+    hp = Hpms(learning_rate=0.01, batch_size=32)
     assert hp.learning_rate == 0.01
     assert hp.batch_size == 32
 
 
 def test_hyperparameters_flatten():
     """Test flattening of nested hyperparameters."""
-    hp = Hyperparameters(
+    hp = Hpms(
         optim={"lr": 0.01, "weight_decay": 0.0001},
         model={"name": "resnet50", "pretrained": True},
         batch_size=32,
@@ -31,7 +31,7 @@ def test_hyperparameters_flatten():
 
 def test_hyperparameters_deep_nesting():
     """Test flattening with deeply nested structures."""
-    hp = Hyperparameters(
+    hp = Hpms(
         optim={"scheduler": {"type": "cosine", "params": {"T_max": 100}}}
     )
     flat = hp.flatten()
@@ -41,9 +41,9 @@ def test_hyperparameters_deep_nesting():
 
 def test_hyperparameters_serialization():
     """Test JSON serialization round-trip."""
-    hp = Hyperparameters(lr=0.01, model={"layers": [1, 2, 3]})
+    hp = Hpms(lr=0.01, model={"layers": [1, 2, 3]})
     json_str = json.dumps(hp.model_dump())
-    reloaded = Hyperparameters(**json.loads(json_str))
+    reloaded = Hpms(**json.loads(json_str))
     assert reloaded.lr == hp.lr
     assert reloaded.model == hp.model
 
@@ -52,11 +52,11 @@ def test_run_basic():
     """Test basic Run model creation."""
     run = Run(
         run_id="exp001",
-        hyperparameters=Hyperparameters(lr=0.01),
+        hpms=Hpms(lr=0.01),
         metrics={"train/loss": [0.5, 0.4, 0.3]},
     )
     assert run.run_id == "exp001"
-    assert run.hyperparameters.lr == 0.01
+    assert run.hpms.lr == 0.01
     assert run.metrics["train/loss"] == [0.5, 0.4, 0.3]
 
 
@@ -64,7 +64,7 @@ def test_run_computed_fields():
     """Test computed fields on Run model."""
     run = Run(
         run_id="exp002",
-        hyperparameters=Hyperparameters(),
+        hpms=Hpms(),
         metrics={
             "train/loss": [0.5, 0.4, 0.3, 0.35],
             "val/acc": [0.8, 0.85, 0.9, 0.88],
@@ -79,7 +79,7 @@ def test_run_empty_metrics():
     """Test Run with empty or missing metrics."""
     run = Run(
         run_id="exp003",
-        hyperparameters=Hyperparameters(),
+        hpms=Hpms(),
         metrics={},
     )
     assert run.best_train_loss is None
@@ -91,14 +91,14 @@ def test_run_serialization():
     """Test Run model JSON serialization."""
     run = Run(
         run_id="exp004",
-        hyperparameters=Hyperparameters(lr=0.01),
+        hpms=Hpms(lr=0.01),
         metrics={"train/loss": [0.5, 0.4]},
         metadata={"timestamp": "2024-01-01", "device": "cuda"},
     )
     json_str = json.dumps(run.model_dump())
     reloaded = Run(**json.loads(json_str))
     assert reloaded.run_id == run.run_id
-    assert reloaded.hyperparameters.lr == 0.01
+    assert reloaded.hpms.lr == 0.01
     assert reloaded.metadata["device"] == "cuda"
 
 
@@ -107,7 +107,7 @@ def test_run_validation_error():
     with pytest.raises(ValueError, match="Input should be a valid"):
         Run(
             run_id="exp005",
-            hyperparameters="not_a_hyperparameters_object",  # type: ignore
+            hpms="not_a_hyperparameters_object",  # type: ignore
             metrics={},
         )
 

@@ -77,9 +77,9 @@ def test_load_runs_from_dir(tmp_path: Path):
     runs = load_runs_from_dir(tmp_path)
     assert len(runs) == 2
     assert runs[0].run_id == "exp001"
-    assert runs[0].hyperparameters.lr == 0.01
+    assert runs[0].hpms.lr == 0.01
     assert runs[1].run_id == "exp002"
-    assert runs[1].hyperparameters.lr == 0.02
+    assert runs[1].hpms.lr == 0.02
 
 
 def test_load_runs_with_invalid_data(tmp_path: Path):
@@ -103,7 +103,7 @@ def test_load_runs_with_invalid_data(tmp_path: Path):
     # Both records create valid runs (2nd uses defaults)
     assert len(runs) == 2
     assert runs[0].run_id == "valid"
-    assert runs[0].hyperparameters.lr == 0.01
+    assert runs[0].hpms.lr == 0.01
     assert runs[1].run_id == "mixed"  # Uses filename as default
 
 
