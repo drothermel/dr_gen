@@ -1,26 +1,37 @@
 """Pydantic models for experiment analysis."""
 
-from typing import Any
+from typing import Any, Callable
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from pydantic_settings import BaseSettings
 
 
-class Hyperparameters(BaseModel):
+class Hpms(BaseModel):
     """Model for experiment hyperparameters with flattening support."""
 
     model_config = ConfigDict(extra="allow")
+    _flat_dict: dict[str, Any] | None = None
+    _flat_dict_prefix: str = ""
+
+    def __setattr__(self, name, value):
+        if hasattr(self, '_flat_dict'):
+            object.__setattr__(self, '_flat_dict', None)
+        super().__setattr__(name, value)
+
 
     def flatten(self, prefix: str = "") -> dict[str, Any]:
         """Flatten nested hyperparameters into dot-notation keys."""
+        if prefix == self._flat_dict_prefix and self._flat_dict is not None:
+            return self._flat_dict
         result = {}
         for key, value in self.model_dump().items():
             full_key = f"{prefix}{key}" if prefix else key
             if isinstance(value, dict):
-                nested = Hyperparameters(**value)
+                nested = Hpms(**value)
                 result.update(nested.flatten(f"{full_key}."))
             else:
                 result[full_key] = value
+        object.__setattr__(self, '_flat_dict', result)
         return result
 
 
@@ -28,16 +39,32 @@ class Run(BaseModel):
     """Model for a single experiment run with metrics and metadata."""
 
     run_id: str
-    hyperparameters: Hyperparameters
+    hpms: Hpms
     metrics: dict[str, list[float]]
     metadata: dict[str, Any] = {}
+
+    def metric_names(self) -> list[str]:
+        """Get all metric names."""
+        return list(self.metrics.keys())
+
+    def best_metric(self, metric_name: str) -> float | None:
+        """Get best (minimum) metric."""
+        if self.metrics.get(metric_name):
+            return min(self.metrics[metric_name])
+        return None
+
+    def last_metric(self, metric_name: str) -> float | None:
+        """Get last metric."""
+        if self.metrics.get(metric_name):
+            return self.metrics[metric_name][-1]
+        return None
 
     @computed_field
     @property
     def best_train_loss(self) -> float | None:
         """Get best (minimum) training loss."""
-        if self.metrics.get("train/loss"):
-            return min(self.metrics["train/loss"])
+        if self.metrics.get("train_loss"):
+            return min(self.metrics["train_loss"])
         return None
 
     @computed_field
@@ -78,3 +105,51 @@ class AnalysisConfig(BaseSettings):
     hparam_display_names: dict[str, str] = Field(
         default_factory=lambda: {"lr": "Learning Rate", "batch_size": "Batch Size"}
     )
+    use_runs_filters: dict[str, Callable[[Run], bool]] = Field(
+        default_factory=lambda: {}
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

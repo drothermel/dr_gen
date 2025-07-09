@@ -7,12 +7,14 @@ from collections import defaultdict
 from collections.abc import Iterator, MutableMapping
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+from pprint import pprint
 
 import dr_util.file_utils as fu
+import pandas as pd
 
 from dr_gen.analyze import check_prefix_exclude
 from dr_gen.analyze.metrics import SplitMetrics
-from dr_gen.analyze.schemas import Hyperparameters, Run
+from dr_gen.analyze.schemas import Hpms, Run
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -21,6 +23,35 @@ if TYPE_CHECKING:
 MIN_FILE_LINES = 2
 TRAIN_TIME_OFFSET_FROM_END = 2
 EPOCHS_KEY = "epochs"
+
+def get_run_id(metrics_path: Path) -> str:
+    run_id = metrics_path.parent.stem.split("_")[-1]
+    return run_id
+
+def get_config_path(metrics_path: Path) -> Path:
+    run_id = get_run_id(metrics_path)
+    config_dir = metrics_path.parent.parent.parent / "jobs"
+    return config_dir / f"{run_id}.json"
+
+def get_config_from_metrics_path(metrics_path: Path) -> dict | None:
+    config_path = get_config_path(metrics_path)
+    if not config_path.exists():
+        return None
+    with open(config_path, "r") as f:
+        run_config = json.load(f)
+    tag = run_config['tags'][0] if len(run_config['tags']) > 0 else None
+    final_config = {**run_config['config'], 'status': run_config['status'], 'tag': tag}
+    return final_config
+
+def records_to_metrics_dict(records):
+    records_df = pd.DataFrame([{**record['metrics'], 'step': record['step']} for record in records])
+    records_df = records_df.drop('timestamp', axis=1)
+    #print(records_df.columns)
+    records_dict = records_df.to_dict('list')
+    #pprint(records_dict)
+    return records_dict
+
+# ------------------------ ORIGINAL CODE ------------------------
 
 
 def _flatten_dict_tuple_keys(
@@ -160,21 +191,22 @@ def load_runs_from_dir(directory: Path, pattern: str = "*.jsonl") -> list[Run]:
     Returns:
         List of validated Run models
     """
+    metrics_files = list(directory.rglob(pattern))
     runs = []
-    for filepath in sorted(directory.glob(pattern)):
+    for filepath in sorted(metrics_files):
         records, _ = parse_jsonl_file(filepath)
-        for record in records:
-            try:
-                hp = Hyperparameters(**record.get("hyperparameters", {}))
-                run = Run(
-                    run_id=record.get("run_id", filepath.stem),
-                    hyperparameters=hp,
-                    metrics=record.get("metrics", {}),
-                    metadata=record.get("metadata", {}),
-                )
-                runs.append(run)
-            except Exception:  # noqa: BLE001, S112
-                continue
+        config = get_config_from_metrics_path(filepath)
+        # Missing config usually indicates not completed
+        if config is None or config['status'] != 'completed':
+            continue
+        run_id = get_run_id(filepath)
+        hp = Hpms(**config)
+        runs.append(Run(
+            run_id=run_id,
+            hpms=hp,
+            metrics=records_to_metrics_dict(records),
+            metadata={},
+        ))
     return runs
 
 
