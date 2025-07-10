@@ -108,6 +108,9 @@ class AnalysisConfig(BaseSettings):
     use_runs_filters: dict[str, Callable[[Run], bool]] = Field(
         default_factory=lambda: {}
     )
+    main_hpms: list[str] = Field(
+        default_factory=lambda: ["optim.lr", "batch_size"]
+    )
 
 
 

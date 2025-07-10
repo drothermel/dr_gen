@@ -47,13 +47,22 @@ class ExperimentDB(BaseModel):
             filter_results = {
                 filter_name: filter_fxn(run) for filter_name, filter_fxn in self.config.use_runs_filters.items()
             }
-            #pprint(run.hpms._flat_dict)
-            #pprint(filter_results)
-            #assert False
             if all(filter_results.values()):
                 self.active_runs.append(run)
         self._runs_df = runs_to_dataframe(self.active_runs)
         self._metrics_df = runs_to_metrics_df(self.active_runs)
+
+    @property
+    def important_hpms(self) -> list[str]:
+        """Get a list of important hyperparameters."""
+        return self.config.main_hpms
+
+    @property
+    def active_runs_df(self) -> pl.DataFrame:
+        """Get a dataframe of active runs with only the main hyperparameter columns."""
+        if self._runs_df is None:
+            return pl.DataFrame()
+        return self._runs_df.select(self.config.main_hpms)
 
     def query_metrics(
         self, metric_filter: str | None = None, run_filter: list[str] | None = None
