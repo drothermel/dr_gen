@@ -267,7 +267,17 @@ def prep_all_data(
 
 
 
-def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = False, yrange_loss: tuple[float, float] = None, yrange_acc: tuple[float, float] = None, figsize: tuple[int, int] = (17, 4.2)) -> None:
+def plot_training_metrics(
+    df: pd.DataFrame, 
+    title: str = "", 
+    xlog: bool = False, 
+    ylog: bool = False, 
+    xrange: tuple[float, float] | None = None, 
+    yrange_loss: tuple[float, float] | None = None, 
+    yrange_acc: tuple[float, float] | None = None, 
+    figsize: tuple[float, float] = (17.0, 4.2),
+    leave_space_for_legend: float = 0.1, 
+) -> None:
     """
     Draw the *four* panels (train‑loss, val‑loss, train‑acc, val‑acc) with
     colour = learning‑rate and linestyle = weight‑decay.  The mapping is derived
@@ -291,14 +301,17 @@ def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = Fal
     style_map = {wd: style_cycle[i % len(style_cycle)] for i, wd in enumerate(wds)}
 
     # ----- set‑up the 1×4 sub‑plots ------------------------------------
-    fig, axes = plt.subplots(1, 4, figsize=figsize, sharex=True)
+    #fig, axes = plt.subplots(1, 4, figsize=figsize, sharex=True)
+    fig, axes = plt.subplots(2, 2, figsize=figsize, sharex=False)
+    fig.suptitle(title, fontsize=16, fontweight='bold')
 
     panels = [('train_loss', 'Train Loss', ylog),
               ('val_loss',   'Val Loss',   ylog),
               ('train_acc',  'Train Acc',  False),
               ('val_acc',    'Val Acc',    False)]
 
-    for (metric, title, met_ylog), ax in zip(panels, axes):
+    # axes is a (2,2) array, so we need to flatten it to iterate over 4 panels
+    for (metric, title, met_ylog), ax in zip(panels, axes.flat):
         for lr in lrs:
             for wd in wds:
                 subset = df[(df.lr == lr) & (df.wd == wd)]
@@ -308,12 +321,16 @@ def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = Fal
                         linestyle=style_map[wd],
                         linewidth=1.8)
 
+        ax.axvline(x=5, color='gray', linestyle='--', linewidth=1.2, alpha=0.7)
+
         ax.set_title(title)
         ax.grid(alpha=.3, which='both', linestyle=':')
-        if metric == 'train_loss' or metric == 'val_loss':
+        if (metric == 'train_loss' or metric == 'val_loss') and yrange_loss is not None:
             ax.set_ylim(yrange_loss)
-        elif metric == 'train_acc' or metric == 'val_acc':
+        elif (metric == 'train_acc' or metric == 'val_acc') and yrange_acc is not None:
             ax.set_ylim(yrange_acc)
+        if xrange is not None:
+            ax.set_xlim(xrange)
         if xlog:
             ax.set_xscale('log')
             ax.set_xlabel('Epoch (log scale)')
@@ -343,12 +360,13 @@ def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = Fal
             labels.append(f'wd={wd}')
 
     # ncol = (# wds + 1)   →  exactly one row per lr group
-    ncol = len(wds) + 1
+    #ncol = len(wds) + 1
+    ncol = len(lrs)
 
     leg = fig.legend(handles, labels,
                     ncol=ncol,
                     loc='lower center',
-                    bbox_to_anchor=(0.5, -0.20),
+                    bbox_to_anchor=(0.5, -leave_space_for_legend),
                     frameon=False,
                     columnspacing=1.5,
                     handletextpad=0.6)
@@ -357,7 +375,7 @@ def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = Fal
     leg.set_title(f'{title}', prop={'weight': 'bold', 'size': 'medium'})
 
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.32)   # leave room beneath the plots
+    plt.subplots_adjust(bottom=0.15)   # leave room beneath the plots
     plt.show()
 
 
