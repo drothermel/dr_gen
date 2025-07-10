@@ -9,13 +9,118 @@ from pathlib import Path
 import pandas as pd
 import polars as pl
 import json
+from typing import Any, Dict, Tuple, List
 from hydra import compose, initialize_config_dir
 from omegaconf import DictConfig, OmegaConf
 from pprint import pprint
+
+from torch._higher_order_ops.run_const_graph import run_const_graph_dispatch_mode
 from dr_gen.analyze.parsing import load_runs_from_dir
 from dr_gen.analyze.database import ExperimentDB
 from dr_gen.analyze.schemas import AnalysisConfig, Hpms
 from IPython.display import display
+from dr_gen.analyze.visualization import prep_all_data, plot_training_metrics
+
+# %% Function: Plot Training Metrics
+
+def plot_training_metrics(df: pd.DataFrame, xlog: bool = False, ylog: bool = False, yrange_loss: tuple[float, float] = None, yrange_acc: tuple[float, float] = None) -> None:
+    """
+    Draw the *four* panels (train‑loss, val‑loss, train‑acc, val‑acc) with
+    colour = learning‑rate and linestyle = weight‑decay.  The mapping is derived
+    automatically from whatever unique values appear in the dataframe.
+
+    Parameters
+    ----------
+    df : tidy dataframe with at least the columns produced by
+         `make_mock_cifar_df`.
+    """
+    # ----- discover the hyper‑parameter palette / style -----------------
+    lrs = sorted(df['lr'].unique())         # e.g. [0.01, 0.03, 0.1]
+    wds = sorted(df['wd'].unique())         # e.g. [1e‑4, 3e‑4, 1e‑3]
+
+    # colours – reuse tab10 but subsample in case there are more than 10 lrs
+    cmap = plt.get_cmap('tab10')
+    colour_map = {lr: cmap(i % 10) for i, lr in enumerate(lrs)}
+
+    # linestyles – cycle through the classic trio, then fallback to dash‑dot etc.
+    style_cycle = ['solid', 'dashed', 'dotted', 'dashdot', (0, (3, 1, 1, 1))]
+    style_map = {wd: style_cycle[i % len(style_cycle)] for i, wd in enumerate(wds)}
+
+    # ----- set‑up the 1×4 sub‑plots ------------------------------------
+    fig, axes = plt.subplots(1, 4, figsize=(17, 4.2), sharex=True)
+
+    panels = [('train_loss', 'Train Loss', ylog),
+              ('val_loss',   'Val Loss',   ylog),
+              ('train_acc',  'Train Acc',  False),
+              ('val_acc',    'Val Acc',    False)]
+
+    for (metric, title, met_ylog), ax in zip(panels, axes):
+        for lr in lrs:
+            for wd in wds:
+                subset = df[(df.lr == lr) & (df.wd == wd)]
+                ax.plot(subset['epoch'], subset[metric],
+                        label=f'lr={lr}, wd={wd}',
+                        color=colour_map[lr],
+                        linestyle=style_map[wd],
+                        linewidth=1.8)
+
+        ax.set_title(title)
+        ax.grid(alpha=.3, which='both', linestyle=':')
+        if metric == 'train_loss' or metric == 'val_loss':
+            ax.set_ylim(yrange_loss)
+        elif metric == 'train_acc' or metric == 'val_acc':
+            ax.set_ylim(yrange_acc)
+        if xlog:
+            ax.set_xscale('log')
+            ax.set_xlabel('Epoch (log scale)')
+        else:
+            ax.set_xlabel('Epoch')
+        if met_ylog:
+            ax.set_yscale('log')
+            ax.set_ylabel(f'{metric} (log scale)')
+        else:
+            ax.set_ylabel(f'{metric}')
+
+    # -------------------  Legend (row-per-lr layout)  --------------------
+
+    title = 'Learning Rate (color) × Weight Decay (style)'
+
+    handles, labels = [], []
+
+    for lr in lrs:
+        # first column of the row: lr label (no visible line)
+        handles.append(Line2D([], [], color='none', label=f'lr={lr}:'))
+        labels.append(f'lr={lr}:')
+        # remaining columns: one entry per wd, styled correctly
+        for wd in wds:
+            handles.append(Line2D([], [], color=colour_map[lr],
+                                linestyle=style_map[wd], linewidth=2,
+                                label=f'wd={wd}'))
+            labels.append(f'wd={wd}')
+
+    # ncol = (# wds + 1)   →  exactly one row per lr group
+    ncol = len(wds) + 1
+
+    leg = fig.legend(handles, labels,
+                    ncol=ncol,
+                    loc='lower center',
+                    bbox_to_anchor=(0.5, -0.20),
+                    frameon=False,
+                    columnspacing=1.5,
+                    handletextpad=0.6)
+
+    # add a bold title and subtitle (two separate lines)
+    leg.set_title(f'{title}', prop={'weight': 'bold', 'size': 'medium'})
+
+    plt.tight_layout()
+    plt.subplots_adjust(bottom=0.32)   # leave room beneath the plots
+    plt.show()
+
+
+# %%
+
+
+
 
 # %%
 config_path = Path("../configs/").absolute()
@@ -199,24 +304,249 @@ print(db.base_path)
 db.load_experiments()
 print(f"Number of runs: {len(db.all_runs)}")
 print(f"Number of active runs: {len(db.active_runs)}")
-#db.config.use_runs_filters['no label smoothing'] = lambda run: run.hpms._flat_dict['train_transforms.label_smoothing'] == 0.0
-#db.update_filtered_runs()
-#print(f"Number of active runs (without label smoothing): {len(db.active_runs)}")
 
-# %%
-print('Important HPMS:', db.important_hpms)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
-display(db.active_runs_df.drop('run_id', 'seed', 'tag', 'optim.name', 'model.architecture').unique().select(['batch_size', 'model.width_mult', 'optim.lr', 'optim.weight_decay']).sort(pl.all()).to_pandas())
 
-# %%
-db._metrics_df.head()
+
+
 
 
 # %%
-pprint(db._runs_df['tag'].unique().to_list())
+
+
+# %%
+
+def group_metric_by_hpms_v2(
+    db: ExperimentDB,
+    metric: str,
+    **hpm_filters: Any
+) -> Dict[tuple, pd.DataFrame]:
+    """
+    Group metric time series by main_hpms (excluding 'seed'), filtered by hpm_filters.
+    
+    Args:
+        db: The ExperimentDB instance.
+        metric: The metric name (e.g., 'train_loss', 'val_acc').
+        **hpm_filters: Keyword arguments for filtering (e.g., batch_size=128, model__width_mult=1.0).
+                      Note: Use double underscore for nested keys (e.g., model__width_mult for model.width_mult)
+    
+    Returns:
+        Dict mapping from tuple of hpm values (excluding 'seed' and 'run_id') to DataFrame with columns:
+        - epoch: timestep
+        - seed: seed value
+        - [metric]: the metric value
+    """
+    # Get the filtered runs based on hpm filters
+    filtered_runs_df = db._runs_df
+    
+    # Apply filters - handle both dot notation and double underscore notation
+    for k, v in hpm_filters.items():
+        # Convert double underscore to dot notation if needed
+        col_name = k.replace('__', '.')
+        
+        # Check if column exists
+        if col_name in filtered_runs_df.columns:
+            filtered_runs_df = filtered_runs_df.filter(pl.col(col_name) == v)
+        else:
+            print(f"Warning: Column '{col_name}' not found in runs dataframe")
+    
+    # Get run_ids from filtered runs
+    run_ids = filtered_runs_df['run_id'].to_list()
+    
+    if not run_ids:
+        print("No runs found matching the filters")
+        return {}
+    
+    # Get metrics for these runs
+    metrics_df = db._metrics_df.filter(
+        (pl.col('run_id').is_in(run_ids)) & 
+        (pl.col('metric') == metric)
+    )
+    
+    # Join metrics with run info to get hpms
+    # Remove 'run_id' from important_hpms to avoid duplicate
+    hpms_to_select = [h for h in db.important_hpms if h != 'run_id']
+    joined_df = metrics_df.join(
+        filtered_runs_df.select(['run_id'] + hpms_to_select),
+        on='run_id',
+        how='left'
+    )
+    
+    # Group by all important hpms except 'seed' and 'run_id'
+    group_keys = [h for h in db.important_hpms if h not in ['seed', 'run_id']]
+    
+    # Convert to pandas for easier grouping
+    joined_pd = joined_df.to_pandas()
+    
+    # Create result dictionary
+    result = {}
+    
+    # Group by the hpm keys
+    for group_values, group_df in joined_pd.groupby(group_keys):
+        # Create a clean dataframe with just epoch, seed, and metric value
+        metric_df = group_df[['epoch', 'seed', 'value']].copy()
+        metric_df.rename(columns={'value': metric}, inplace=True)
+        metric_df = metric_df.sort_values(['seed', 'epoch'])
+        
+        # Use tuple of group values as key
+        if isinstance(group_values, tuple):
+            key = group_values
+        else:
+            key = (group_values,)
+            
+        result[key] = metric_df
+    
+    return result
+
+
+
+
+
+# %%
+def prepare_data_for_plotting(
+    grouped_results: Dict[tuple, pd.DataFrame],
+    metric_name: str,
+    db: ExperimentDB,
+    aggregate_seeds: bool = True
+) -> pd.DataFrame:
+    """
+    Prepare the grouped results for use with plot_training_metrics.
+    
+    Args:
+        grouped_results: Output from group_metric_by_hpms_v2
+        metric_name: Name of the metric being plotted
+        db: ExperimentDB instance (to access important_hpms)
+        aggregate_seeds: If True, average across seeds; if False, include seed as a column
+    
+    Returns:
+        DataFrame formatted for plot_training_metrics with columns:
+        epoch, lr, wd, [metric_name], and optionally seed
+    """
+    all_dfs = []
+    
+    for group_key, df in grouped_results.items():
+        # Extract lr and wd from the group key
+        # Find indices for lr and wd in the group key
+        group_keys = [h for h in db.important_hpms if h not in ['seed', 'run_id']]
+        lr_idx = group_keys.index('optim.lr')
+        wd_idx = group_keys.index('optim.weight_decay')
+        
+        lr = group_key[lr_idx]
+        wd = group_key[wd_idx]
+        
+        # Add lr and wd columns
+        df = df.copy()
+        df['lr'] = lr
+        df['wd'] = wd
+        
+        if aggregate_seeds:
+            # Average across seeds
+            agg_df = df.groupby(['epoch', 'lr', 'wd'])[metric_name].mean().reset_index()
+            all_dfs.append(agg_df)
+        else:
+            all_dfs.append(df)
+    
+    # Combine all dataframes
+    combined_df = pd.concat(all_dfs, ignore_index=True)
+    return combined_df
+
+
+# %%
+
+def prep_all_data(
+    db: ExperimentDB,
+    metrics: List[str],
+    hpm_filters: Dict[str, Any],
+    aggregate_seeds: bool = True,
+) -> None:
+    # Prepare data for each metric
+    metric_dfs = {}
+    for metric in metrics:
+        grouped = group_metric_by_hpms_v2(db, metric, **hpm_filters)
+        if not grouped:
+            print(f"No data found for metric: {metric}")
+            continue
+        metric_dfs[metric] = prepare_data_for_plotting(grouped, metric, db, aggregate_seeds)
+    
+    if not metric_dfs:
+        print("No data to plot")
+        return
+    
+    # Combine all metric dataframes
+    # We need to merge them on epoch, lr, wd
+    combined_df = None
+    for metric, df in metric_dfs.items():
+        if combined_df is None:
+            combined_df = df
+        else:
+            # Merge on common columns
+            merge_cols = ['epoch', 'lr', 'wd']
+            if 'seed' in df.columns and 'seed' in combined_df.columns:
+                merge_cols.append('seed')
+            combined_df = combined_df.merge(df, on=merge_cols, how='outer')
+    
+    return combined_df
+
+
+# %%
+
+all_data = prep_all_data(
+    db, 
+    ['train_loss', 'train_acc', 'val_loss', 'val_acc'],
+    {'batch_size':128, 'model.width_mult': 1.0},
+)
+all_data.head()
+
+# %%
+
+# The original code tries to use polars `.filter` on a pandas DataFrame, which will not work.
+# Instead, use pandas boolean indexing:
+no_outliers = all_data[
+    #all_data["lr"].isin([0.01, 0.03, 0.1]) & all_data["wd"].isin([0.0001, 0.0003, 0.001])
+    all_data["lr"].isin([0.01, 0.03, 0.1]))
+]
+# Take mean over seeds for each (epoch) (averaging across all lr and wd)
+mean_no_outliers = no_outliers.groupby(['epoch', 'wd', 'lr']).mean(numeric_only=True).reset_index()
+print(mean_no_outliers.head())
+
+
+
+# %%
+plot_training_metrics(mean_no_outliers, yrange_loss=(-0.1, 2.5), yrange_acc=(0, 1.1))
+
+
+
+
+
+
+
+# %%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # %%

@@ -64,6 +64,12 @@ class ExperimentDB(BaseModel):
             return pl.DataFrame()
         return self._runs_df.select(self.config.main_hpms)
 
+    def active_metrics_df(self) -> pl.DataFrame:
+        """Get a dataframe of active metrics with only the main hyperparameter columns."""
+        if self._metrics_df is None:
+            return pl.DataFrame()
+        return self._metrics_df.select(self.config.main_hpms)
+
     def query_metrics(
         self, metric_filter: str | None = None, run_filter: list[str] | None = None
     ) -> pl.DataFrame:
