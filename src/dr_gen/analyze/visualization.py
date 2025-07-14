@@ -217,12 +217,12 @@ def prepare_data_for_plotting(
         
         # Add lr and wd columns
         df = df.copy()
-        df['lr'] = lr
-        df['wd'] = wd
+        df['run_lr'] = lr
+        df['run_wd'] = wd
         
         if aggregate_seeds:
             # Average across seeds
-            agg_df = df.groupby(['epoch', 'lr', 'wd'])[metric_name].mean().reset_index()
+            agg_df = df.groupby(['epoch', 'run_lr', 'run_wd'])[metric_name].mean().reset_index()
             all_dfs.append(agg_df)
         else:
             all_dfs.append(df)
@@ -258,7 +258,7 @@ def prep_all_data(
             combined_df = df
         else:
             # Merge on common columns
-            merge_cols = ['epoch', 'lr', 'wd']
+            merge_cols = ['epoch', 'run_lr', 'run_wd']
             if 'seed' in df.columns and 'seed' in combined_df.columns:
                 merge_cols.append('seed')
             combined_df = combined_df.merge(df, on=merge_cols, how='outer')
@@ -273,10 +273,13 @@ def plot_training_metrics(
     xlog: bool = False, 
     ylog: bool = False, 
     xrange: tuple[float, float] | None = None, 
-    yrange_loss: tuple[float, float] | None = None, 
+    yrange_train_loss: tuple[float, float] | None = None, 
+    yrange_val_loss: tuple[float, float] | None = None, 
     yrange_acc: tuple[float, float] | None = None, 
     figsize: tuple[float, float] = (17.0, 4.2),
     leave_space_for_legend: float = 0.1, 
+    df_std: pd.DataFrame | None = None,
+    hbar2: float = 50,
 ) -> None:
     """
     Draw the *four* panels (train‑loss, val‑loss, train‑acc, val‑acc) with
@@ -287,10 +290,11 @@ def plot_training_metrics(
     ----------
     df : tidy dataframe with at least the columns produced by
          `make_mock_cifar_df`.
+    df_std : dataframe with the same structure as df, containing std dev for each metric.
     """
     # ----- discover the hyper‑parameter palette / style -----------------
-    lrs = sorted(df['lr'].unique())         # e.g. [0.01, 0.03, 0.1]
-    wds = sorted(df['wd'].unique())         # e.g. [1e‑4, 3e‑4, 1e‑3]
+    lrs = sorted(df['run_lr'].unique())         # e.g. [0.01, 0.03, 0.1]
+    wds = sorted(df['run_wd'].unique())         # e.g. [1e‑4, 3e‑4, 1e‑3]
 
     # colours – reuse tab10 but subsample in case there are more than 10 lrs
     cmap = plt.get_cmap('tab10')
@@ -301,8 +305,7 @@ def plot_training_metrics(
     style_map = {wd: style_cycle[i % len(style_cycle)] for i, wd in enumerate(wds)}
 
     # ----- set‑up the 1×4 sub‑plots ------------------------------------
-    #fig, axes = plt.subplots(1, 4, figsize=figsize, sharex=True)
-    fig, axes = plt.subplots(2, 2, figsize=figsize, sharex=False)
+    fig, axes = plt.subplots(1, 4, figsize=figsize, sharex=False)
     fig.suptitle(title, fontsize=16, fontweight='bold')
 
     panels = [('train_loss', 'Train Loss', ylog),
@@ -311,16 +314,101 @@ def plot_training_metrics(
               ('val_acc',    'Val Acc',    False)]
 
     # axes is a (2,2) array, so we need to flatten it to iterate over 4 panels
-    for (metric, title, met_ylog), ax in zip(panels, axes.flat):
+    for (metric, panel_title, met_ylog), ax in zip(panels, axes.flat):
         for lr in lrs:
             for wd in wds:
-                subset = df[(df.lr == lr) & (df.wd == wd)]
-                ax.plot(subset['epoch'], subset[metric],
-                        label=f'lr={lr}, wd={wd}',
-                        color=colour_map[lr],
-                        linestyle=style_map[wd],
-                        linewidth=1.8)
+                subset = df[(df.run_lr == lr) & (df.run_wd == wd)]
+                ax.plot(
+                    subset['epoch'], subset[metric],
+                    label=f'lr={lr}, wd={wd}',
+                    color=colour_map[lr],
+                    linestyle=style_map[wd],
+                    linewidth=1.8
+                )
+                #max_val_acc_epoch = subset[subset['val_acc'] == subset['val_acc'].max()]['epoch'].values[0]
+                #ax.axvline(x=max_val_acc_epoch, color=colour_map[lr], linestyle='-', linewidth=1.2, alpha=0.7)
 
+                train_loss_below_value = subset[subset['train_loss'] < 0.01]['epoch'].values[0]
+                ax.axvline(x=train_loss_below_value, color=colour_map[lr], linestyle='--', linewidth=2, alpha=0.7)
+
+                # If std dev dataframe is provided, plot shaded region for mean ± std
+                if df_std is not None and metric in df_std.columns:
+                    subset_std = df_std[(df_std.lr == lr) & (df_std.wd == wd)]
+                    # Only plot if both mean and std have matching epochs
+                    if not subset_std.empty and not subset.empty:
+                        # Align on epoch
+                        merged = pd.merge(
+                            subset[['epoch', metric]],
+                            subset_std[['epoch', metric]],
+                            on='epoch',
+                            suffixes=('_mean', '_std')
+                        )
+                        if not merged.empty:
+                            mean = merged[f"{metric}_mean"]
+                            std = merged[f"{metric}_std"]
+                            epochs = merged["epoch"]
+                            ax.fill_between(
+                                epochs,
+                                mean - std,
+                                mean + std,
+                                color=colour_map[lr],
+                                alpha=0.18,
+                                linewidth=0,
+                                zorder=0
+                            )
+
+        ax.axvline(x=5, color='gray', linestyle='--', linewidth=1.2, alpha=0.7)
+        #ax.axvline(x=hbar2, color='gray', linestyle='--', linewidth=1.2, alpha=0.7)
+
+        ax.set_title(panel_title)
+        ax.grid(alpha=.3, which='both', linestyle=':')
+        if metric == 'train_loss' and yrange_train_loss is not None:
+            ax.set_ylim(yrange_train_loss)
+        if metric == 'val_loss' and yrange_val_loss is not None:
+            ax.set_ylim(yrange_val_loss)
+        elif (metric == 'train_acc' or metric == 'val_acc') and yrange_acc is not None:
+            ax.set_ylim(yrange_acc)
+        if xrange is not None:
+            ax.set_xlim(xrange)
+        if xlog:
+            ax.set_xscale('log')
+            ax.set_xlabel('Epoch (log scale)')
+        else:
+            ax.set_xlabel('Epoch')
+        if met_ylog:
+            ax.set_yscale('log')
+            ax.set_ylabel(f'{metric} (log scale)')
+        else:
+            ax.set_ylabel(f'{metric}')
+
+    # -------------------  Legend (row-per-lr layout)  --------------------
+
+    legend_title = 'Learning Rate (color) × Weight Decay (style)'
+
+    handles, labels = [], []
+
+    for lr in lrs:
+        # first column of the row: lr label (no visible line)
+        handles.append(Line2D([], [], color='none', label=f'lr={lr}:'))
+        labels.append(f'lr={lr}:')
+        # remaining columns: one entry per wd, styled correctly
+        for wd in wds:
+            handles.append(Line2D([], [], color=colour_map[lr],
+                                linestyle=style_map[wd], linewidth=2,
+                                label=f'wd={wd}'))
+            labels.append(f'wd={wd}')
+
+    ncol = len(lrs)
+
+    leg = fig.legend(handles, labels,
+                    ncol=ncol,
+                    loc='lower center',
+                    bbox_to_anchor=(0.5, -leave_space_for_legend),
+                    frameon=False,
+                    columnspacing=1.5,
+                    handletextpad=0.6)
+
+    """
         ax.axvline(x=5, color='gray', linestyle='--', linewidth=1.2, alpha=0.7)
 
         ax.set_title(title)
@@ -371,6 +459,7 @@ def plot_training_metrics(
                     columnspacing=1.5,
                     handletextpad=0.6)
 
+    """
     # add a bold title and subtitle (two separate lines)
     leg.set_title(f'{title}', prop={'weight': 'bold', 'size': 'medium'})
 

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from pprint import pprint
-
+from typing import Any
 import polars as pl
 from pydantic import BaseModel, ConfigDict
 
@@ -63,6 +63,24 @@ class ExperimentDB(BaseModel):
         if self._runs_df is None:
             return pl.DataFrame()
         return self._runs_df.select(self.config.main_hpms)
+
+    @property
+    def active_runs_hpms(self) -> list[dict[str, Any]]:
+        """Get a list of important hyperparameters for active runs."""
+        return [run.get_important_hpms(self.important_hpms) for run in self.active_runs]
+
+    def active_runs_grouped_by_hpms(self) -> dict[tuple, list[Run]]:
+        """Group active runs by their important hyperparameters."""
+        grouped_runs = {}
+        for run in self.active_runs:
+            run_hpms = run.get_important_hpms(self.important_hpms)
+            sorted_run_hpms = sorted(run_hpms.items(), key=lambda x: x[0])
+            hpm_keys = [k for k, v in sorted_run_hpms if k != "seed" and k != "run_id"]
+            key = tuple([v for k, v in sorted_run_hpms if k != "seed" and k != "tag"])
+            if key not in grouped_runs:
+                grouped_runs[key] = []
+            grouped_runs[key].append(run)
+        return hpm_keys, grouped_runs
 
     def active_metrics_df(self) -> pl.DataFrame:
         """Get a dataframe of active metrics with only the main hyperparameter columns."""

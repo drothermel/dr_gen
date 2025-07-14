@@ -59,6 +59,11 @@ class Run(BaseModel):
             return self.metrics[metric_name][-1]
         return None
 
+    def get_important_hpms(self, important_hpms: list[str]) -> dict[str, Any]:
+        """Get important hyperparameters."""
+        self.hpms.flatten()
+        return {k: v for k, v in self.hpms._flat_dict.items() if k in important_hpms}
+
     @computed_field
     @property
     def best_train_loss(self) -> float | None:
