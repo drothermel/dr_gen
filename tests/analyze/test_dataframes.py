@@ -11,7 +11,7 @@ from dr_gen.analyze.dataframes import (
     runs_to_metrics_df,
     summarize_by_hparams,
 )
-from dr_gen.analyze.schemas import AnalysisConfig, Hyperparameters, Run
+from dr_gen.analyze.schemas import AnalysisConfig, Hpms, Run
 
 
 def test_runs_to_dataframe_empty():
@@ -25,13 +25,13 @@ def test_runs_to_dataframe_basic():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(lr=0.01, batch_size=32),
+            hpms=Hpms(lr=0.01, batch_size=32),
             metrics={"loss": [0.5]},
             metadata={"seed": 42},
         ),
         Run(
             run_id="exp2",
-            hyperparameters=Hyperparameters(lr=0.02, batch_size=64),
+            hpms=Hpms(lr=0.02, batch_size=64),
             metrics={"loss": [0.6]},
             metadata={"seed": 43},
         ),
@@ -51,7 +51,7 @@ def test_runs_to_metrics_df():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(),
+            hpms=Hpms(),
             metrics={"train/loss": [0.5, 0.4, 0.3], "val/acc": [0.8, 0.85]},
         )
     ]
@@ -71,12 +71,12 @@ def test_find_varying_hparams():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(lr=0.01, batch_size=32, seed=42),
+            hpms=Hpms(lr=0.01, batch_size=32, seed=42),
             metrics={},
         ),
         Run(
             run_id="exp2",
-            hyperparameters=Hyperparameters(lr=0.02, batch_size=32, seed=42),
+            hpms=Hpms(lr=0.02, batch_size=32, seed=42),
             metrics={},
         ),
     ]
@@ -91,17 +91,17 @@ def test_group_by_hparams():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(lr=0.01, arch="cnn"),
+            hpms=Hpms(lr=0.01, arch="cnn"),
             metrics={},
         ),
         Run(
             run_id="exp2",
-            hyperparameters=Hyperparameters(lr=0.01, arch="cnn"),
+            hpms=Hpms(lr=0.01, arch="cnn"),
             metrics={},
         ),
         Run(
             run_id="exp3",
-            hyperparameters=Hyperparameters(lr=0.02, arch="cnn"),
+            hpms=Hpms(lr=0.02, arch="cnn"),
             metrics={},
         ),
     ]
@@ -122,7 +122,7 @@ def test_query_metrics():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(),
+            hpms=Hpms(),
             metrics={"train/loss": [0.5], "val/loss": [0.6]},
         )
     ]
@@ -144,12 +144,12 @@ def test_summarize_by_hparams():
     runs = [
         Run(
             run_id="exp1",
-            hyperparameters=Hyperparameters(lr=0.01),
+            hpms=Hpms(lr=0.01),
             metrics={"loss": [0.5, 0.4]},
         ),
         Run(
             run_id="exp2",
-            hyperparameters=Hyperparameters(lr=0.01),
+            hpms=Hpms(lr=0.01),
             metrics={"loss": [0.6, 0.5]},
         ),
     ]

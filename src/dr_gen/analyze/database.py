@@ -1,13 +1,14 @@
 """ExperimentDB class for unified analysis API."""
 
 from pathlib import Path
-
+from pprint import pprint
+from typing import Any
 import polars as pl
 from pydantic import BaseModel, ConfigDict
 
-from dr_gen.analyze.dataframes import runs_to_dataframe, runs_to_metrics_df
+from dr_gen.analyze.dataframes import runs_to_dataframe, runs_to_metrics_df, query_metrics, summarize_by_hparams
 from dr_gen.analyze.parsing import load_runs_from_dir
-from dr_gen.analyze.schemas import AnalysisConfig
+from dr_gen.analyze.schemas import AnalysisConfig, Run
 
 
 class ExperimentDB(BaseModel):
@@ -15,6 +16,8 @@ class ExperimentDB(BaseModel):
 
     config: AnalysisConfig
     base_path: Path
+    all_runs: list[Run] = []
+    active_runs: list[Run] = []
     lazy: bool = True
     _runs_df: pl.DataFrame | None = None
     _metrics_df: pl.DataFrame | None = None
@@ -23,23 +26,72 @@ class ExperimentDB(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(
-        self, config: AnalysisConfig, base_path: Path, lazy: bool = True
+        self, config: AnalysisConfig, base_path=None, lazy: bool = True
     ) -> None:
+        if base_path is None:
+            base_path = Path(config.experiment_dir)
         """Initialize ExperimentDB with configuration and base path."""
         super().__init__(config=config, base_path=base_path, lazy=lazy)
 
     def load_experiments(self) -> None:
         """Load experiments from base_path directory."""
-        runs = load_runs_from_dir(self.base_path)
-        self._runs_df = runs_to_dataframe(runs)
-        self._metrics_df = runs_to_metrics_df(runs)
+        self.all_runs = load_runs_from_dir(self.base_path, pattern="*metrics.jsonl")
+        self.update_filtered_runs()
         self._errors = []
+
+    def update_filtered_runs(self) -> None:
+        """Filter runs based on the filter_out_runs configuration."""
+        self.active_runs = []
+        for run in self.all_runs:
+            run.hpms.flatten()
+            filter_results = {
+                filter_name: filter_fxn(run) for filter_name, filter_fxn in self.config.use_runs_filters.items()
+            }
+            if all(filter_results.values()):
+                self.active_runs.append(run)
+        self._runs_df = runs_to_dataframe(self.active_runs)
+        self._metrics_df = runs_to_metrics_df(self.active_runs)
+
+    @property
+    def important_hpms(self) -> list[str]:
+        """Get a list of important hyperparameters."""
+        return self.config.main_hpms
+
+    @property
+    def active_runs_df(self) -> pl.DataFrame:
+        """Get a dataframe of active runs with only the main hyperparameter columns."""
+        if self._runs_df is None:
+            return pl.DataFrame()
+        return self._runs_df.select(self.config.main_hpms)
+
+    @property
+    def active_runs_hpms(self) -> list[dict[str, Any]]:
+        """Get a list of important hyperparameters for active runs."""
+        return [run.get_important_hpms(self.important_hpms) for run in self.active_runs]
+
+    def active_runs_grouped_by_hpms(self) -> dict[tuple, list[Run]]:
+        """Group active runs by their important hyperparameters."""
+        grouped_runs = {}
+        for run in self.active_runs:
+            run_hpms = run.get_important_hpms(self.important_hpms)
+            sorted_run_hpms = sorted(run_hpms.items(), key=lambda x: x[0])
+            hpm_keys = [k for k, v in sorted_run_hpms if k != "seed" and k != "run_id"]
+            key = tuple([v for k, v in sorted_run_hpms if k != "seed" and k != "tag"])
+            if key not in grouped_runs:
+                grouped_runs[key] = []
+            grouped_runs[key].append(run)
+        return hpm_keys, grouped_runs
+
+    def active_metrics_df(self) -> pl.DataFrame:
+        """Get a dataframe of active metrics with only the main hyperparameter columns."""
+        if self._metrics_df is None:
+            return pl.DataFrame()
+        return self._metrics_df.select(self.config.main_hpms)
 
     def query_metrics(
         self, metric_filter: str | None = None, run_filter: list[str] | None = None
     ) -> pl.DataFrame:
         """Query metrics with optional filters."""
-        from dr_gen.analyze.dataframes import query_metrics
 
         if self._metrics_df is None and not self.lazy:
             self.load_experiments()
@@ -47,7 +99,6 @@ class ExperimentDB(BaseModel):
 
     def summarize_metrics(self, hparams: list[str]) -> pl.DataFrame:
         """Get summary statistics grouped by hyperparameters."""
-        from dr_gen.analyze.dataframes import summarize_by_hparams
 
         if self._metrics_df is None and not self.lazy:
             self.load_experiments()

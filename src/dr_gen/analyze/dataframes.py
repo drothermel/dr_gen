@@ -15,7 +15,7 @@ def runs_to_dataframe(runs: list[Run]) -> pl.DataFrame:
 
     data = []
     for run in runs:
-        flat_hparams = run.hyperparameters.flatten()
+        flat_hparams = run.hpms.flatten()
         data.append(
             {
                 "run_id": run.run_id,

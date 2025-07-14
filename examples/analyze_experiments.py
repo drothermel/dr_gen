@@ -67,7 +67,7 @@ def lazy_evaluation_example():
 def legacy_migration_example():
     """Example of migrating legacy experiment data."""
     from dr_gen.analyze.parsing import convert_legacy_format
-    from dr_gen.analyze.schemas import Run, Hyperparameters
+    from dr_gen.analyze.schemas import Run, Hpms
     
     # Load legacy data (e.g., from pickle file)
     legacy_data = {
@@ -85,7 +85,7 @@ def legacy_migration_example():
     # Create Run model
     run = Run(
         run_id=converted["run_id"],
-        hyperparameters=Hyperparameters(**converted["hyperparameters"]),
+        hpms=Hpms(**converted["hyperparameters"]),
         metrics=converted["metrics"],
         metadata=converted["metadata"],
     )
