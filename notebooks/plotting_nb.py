@@ -513,6 +513,7 @@ plot_metric_group(
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
+    show_individual_runs=False,
     group_descriptions=all_lr_wd_descriptions,
     group_hparams=all_lr_wd_hparams,
     color_by='group',  # Colors distinguish metrics (train vs val)
@@ -523,6 +524,11 @@ plot_metric_group(
     xlim=(20, 50),
     ylim=(0, 1.0),
     legend_loc='upper left',
+    separate_legends=True,  # Must be explicitly set
+    color_legend_title="Learning Rate",
+    linestyle_legend_title="Weight Decay",
+    color_legend_loc="center left",
+    linestyle_legend_loc="upper left"
 )
 
 # %% ========== PLOTTING EXAMPLES SUMMARY ==========

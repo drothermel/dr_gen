@@ -269,7 +269,14 @@ def plot_metric_group(
         if param_name == "metric":
             return y_metrics.copy()
         if param_name == "group":
-            return list(groups.keys())
+            # Always return groups in the same order as the main plot (sorted when using hyperparameters)
+            if (color_by not in ["metric", "group", "none"] and group_hparams) or (
+                linestyle_by not in ["metric", "group", "none"] and group_hparams
+            ):
+                sorted_groups_keys = sorted(groups.items(), key=get_sort_key)
+                return [key for key, _ in sorted_groups_keys]
+            # For consistency, always sort group keys to ensure deterministic ordering
+            return sorted(groups.keys())
         if group_hparams and param_name in next(iter(group_hparams.values()), {}):
             # Extract unique values for this hyperparameter
             values = set()
@@ -566,9 +573,56 @@ def plot_metric_group(
         if use_dual_legends:
             # Create dual legends with proxy objects
 
-            # Get unique values for color and linestyle dimensions (already sorted for hyperparameters)
-            color_values = get_unique_values(color_by)
-            linestyle_values = get_unique_values(linestyle_by)
+            # Get unique values in the same order as they appear in the sorted groups
+            # This ensures dual legends match the main plot ordering
+            if (color_by not in ["metric", "group", "none"] and group_hparams) or (
+                linestyle_by not in ["metric", "group", "none"] and group_hparams
+            ):
+                # Use the same sorting as the main plot
+                sorted_groups_for_legend = sorted(groups.items(), key=get_sort_key)
+
+                # Extract values in plot order while preserving uniqueness
+                color_values = []
+                linestyle_values = []
+                seen_colors = set()
+                seen_linestyles = set()
+
+                for group_id, _ in sorted_groups_for_legend:
+                    group_hpms = (
+                        group_hparams.get(group_id, {}) if group_hparams else {}
+                    )
+
+                    # Add color value if it's new and we're using hyperparameter coloring
+                    if (
+                        color_by not in ["metric", "group", "none"]
+                        and color_by in group_hpms
+                    ):
+                        color_val = group_hpms[color_by]
+                        if color_val not in seen_colors:
+                            color_values.append(color_val)
+                            seen_colors.add(color_val)
+
+                    # Add linestyle value if it's new and we're using hyperparameter linestyle
+                    if (
+                        linestyle_by not in ["metric", "group", "none"]
+                        and linestyle_by in group_hpms
+                    ):
+                        linestyle_val = group_hpms[linestyle_by]
+                        if linestyle_val not in seen_linestyles:
+                            linestyle_values.append(linestyle_val)
+                            seen_linestyles.add(linestyle_val)
+
+                # Fall back to get_unique_values for non-hyperparameter cases
+                if color_by in ["metric", "group", "none"]:
+                    color_values = get_unique_values(color_by)
+                if linestyle_by in ["metric", "group", "none"]:
+                    linestyle_values = get_unique_values(linestyle_by)
+            else:
+                # No hyperparameter-based sorting needed, use standard approach
+                color_values = get_unique_values(color_by)
+                linestyle_values = get_unique_values(linestyle_by)
+                print(f"DEBUG: Final color_values: {color_values}")
+                print(f"DEBUG: Final linestyle_values: {linestyle_values}")
 
             # Create color legend with proxy Line2D objects (sorted by hyperparameter values)
             color_handles = []
