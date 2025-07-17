@@ -371,6 +371,76 @@ class ExperimentDB(BaseModel):
 
         return result
 
+    def get_groups_matching(
+        self,
+        base_hpms: dict[str, Any],
+        varying_hpms: list[str] | None = None,
+        metrics: list[str] | None = None,
+    ) -> tuple[list[str], dict[tuple, Any]]:
+        """Get run groups that match specific base hyperparameters.
+
+        Useful for getting all (lr, wd) combinations for a specific model/batch_size.
+
+        Args:
+            base_hpms: Dict of hyperparameters that must match exactly
+            varying_hpms: List of hyperparameters that are allowed to vary.
+                         If None, uses ['optim.lr', 'optim.weight_decay']
+            metrics: If provided, returns metric DataFrames instead of Run lists
+
+        Returns:
+            Tuple of (hpm_names, groups) where:
+            - hpm_names: List of hyperparameter names in the group keys (varying_hpms)
+            - groups: Dict mapping tuples to either Run lists or metric DataFrames
+
+        Example:
+            >>> # Get all lr/wd combinations for a specific architecture
+            >>> hpm_names, groups = db.get_groups_matching(
+            ...     {"model.architecture": "resnet18", "batch_size": 128},
+            ...     varying_hpms=["optim.lr", "optim.weight_decay"],
+            ... )
+            >>> # groups keys will be (lr, wd) tuples
+        """
+        if varying_hpms is None:
+            varying_hpms = ["optim.lr", "optim.weight_decay"]
+
+        # First group by all important hpms except seed/run_id
+        all_hpm_names, all_groups = self.active_runs_grouped_by_hpms()
+
+        # Filter groups that match base_hpms
+        filtered_groups = {}
+        varying_indices = None
+
+        for group_key, runs in all_groups.items():
+            # Convert group key to dict for easier checking
+            group_dict = self.group_key_to_dict(group_key, all_hpm_names)
+
+            # Check if all base hpms match
+            if all(group_dict.get(k) == v for k, v in base_hpms.items()):
+                # Extract only the varying hpms for the new key
+                if varying_indices is None:
+                    # Find indices of varying hpms in the group key
+                    varying_indices = [
+                        all_hpm_names.index(h)
+                        for h in varying_hpms
+                        if h in all_hpm_names
+                    ]
+
+                new_key = tuple(group_key[i] for i in varying_indices)
+
+                if metrics:
+                    # Return metric DataFrames
+                    filtered_groups[new_key] = self.run_group_to_metric_dfs(
+                        runs, metrics
+                    )
+                else:
+                    # Return Run lists
+                    filtered_groups[new_key] = runs
+
+        # Return hpm names that correspond to the keys
+        varying_hpm_names = [h for h in varying_hpms if h in all_hpm_names]
+
+        return varying_hpm_names, filtered_groups
+
     def active_metrics_df(self) -> pl.DataFrame:
         """Get a dataframe of active metrics with only the main hyperparameter columns."""
         if self._metrics_df is None:

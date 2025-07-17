@@ -154,14 +154,6 @@ metric_dfs['train_loss'].head()
 
 # %%
 
-# Simple usage with all defaults
-plot_metric_group(
-    metric_dfs,
-    x_metric='epoch',
-    y_metric='train_loss',
-    db=db,
-    group_descriptions=db.format_group_description(first_group_key, hpm_names)
-)
 
 # Print summary statistics
 mean_y = metric_dfs['train_loss'].mean(axis=1)
@@ -290,6 +282,137 @@ plot_metric_group(
     ylabel='Cross-Entropy Loss',  # Custom label - will get "(log scale)" appended
     xlim=(1, 50),
     ylim=(0.01, 2.5)
+)
+
+# %% ========== FILTERING WORKFLOW EXAMPLE ==========
+# Demonstrate the workflow for filtering (lr, wd) combinations
+
+# Step 1: Get all (lr, wd) combinations for a specific model configuration
+# First, let's see what hyperparameters we have
+first_run = db.active_runs[0]
+print("Example hyperparameters available:")
+for k, v in sorted(first_run.hpms._flat_dict.items()):
+    if not k.startswith('_'):
+        print(f"  {k}: {v}")
+
+# %%
+# Step 2: Choose base hyperparameters to fix
+# Get all runs with these fixed values, varying only lr and wd
+base_hpms = {
+    'batch_size': 512,
+    'model.width_mult': 1.0,
+    # Add other hpms you want to fix here
+}
+
+# Get groups with these base hpms, varying lr and wd
+hpm_names, lr_wd_groups = db.get_groups_matching(
+    base_hpms=base_hpms,
+    varying_hpms=['optim.lr', 'optim.weight_decay'],
+    metrics=['train_loss', 'val_loss', 'train_acc', 'val_acc', 'epoch']
+)
+
+print(f"Found {len(lr_wd_groups)} (lr, wd) combinations")
+print(f"Varying hyperparameters: {hpm_names}")
+
+# Show all combinations
+print("\nAll (lr, wd) combinations:")
+for i, (key, _) in enumerate(lr_wd_groups.items()):
+    lr, wd = key
+    print(f"  {i+1}. lr={lr}, wd={wd}")
+
+# %%
+# Step 3: Plot all combinations to see what needs filtering
+print("Plotting all combinations...")
+plot_metric_group(
+    lr_wd_groups,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions={
+        key: f"LR={key[0]}, WD={key[1]}" 
+        for key in lr_wd_groups.keys()
+    },
+    figsize=(12, 6),
+    title='All Learning Rate and Weight Decay Combinations'
+)
+
+# %%
+# Step 4: Interactive filtering - see what we have
+from dr_gen.analyze.filtering import filter_groups, filter_groups_interactive
+
+# This shows current values and helps decide what to filter
+filtered, include, exclude = filter_groups_interactive(
+    lr_wd_groups,
+    hpm_names
+)
+
+# %%
+# Step 5: Apply specific filters
+# Example: Remove very high learning rates and specific problematic combinations
+
+# Filter by individual values
+filtered_groups = filter_groups(
+    lr_wd_groups,
+    hpm_names,
+    include={'optim.lr': [0.001, 0.003, 0.01, 0.03]},  # Only these LRs
+    exclude={'optim.weight_decay': [0.01]},  # Exclude this WD
+)
+
+print(f"After filtering: {len(filtered_groups)} groups remain")
+
+# Plot filtered version
+plot_metric_group(
+    filtered_groups,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions={
+        key: f"LR={key[0]}, WD={key[1]}" 
+        for key in filtered_groups.keys()
+    },
+    figsize=(12, 6),
+    title='Filtered: Reasonable Learning Rates Only'
+)
+
+# %%
+# Step 6: Further filtering - exclude specific (lr, wd) pairs
+# Maybe some combinations are unstable or uninteresting
+
+filtered_groups_2 = filter_groups(
+    filtered_groups,  # Start from previous filtered result
+    hpm_names,
+    exclude_pairs=[(0.03, 0.0003), (0.01, 0.0001)]  # Remove specific pairs
+)
+
+print(f"After removing specific pairs: {len(filtered_groups_2)} groups remain")
+
+plot_metric_group(
+    filtered_groups_2,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions={
+        key: f"LR={key[0]}, WD={key[1]}" 
+        for key in filtered_groups_2.keys()
+    },
+    figsize=(12, 6),
+    title='Final Filtered Selection'
+)
+
+# %%
+# Step 7: Compare train vs validation for final selection
+plot_metric_group(
+    filtered_groups_2,
+    x_metric='epoch',
+    y_metrics=['train_loss', 'val_loss'],
+    db=db,
+    group_descriptions={
+        key: f"LR={key[0]}, WD={key[1]}" 
+        for key in filtered_groups_2.keys()
+    },
+    figsize=(12, 6),
+    ylabel='Loss',
+    title='Train vs Validation Loss - Final Selection'
 )
 
 # %%

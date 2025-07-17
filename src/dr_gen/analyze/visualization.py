@@ -318,11 +318,11 @@ def plot_metric_group(
         xlabel = db.get_display_name(x_metric)
     elif xlabel is None:
         xlabel = x_metric
-    
+
     # Add log scale suffix if needed
     if xscale == "log" and xlabel and "(log scale)" not in xlabel.lower():
         xlabel = f"{xlabel} (log scale)"
-    
+
     ax.set_xlabel(xlabel)
 
     if ylabel is None:
@@ -334,11 +334,11 @@ def plot_metric_group(
                 ylabel = y_metrics[0]
         else:
             ylabel = "Value"  # Generic label for multiple metrics
-    
+
     # Add log scale suffix if needed
     if yscale == "log" and ylabel and "(log scale)" not in ylabel.lower():
         ylabel = f"{ylabel} (log scale)"
-        
+
     ax.set_ylabel(ylabel)
 
     # Set title
