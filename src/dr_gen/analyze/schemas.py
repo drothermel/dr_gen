@@ -3,25 +3,25 @@
 from typing import Any, Callable
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Hpms(BaseModel):
     """Model for experiment hyperparameters with flattening support."""
 
     model_config = ConfigDict(extra="allow")
-    _flat_dict: dict[str, Any] | None = None
+    _flat_dict: dict[str, Any] = {}
     _flat_dict_prefix: str = ""
 
     def __setattr__(self, name, value):
         if hasattr(self, '_flat_dict'):
-            object.__setattr__(self, '_flat_dict', None)
+            object.__setattr__(self, '_flat_dict', {})
         super().__setattr__(name, value)
 
 
     def flatten(self, prefix: str = "") -> dict[str, Any]:
         """Flatten nested hyperparameters into dot-notation keys."""
-        if prefix == self._flat_dict_prefix and self._flat_dict is not None:
+        if prefix == self._flat_dict_prefix and self._flat_dict:
             return self._flat_dict
         result = {}
         for key, value in self.model_dump().items():
@@ -32,6 +32,7 @@ class Hpms(BaseModel):
             else:
                 result[full_key] = value
         object.__setattr__(self, '_flat_dict', result)
+        object.__setattr__(self, '_flat_dict_prefix', prefix)
         return result
 
 
@@ -91,7 +92,7 @@ class Run(BaseModel):
 class AnalysisConfig(BaseSettings):
     """Configuration for experiment analysis with environment variable support."""
 
-    model_config = ConfigDict(env_prefix="ANALYSIS_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="ANALYSIS_", env_file=".env")
 
     # Data paths
     experiment_dir: str = Field(
