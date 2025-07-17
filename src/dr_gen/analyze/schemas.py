@@ -1,27 +1,27 @@
 """Pydantic models for experiment analysis."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Hpms(BaseModel):
     """Model for experiment hyperparameters with flattening support."""
 
     model_config = ConfigDict(extra="allow")
-    _flat_dict: dict[str, Any] | None = None
+    _flat_dict: dict[str, Any] = {}
     _flat_dict_prefix: str = ""
 
     def __setattr__(self, name, value):
-        if hasattr(self, '_flat_dict'):
-            object.__setattr__(self, '_flat_dict', None)
+        if hasattr(self, "_flat_dict"):
+            object.__setattr__(self, "_flat_dict", {})
         super().__setattr__(name, value)
-
 
     def flatten(self, prefix: str = "") -> dict[str, Any]:
         """Flatten nested hyperparameters into dot-notation keys."""
-        if prefix == self._flat_dict_prefix and self._flat_dict is not None:
+        if prefix == self._flat_dict_prefix and self._flat_dict:
             return self._flat_dict
         result = {}
         for key, value in self.model_dump().items():
@@ -31,7 +31,8 @@ class Hpms(BaseModel):
                 result.update(nested.flatten(f"{full_key}."))
             else:
                 result[full_key] = value
-        object.__setattr__(self, '_flat_dict', result)
+        object.__setattr__(self, "_flat_dict", result)
+        object.__setattr__(self, "_flat_dict_prefix", prefix)
         return result
 
 
@@ -91,7 +92,7 @@ class Run(BaseModel):
 class AnalysisConfig(BaseSettings):
     """Configuration for experiment analysis with environment variable support."""
 
-    model_config = ConfigDict(env_prefix="ANALYSIS_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="ANALYSIS_", env_file=".env")
 
     # Data paths
     experiment_dir: str = Field(
@@ -110,54 +111,13 @@ class AnalysisConfig(BaseSettings):
     hparam_display_names: dict[str, str] = Field(
         default_factory=lambda: {"lr": "Learning Rate", "batch_size": "Batch Size"}
     )
-    use_runs_filters: dict[str, Callable[[Run], bool]] = Field(
-        default_factory=lambda: {}
+    use_runs_filters: dict[str, Callable[[Run], bool]] = Field(default_factory=dict)
+    main_hpms: list[str] = Field(default_factory=lambda: ["optim.lr", "batch_size"])
+    grouping_exclude_hpms: list[str] = Field(
+        default_factory=lambda: ["seed", "run_id", "tag"],
+        description="Hyperparameters to exclude when grouping runs",
     )
-    main_hpms: list[str] = Field(
-        default_factory=lambda: ["optim.lr", "batch_size"]
+    grouping_exclude_hpm_display_names: list[str] = Field(
+        default_factory=list,
+        description="Hyperparameters to exclude from display names when showing groups",
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

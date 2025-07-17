@@ -31,9 +31,7 @@ def test_hyperparameters_flatten():
 
 def test_hyperparameters_deep_nesting():
     """Test flattening with deeply nested structures."""
-    hp = Hpms(
-        optim={"scheduler": {"type": "cosine", "params": {"T_max": 100}}}
-    )
+    hp = Hpms(optim={"scheduler": {"type": "cosine", "params": {"T_max": 100}}})
     flat = hp.flatten()
     assert flat["optim.scheduler.type"] == "cosine"
     assert flat["optim.scheduler.params.T_max"] == 100
