@@ -260,6 +260,7 @@ plot_metric_group(
 )
 
 # %% Log scale comparison across groups
+# Note: When log scale is used, "(log scale)" is automatically added to axis labels
 plot_metric_group(
     groups_to_plot,
     x_metric='epoch',
@@ -272,6 +273,23 @@ plot_metric_group(
     xlim=(1, 50),
     ylim=(0.01, 2.5),
     title='Training Dynamics Comparison (Log Scale)'
+)
+
+# %% Log scale with custom labels
+# Even with custom labels, "(log scale)" is appended if not already present
+plot_metric_group(
+    metric_dfs,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions=db.format_group_description(first_group_key, hpm_names),
+    figsize=(10, 6),
+    xscale='log',
+    yscale='log',
+    xlabel='Training Progress',  # Custom label - will get "(log scale)" appended
+    ylabel='Cross-Entropy Loss',  # Custom label - will get "(log scale)" appended
+    xlim=(1, 50),
+    ylim=(0.01, 2.5)
 )
 
 # %%
