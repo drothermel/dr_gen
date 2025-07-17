@@ -163,7 +163,7 @@ def plot_metric_group(
         legend_loc: Legend location ('best', 'upper right', 'upper left', 'lower left',
                    'lower right', 'right', 'center left', 'center right', 'lower center',
                    'upper center', 'center', or (x, y) tuple for custom position)
-        separate_legends: Enable dual legend mode when color_by and linestyle_by use different attributes
+        separate_legends: Enable dual legend mode (user must explicitly set to True)
         color_legend_title: Title for color legend (when separate_legends=True)
         linestyle_legend_title: Title for linestyle legend (when separate_legends=True)
         color_legend_loc: Position for color legend (when separate_legends=True)
@@ -553,14 +553,8 @@ def plot_metric_group(
 
     # Add legend(s) if requested
     if legend:
-        # Determine if we should use dual legend mode
-        use_dual_legends = (
-            separate_legends
-            and color_by not in ["metric", "group", "none"]
-            and linestyle_by not in ["metric", "group", "none"]
-            and color_by != linestyle_by
-            and group_hparams is not None
-        )
+        # Use dual legend mode only when explicitly requested
+        use_dual_legends = separate_legends
 
         if use_dual_legends:
             # Create dual legends with proxy objects
@@ -574,12 +568,21 @@ def plot_metric_group(
             color_labels = []
             for value in color_values:
                 color = color_mapping[value]
-                # Use db for display names if available
-                if db is not None and color_by.startswith("optim."):
+
+                # Create appropriate label based on the color_by parameter
+                if color_by == "metric":
+                    # For metrics, use display name
+                    label = db.get_display_name(value, "metric") if db else value
+                elif color_by == "group":
+                    # For groups, use the group description
+                    label = group_desc_dict.get(value, f"Group {value}")
+                elif color_by != "none" and db is not None:
+                    # For hyperparameters, format the value properly
                     formatted_value = db.format_hparam_value(color_by, value)
                     display_name = db.get_display_name(color_by, "hparam")
                     label = f"{display_name}: {formatted_value}"
                 else:
+                    # Fallback for other cases
                     label = f"{color_by}: {value}"
 
                 proxy = Line2D([0], [0], color=color, linestyle="-", linewidth=2)
@@ -591,14 +594,21 @@ def plot_metric_group(
             linestyle_labels = []
             for value in linestyle_values:
                 linestyle = linestyle_mapping[value]
-                # Use db for display names if available
-                if db is not None and linestyle_by.startswith("optim."):
+
+                # Create appropriate label based on the linestyle_by parameter
+                if linestyle_by == "metric":
+                    # For metrics, use display name
+                    label = db.get_display_name(value, "metric") if db else value
+                elif linestyle_by == "group":
+                    # For groups, use the group description
+                    label = group_desc_dict.get(value, f"Group {value}")
+                elif linestyle_by != "none" and db is not None:
+                    # For hyperparameters, format the value properly
                     formatted_value = db.format_hparam_value(linestyle_by, value)
                     display_name = db.get_display_name(linestyle_by, "hparam")
                     label = f"{display_name}: {formatted_value}"
-                elif linestyle_by == "metric" and db is not None:
-                    label = db.get_display_name(value, "metric")
                 else:
+                    # Fallback for other cases
                     label = f"{linestyle_by}: {value}"
 
                 proxy = Line2D(
