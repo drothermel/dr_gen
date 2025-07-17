@@ -280,6 +280,20 @@ if all(m in metric_dfs for m in ['train_acc', 'val_acc']):
     )
 
 # %% ========== SYSTEMATIC PLOTTING EXAMPLES ==========
+# These examples demonstrate the NEW color_by and linestyle_by parameters for plot_metric_group:
+#
+# color_by options:
+#   - 'metric': Colors distinguish different metrics (default, previous behavior)
+#   - 'group': Colors distinguish different groups/hyperparameter combinations 
+#   - 'hyperparameter_name': Colors distinguish different values of that hyperparameter
+#
+# linestyle_by options:
+#   - 'group': Linestyles distinguish different groups (default, previous behavior)
+#   - 'metric': Linestyles distinguish different metrics
+#   - 'hyperparameter_name': Linestyles distinguish different values of that hyperparameter
+#
+# This allows flexible control over which dimension (metrics vs hyperparameters) drives visual distinction
+
 # Filter to well-sampled groups and select specific BS + Width Mult configuration
 
 # Step 1: Filter to groups with at least 3 runs for robust statistics
@@ -353,19 +367,30 @@ fixed_lr_analysis = lr_wd_analysis.filter(
     include={'optim.lr': [selected_lr]}
 )
 
-# Extract metrics and plot
-fixed_lr_metrics = fixed_lr_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
-fixed_lr_descriptions = fixed_lr_analysis.describe_groups()
+# Extract metrics and plot using the NEW color control feature
+# Get all plotting data in one call: metrics, descriptions, and hyperparameter dicts
+fixed_lr_metrics, fixed_lr_descriptions, fixed_lr_hparams = fixed_lr_analysis.get_plotting_data(['train_loss', 'val_loss', 'epoch'])
 
+print(f"Groups varying by weight decay (LR={selected_lr} fixed):")
+for key, desc in fixed_lr_descriptions.items():
+    print(f"  {key}: {desc}")
+
+# Alternative: Use specific hyperparameter for color control
+# This achieves the same result but more explicitly
+print(f"\nAlternative approach - color by specific hyperparameter:")
 plot_metric_group(
     fixed_lr_metrics,
     x_metric='epoch',
     y_metrics='train_loss',
     db=db,
     group_descriptions=fixed_lr_descriptions,
+    group_hparams=fixed_lr_hparams,
+    color_by='optim.weight_decay',  # NEW: Colors by weight decay hyperparameter
+    linestyle_by='optim.lr',  # Linestyles by weight decay too
     figsize=(10, 6),
-    title=f'Training Loss: LR={selected_lr} across Weight Decay Values'
+    title=f'Training Loss: LR={selected_lr} by Weight Decay (alternative coloring)'
 )
+
 
 # %% Example 2: Fixed Weight Decay across Learning Rate values (Single Metric)
 print("\n=== Example 2: Fixed WD across LR values (Single Metric) ===")
@@ -379,9 +404,14 @@ fixed_wd_analysis = lr_wd_analysis.filter(
     include={'optim.weight_decay': [selected_wd]}
 )
 
-# Extract metrics and plot
-fixed_wd_metrics = fixed_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
-fixed_wd_descriptions = fixed_wd_analysis.describe_groups()
+# Extract metrics and plot using the NEW color control feature
+# Get all plotting data in one call: metrics, descriptions, and hyperparameter dicts
+fixed_wd_metrics, fixed_wd_descriptions, fixed_wd_hparams = fixed_wd_analysis.get_plotting_data(['train_loss', 'val_loss', 'epoch'])
+
+print(f"Groups varying by weight decay (WD={selected_wd} fixed):")
+for key, desc in fixed_wd_descriptions.items():
+    print(f"  {key}: {desc}")
+
 
 plot_metric_group(
     fixed_wd_metrics,
@@ -389,6 +419,9 @@ plot_metric_group(
     y_metrics='train_loss',
     db=db,
     group_descriptions=fixed_wd_descriptions,
+    group_hparams=fixed_wd_hparams,
+    color_by='optim.lr',  # NEW: Colors by weight decay hyperparameter
+    linestyle_by='optim.weight_decay',  # Linestyles by weight decay too
     figsize=(10, 6),
     title=f'Training Loss: WD={selected_wd} across Learning Rate Values'
 )
@@ -396,9 +429,12 @@ plot_metric_group(
 # %% Example 3: All LR x WD combinations (Single Metric)
 print("\n=== Example 3: All LR x WD combinations (Single Metric) ===")
 
-# Show all combinations
-all_lr_wd_metrics = lr_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
-all_lr_wd_descriptions = lr_wd_analysis.describe_groups()
+# Show all combinations with systematic color/linestyle control
+all_lr_wd_metrics, all_lr_wd_descriptions, all_lr_wd_hparams = lr_wd_analysis.get_plotting_data(['train_loss', 'val_loss', 'epoch'])
+
+print(f"Showing all {len(all_lr_wd_metrics)} LR x WD combinations:")
+for key, desc in all_lr_wd_descriptions.items():
+    print(f"  {key}: {desc}")
 
 plot_metric_group(
     all_lr_wd_metrics,
@@ -406,6 +442,9 @@ plot_metric_group(
     y_metrics='train_loss',
     db=db,
     group_descriptions=all_lr_wd_descriptions,
+    group_hparams=all_lr_wd_hparams,
+    color_by='optim.lr',  # Colors distinguish learning rates
+    linestyle_by='optim.weight_decay',  # Linestyles distinguish weight decay
     figsize=(12, 6),
     title='Training Loss: All LR x WD Combinations'
 )
@@ -420,8 +459,8 @@ fixed_lr_analysis = lr_wd_analysis.filter(
     include={'optim.lr': [selected_lr]}
 )
 
-fixed_lr_metrics = fixed_lr_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
-fixed_lr_descriptions = fixed_lr_analysis.describe_groups()
+# Get plotting data with hyperparameter information
+fixed_lr_metrics, fixed_lr_descriptions, fixed_lr_hparams = fixed_lr_analysis.get_plotting_data(['train_loss', 'val_loss', 'epoch'])
 
 plot_metric_group(
     fixed_lr_metrics,
@@ -429,6 +468,9 @@ plot_metric_group(
     y_metrics=['train_loss', 'val_loss'],
     db=db,
     group_descriptions=fixed_lr_descriptions,
+    group_hparams=fixed_lr_hparams,
+    color_by='optim.weight_decay',  # Colors distinguish metrics (train vs val)
+    linestyle_by='metric',  # Linestyles distinguish WD values
     figsize=(12, 6),
     ylabel='Loss',
     title=f'Train vs Val Loss: LR={selected_lr} across Weight Decay Values'
@@ -444,8 +486,8 @@ fixed_wd_analysis = lr_wd_analysis.filter(
     include={'optim.weight_decay': [selected_wd]}
 )
 
-fixed_wd_metrics = fixed_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
-fixed_wd_descriptions = fixed_wd_analysis.describe_groups()
+# Get plotting data with hyperparameter information
+fixed_wd_metrics, fixed_wd_descriptions, fixed_wd_hparams = fixed_wd_analysis.get_plotting_data(['train_loss', 'val_loss', 'epoch'])
 
 plot_metric_group(
     fixed_wd_metrics,
@@ -453,6 +495,9 @@ plot_metric_group(
     y_metrics=['train_loss', 'val_loss'],
     db=db,
     group_descriptions=fixed_wd_descriptions,
+    group_hparams=fixed_wd_hparams,
+    color_by='optim.lr',  # Colors distinguish metrics (train vs val)
+    linestyle_by='metric',  # Linestyles distinguish LR values
     figsize=(12, 6),
     ylabel='Loss',
     title=f'Train vs Val Loss: WD={selected_wd} across Learning Rate Values'
@@ -461,38 +506,63 @@ plot_metric_group(
 # %% Example 6: All LR x WD combinations (Multiple Metrics)
 print("\n=== Example 6: All LR x WD combinations (Multiple Metrics) ===")
 
+print(f"Showing train vs validation loss for all {len(all_lr_wd_metrics)} LR x WD combinations")
+
 plot_metric_group(
     all_lr_wd_metrics,
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
     group_descriptions=all_lr_wd_descriptions,
+    group_hparams=all_lr_wd_hparams,
+    color_by='group',  # Colors distinguish metrics (train vs val)
+    linestyle_by='metric',  # Linestyles distinguish each LR x WD combination
     figsize=(14, 6),
     ylabel='Loss',
-    title='Train vs Val Loss: All LR x WD Combinations'
+    title='Train vs Val Loss: All LR x WD Combinations',
+    xlim=(20, 50),
+    ylim=(0, 1.0),
+    legend_loc='upper left',
 )
 
 # %% ========== PLOTTING EXAMPLES SUMMARY ==========
-# The examples above demonstrate systematic plotting patterns:
+# The examples above demonstrate systematic plotting patterns with NEW color/linestyle control:
 # 
 # 1. FILTERING STRATEGY:
 #    - Filter to groups with ≥3 runs for statistical reliability
 #    - Fix batch size + width multiplier to focus analysis
 #    - Extract (lr, wd) combinations for systematic comparison
 #
-# 2. PLOTTING PATTERNS:
-#    - Fixed LR across WD values (Examples 1, 4)
-#    - Fixed WD across LR values (Examples 2, 5) 
-#    - All LR x WD combinations (Examples 3, 6)
-#    - Single metric (Examples 1-3) vs Multiple metrics (Examples 4-6)
+# 2. PLOTTING PATTERNS & AESTHETIC STRATEGY:
+#    - Example 1: Fixed LR, varying WD (single metric)
+#      → color_by='optim.weight_decay' (colors distinguish WD values)
+#    - Example 2: Fixed WD, varying LR (single metric)  
+#      → color_by='optim.lr' (colors distinguish LR values)
+#    - Example 3: All LR x WD combinations (single metric)
+#      → color_by='optim.lr', linestyle_by='optim.weight_decay' (systematic 2D mapping)
+#    - Example 4: Fixed LR, varying WD (multiple metrics)
+#      → color_by='metric', linestyle_by='optim.weight_decay' (colors for train/val, lines for WD)
+#    - Example 5: Fixed WD, varying LR (multiple metrics)
+#      → color_by='metric', linestyle_by='optim.lr' (colors for train/val, lines for LR)
+#    - Example 6: All LR x WD combinations (multiple metrics)
+#      → color_by='metric', linestyle_by='group' (colors for train/val, lines for each combination)
 #
-# 3. AESTHETIC CONTROL OPPORTUNITIES:
-#    - figsize: Control plot dimensions
-#    - title: Custom titles with dynamic values
-#    - ylabel: Specify axis labels
-#    - color_scheme: Different color palettes (not used yet)
-#    - x/yscale: Log scale options (not used yet)
-#    - xlim/ylim: Axis limits (not used yet)
+# 3. COLOR/LINESTYLE CONTROL OPTIONS:
+#    NEW: color_by and linestyle_by parameters allow flexible visual mapping:
+#    - 'metric': Default, distinguishes different metrics
+#    - 'group': Distinguishes different hyperparameter groups
+#    - 'optim.lr', 'optim.weight_decay': Specific hyperparameter mapping
+#    - 'none': Single color or linestyle for simplified plots
+#
+# 4. ADDITIONAL AESTHETIC CONTROL OPPORTUNITIES:
+#    - figsize: Control plot dimensions (used in examples)
+#    - title: Custom titles with dynamic values (used in examples)
+#    - ylabel: Specify axis labels (used in examples)
+#    - color_scheme: Different color palettes ('colorblind', 'paul_tol', 'categorical')
+#    - x/yscale: Log scale options ('linear', 'log')
+#    - xlim/ylim: Axis limits
+#    - individual_alpha: Transparency for individual runs
+#    - std_band: Show/hide standard deviation bands
 #
 # Each example is in its own cell for easy iteration on aesthetic options!
 

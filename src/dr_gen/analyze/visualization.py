@@ -89,6 +89,10 @@ def plot_metric_group(
     y_metrics: str | list[str] = "train_loss",
     db: ExperimentDB | None = None,
     group_descriptions: str | dict[Any, str] | None = None,
+    color_by: str = "metric",  # 'metric', 'group', hyperparameter name, or color value
+    linestyle_by: str = "group",  # 'group', 'metric', hyperparameter name, or linestyle value
+    group_hparams: dict[Any, dict[str, Any]]
+    | None = None,  # hyperparameter dicts for each group
     figsize: tuple[float, float] = (8, 5),
     show_individual_runs: bool = True,
     individual_alpha: float = 0.25,
@@ -100,6 +104,7 @@ def plot_metric_group(
     grid: bool = True,
     grid_alpha: float = 0.2,
     legend: bool = True,
+    legend_loc: str | tuple[float, float] = "best",
     xlabel: str | None = None,
     ylabel: str | None = None,
     title: str | None = None,
@@ -112,8 +117,8 @@ def plot_metric_group(
 ) -> plt.Figure | None:
     """Plot metrics for one or more groups of runs with mean and standard deviation.
 
-    Uses colorblind-safe colors to distinguish metrics and line styles to distinguish groups.
-    Individual runs and std band use the same color/style as the mean with different alpha.
+    Colors and linestyles can be controlled to distinguish either metrics, groups, or specific
+    hyperparameters. Individual runs and std band use the same color/style as the mean.
 
     Args:
         metric_dfs: Either:
@@ -126,6 +131,19 @@ def plot_metric_group(
             - String description for single group
             - Dict mapping group IDs to descriptions
             - None to auto-generate or omit
+        color_by: What to use for color differentiation:
+            - 'metric': Different colors for different metrics (default)
+            - 'group': Different colors for different groups
+            - 'none': Use single color (first color from color_scheme)
+            - hyperparameter name: Different colors for different values of that hyperparameter
+        linestyle_by: What to use for linestyle differentiation:
+            - 'group': Different linestyles for different groups (default)
+            - 'metric': Different linestyles for different metrics
+            - 'none': Use single linestyle (solid line)
+            - hyperparameter name: Different linestyles for different values of that hyperparameter
+        group_hparams: Dict mapping group IDs to hyperparameter dictionaries.
+            Required when color_by or linestyle_by is a hyperparameter name.
+            Can be obtained from GroupedRuns.group_keys_to_dicts()
         figsize: Figure size tuple
         show_individual_runs: Whether to plot individual run traces
         individual_alpha: Transparency for individual runs
@@ -137,6 +155,9 @@ def plot_metric_group(
         grid: Whether to show grid
         grid_alpha: Grid transparency
         legend: Whether to show legend
+        legend_loc: Legend location ('best', 'upper right', 'upper left', 'lower left',
+                   'lower right', 'right', 'center left', 'center right', 'lower center',
+                   'upper center', 'center', or (x, y) tuple for custom position)
         xlabel: Override x-axis label (uses display name if None)
         ylabel: Override y-axis label (uses display name if None)
         title: Override title (auto-generated if None)
@@ -222,11 +243,77 @@ def plot_metric_group(
                     f"y_metric '{y_metric}' not found in group '{group_id}'"
                 )
 
-    # Get color palette for the metrics
-    colors = get_color_palette(len(y_metrics), palette=color_scheme)
+    # Set up color and linestyle mappings based on color_by and linestyle_by parameters
+    all_line_styles = [
+        "-",
+        "--",
+        ":",
+        "-.",
+        (0, (3, 1, 1, 1)),
+        (0, (5, 2)),
+        (0, (1, 1)),
+    ]
 
-    # Define line styles for different groups
-    line_styles = ["-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 2)), (0, (1, 1))]
+    # Helper function to extract unique values for a given parameter
+    def get_unique_values(param_name: str) -> list[Any]:
+        if param_name == "metric":
+            return y_metrics.copy()
+        if param_name == "group":
+            return list(groups.keys())
+        if group_hparams and param_name in next(iter(group_hparams.values()), {}):
+            # Extract unique values for this hyperparameter
+            values = set()
+            for hparams in group_hparams.values():
+                if param_name in hparams:
+                    values.add(hparams[param_name])
+            return sorted(values)
+        raise ValueError(
+            f"Cannot map by '{param_name}': not found in metrics, groups, or hyperparameters"
+        )
+
+    # Set up color mapping
+    if color_by == "none":
+        # Use single color (first color from palette)
+        single_color = get_color_palette(1, palette=color_scheme)[0]
+        color_mapping = {}  # Will use single_color for everything
+    elif color_by == "metric":
+        color_values = y_metrics
+        color_palette = get_color_palette(len(color_values), palette=color_scheme)
+        color_mapping = {val: color_palette[i] for i, val in enumerate(color_values)}
+    elif color_by == "group":
+        color_values = list(groups.keys())
+        color_palette = get_color_palette(len(color_values), palette=color_scheme)
+        color_mapping = {val: color_palette[i] for i, val in enumerate(color_values)}
+    else:
+        # Hyperparameter-based coloring
+        color_values = get_unique_values(color_by)
+        color_palette = get_color_palette(len(color_values), palette=color_scheme)
+        color_mapping = {val: color_palette[i] for i, val in enumerate(color_values)}
+
+    # Set up linestyle mapping
+    if linestyle_by == "none":
+        # Use single linestyle (solid line)
+        single_linestyle = "-"
+        linestyle_mapping = {}  # Will use single_linestyle for everything
+    elif linestyle_by == "group":
+        linestyle_values = list(groups.keys())
+        linestyle_mapping = {
+            val: all_line_styles[i % len(all_line_styles)]
+            for i, val in enumerate(linestyle_values)
+        }
+    elif linestyle_by == "metric":
+        linestyle_values = y_metrics
+        linestyle_mapping = {
+            val: all_line_styles[i % len(all_line_styles)]
+            for i, val in enumerate(linestyle_values)
+        }
+    else:
+        # Hyperparameter-based linestyle
+        linestyle_values = get_unique_values(linestyle_by)
+        linestyle_mapping = {
+            val: all_line_styles[i % len(all_line_styles)]
+            for i, val in enumerate(linestyle_values)
+        }
 
     # Create figure with publication styling
     if publication_style:
@@ -250,15 +337,79 @@ def plot_metric_group(
     first_group = next(iter(groups.values()))
     x_values = first_group[x_metric].iloc[:, 0].values
 
+    # Sort groups for consistent legend ordering when using hyperparameter-based coloring/styling
+    def get_sort_key(item):
+        group_id, _ = item
+        group_hpms = group_hparams.get(group_id, {}) if group_hparams else {}
+
+        # Create sort key based on hyperparameters used for color_by and linestyle_by
+        sort_values = []
+
+        # Add color_by value to sort key if it's a hyperparameter
+        if color_by not in ["metric", "group", "none"] and color_by in group_hpms:
+            sort_values.append(group_hpms[color_by])
+
+        # Add linestyle_by value to sort key if it's a hyperparameter
+        if (
+            linestyle_by not in ["metric", "group", "none"]
+            and linestyle_by in group_hpms
+        ):
+            sort_values.append(group_hpms[linestyle_by])
+
+        # If no hyperparameter sorting needed, maintain original order
+        if not sort_values:
+            return (0, group_id)  # Use group_id for stable sorting
+
+        return tuple(sort_values)
+
+    # Sort groups if using hyperparameter-based styling
+    if (color_by not in ["metric", "group", "none"] and group_hparams) or (
+        linestyle_by not in ["metric", "group", "none"] and group_hparams
+    ):
+        sorted_groups = sorted(groups.items(), key=get_sort_key)
+    else:
+        sorted_groups = list(groups.items())
+
     # Plot each group and metric combination
-    for group_idx, (group_id, group_dfs) in enumerate(groups.items()):
-        # Get line style for this group
-        line_style = line_styles[group_idx % len(line_styles)]
+    for group_id, group_dfs in sorted_groups:
         group_desc = group_desc_dict.get(group_id, "")
 
+        # Get hyperparameters for this group if needed
+        group_hpms = group_hparams.get(group_id, {}) if group_hparams else {}
+
         # Plot each metric for this group
-        for metric_idx, y_metric in enumerate(y_metrics):
-            metric_color = colors[metric_idx]
+        for y_metric in y_metrics:
+            # Determine color for this combination
+            if color_by == "none":
+                plot_color = single_color
+            elif color_by == "metric":
+                plot_color = color_mapping[y_metric]
+            elif color_by == "group":
+                plot_color = color_mapping[group_id]
+            else:
+                # Hyperparameter-based coloring
+                if color_by in group_hpms:
+                    plot_color = color_mapping[group_hpms[color_by]]
+                else:
+                    plot_color = color_mapping[
+                        list(color_mapping.keys())[0]
+                    ]  # fallback
+
+            # Determine linestyle for this combination
+            if linestyle_by == "none":
+                plot_linestyle = single_linestyle
+            elif linestyle_by == "group":
+                plot_linestyle = linestyle_mapping[group_id]
+            elif linestyle_by == "metric":
+                plot_linestyle = linestyle_mapping[y_metric]
+            else:
+                # Hyperparameter-based linestyle
+                if linestyle_by in group_hpms:
+                    plot_linestyle = linestyle_mapping[group_hpms[linestyle_by]]
+                else:
+                    plot_linestyle = linestyle_mapping[
+                        list(linestyle_mapping.keys())[0]
+                    ]  # fallback
 
             # Get display name for metric
             if db is not None:
@@ -272,10 +423,10 @@ def plot_metric_group(
                     ax.plot(
                         x_values,
                         group_dfs[y_metric][col],
-                        color=metric_color,
+                        color=plot_color,
                         alpha=individual_alpha,
                         linewidth=individual_linewidth,
-                        linestyle=line_style,
+                        linestyle=plot_linestyle,
                     )
 
             # Calculate and plot mean
@@ -296,9 +447,9 @@ def plot_metric_group(
             ax.plot(
                 x_values,
                 mean_y,
-                color=metric_color,
+                color=plot_color,
                 linewidth=mean_linewidth,
-                linestyle=line_style,
+                linestyle=plot_linestyle,
                 label=label,
             )
 
@@ -310,7 +461,7 @@ def plot_metric_group(
                     mean_y - std_y,
                     mean_y + std_y,
                     alpha=std_alpha,
-                    color=metric_color,
+                    color=plot_color,
                 )
 
     # Set labels with display names if available
@@ -392,7 +543,7 @@ def plot_metric_group(
 
     # Add legend if requested
     if legend:
-        ax.legend()
+        ax.legend(loc=legend_loc)
 
     # Show or return figure
     if return_fig:
