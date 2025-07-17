@@ -14,7 +14,7 @@ from dr_gen.analyze.parsing import load_runs_from_dir
 from dr_gen.analyze.database import ExperimentDB
 from dr_gen.analyze.schemas import AnalysisConfig, Hpms
 from IPython.display import display
-from dr_gen.analyze.visualization import plot_training_metrics
+from dr_gen.analyze.visualization import plot_training_metrics, plot_metric_group
 
 # %% Load Config
 config_path = Path("../configs/").absolute()
@@ -154,44 +154,66 @@ metric_dfs['train_loss'].head()
 
 # %%
 
-# Define metrics to plot (easy to change!)
-# Examples: x_metric = 'lr', 'cumulative_lr', 'global_step', 'epoch'
-#           y_metric = 'train_loss', 'val_loss', 'train_acc', 'val_acc'
-x_metric = 'epoch'
-y_metric = 'train_loss'
-
-# Get x-axis values from first column (all runs should have same x values)
-x_values = metric_dfs[x_metric].iloc[:, 0].values
-
-# Plot y_metric vs x_metric for all runs in the group
-plt.figure(figsize=(10, 6))
-
-# Plot individual runs with transparency
-for col in metric_dfs[y_metric].columns:
-    plt.plot(x_values, metric_dfs[y_metric][col], alpha=0.3, linewidth=1)
-
-# Plot mean with thicker line
-mean_y = metric_dfs[y_metric].mean(axis=1)
-plt.plot(x_values, mean_y, 'k-', linewidth=2, label='Mean')
-
-# Add standard deviation band
-std_y = metric_dfs[y_metric].std(axis=1)
-plt.fill_between(x_values, mean_y - std_y, mean_y + std_y, 
-                    alpha=0.2, color='gray', label='±1 std')
-
-# Use display names for axis labels
-plt.xlabel(db.get_display_name(x_metric))
-plt.ylabel(db.get_display_name(y_metric))
-plt.title(f'{db.get_display_name(y_metric)} | {db.format_group_description(first_group_key, hpm_names)}')
-plt.grid(True, alpha=0.3)
-plt.legend()
-plt.show()
+# Simple usage with all defaults
+plot_metric_group(
+    metric_dfs,
+    x_metric='epoch',
+    y_metric='train_loss',
+    db=db,
+    group_description=db.format_group_description(first_group_key, hpm_names)
+)
 
 # Print summary statistics
+mean_y = metric_dfs['train_loss'].mean(axis=1)
+std_y = metric_dfs['train_loss'].std(axis=1)
 print(f"\nGroup hyperparameters: {db.format_group_description(first_group_key, hpm_names)}")
 print(f"Number of runs: {len(first_group_runs)}")
-print(f"Final {db.get_display_name(y_metric).lower()}: {mean_y.iloc[-1]:.4f} ± {std_y.iloc[-1]:.4f}")
+print(f"Final {db.get_display_name('train_loss').lower()}: {mean_y.iloc[-1]:.4f} ± {std_y.iloc[-1]:.4f}")
 
+
+# %% Different metrics
+# Example: Validation accuracy over epochs
+if 'val_acc' in metric_dfs:
+    plot_metric_group(
+        metric_dfs,
+        x_metric='epoch',
+        y_metrics='val_acc',
+        db=db,
+        group_description=db.format_group_description(first_group_key, hpm_names),
+        ylim=(0, 1.0),
+        ylabel='Validation Accuracy',
+        title='Model Performance'
+    )
+
+# %% Multiple metrics on same plot
+# Example: Plot both train and validation loss together
+plot_metric_group(
+    metric_dfs,
+    x_metric='epoch',
+    y_metrics=['train_loss', 'val_loss'],
+    db=db,
+    group_description=db.format_group_description(first_group_key, hpm_names),
+    color_scheme='colorblind',
+    figsize=(10, 6),
+    ylabel='Loss',
+    title='Training vs Validation Loss'
+)
+
+# %% Multiple metrics with different color schemes
+# Example: Using Paul Tol's color palette
+if all(m in metric_dfs for m in ['train_acc', 'val_acc']):
+    plot_metric_group(
+        metric_dfs,
+        x_metric='epoch',
+        y_metrics=['train_acc', 'val_acc'],
+        db=db,
+        group_description=db.format_group_description(first_group_key, hpm_names),
+        color_scheme='paul_tol',
+        figsize=(10, 6),
+        ylim=(0, 1.0),
+        ylabel='Accuracy',
+        title='Model Accuracy Comparison'
+    )
 
 # %%
 

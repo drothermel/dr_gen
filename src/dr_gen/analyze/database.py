@@ -230,10 +230,10 @@ class ExperimentDB(BaseModel):
         return dict(zip(hpm_names, group_key, strict=False))
 
     def format_group_description(
-        self, 
-        group_key: tuple, 
+        self,
+        group_key: tuple,
         hpm_names: list[str] | None = None,
-        exclude_from_display: list[str] | None = None
+        exclude_from_display: list[str] | None = None,
     ) -> str:
         """Create a formatted string description of a hyperparameter group.
 
@@ -254,7 +254,7 @@ class ExperimentDB(BaseModel):
             ... )  # "Batch Size: 128, Learning Rate: 1e-03, Weight Decay: 1e-04"
         """
         hpm_dict = self.group_key_to_dict(group_key, hpm_names, use_display_names=False)
-        
+
         # Use config default if not specified
         if exclude_from_display is None:
             exclude_from_display = self.config.grouping_exclude_hpm_display_names
@@ -264,7 +264,7 @@ class ExperimentDB(BaseModel):
             # Skip if this hpm should be excluded from display
             if name in exclude_from_display:
                 continue
-                
+
             display_name = self.get_display_name(name, "hparam")
             formatted_value = self.format_hparam_value(name, value)
             parts.append(f"{display_name}: {formatted_value}")
