@@ -11,9 +11,22 @@ from typing import TYPE_CHECKING, Any
 import dr_util.file_utils as fu
 import pandas as pd
 
-from dr_gen.analyze import check_prefix_exclude
 from dr_gen.analyze.metrics import SplitMetrics
 from dr_gen.analyze.schemas import Hpms, Run
+
+
+def check_prefix_exclude(check_string: str, excluded_prefixes: list[str]) -> bool:
+    """Check if string starts with any of the excluded prefixes.
+
+    Args:
+        check_string: String to check
+        excluded_prefixes: List of prefix strings to check against
+
+    Returns:
+        True if check_string starts with any excluded prefix, False otherwise
+    """
+    return any(check_string.startswith(pre) for pre in excluded_prefixes)
+
 
 if TYPE_CHECKING:
     from pathlib import Path
