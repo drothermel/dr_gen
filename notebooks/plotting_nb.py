@@ -4,10 +4,7 @@
 %autoreload 2
 
 from pathlib import Path
-import pandas as pd
-import polars as pl
-import json
-from typing import Any, Dict, Tuple, List
+import matplotlib.pyplot as plt
 from hydra import compose, initialize_config_dir
 from omegaconf import DictConfig, OmegaConf
 from pprint import pprint
@@ -17,7 +14,7 @@ from dr_gen.analyze.parsing import load_runs_from_dir
 from dr_gen.analyze.database import ExperimentDB
 from dr_gen.analyze.schemas import AnalysisConfig, Hpms
 from IPython.display import display
-from dr_gen.analyze.visualization import prep_all_data, plot_training_metrics
+from dr_gen.analyze.visualization import plot_training_metrics
 
 # %% Load Config
 config_path = Path("../configs/").absolute()
@@ -45,22 +42,24 @@ analysis_cfg = AnalysisConfig(
         'global_step': 'Global Step',
         'val_loss': 'Validation Loss',
         'val_acc': 'Validation Accuracy',
+        'epoch': 'Epoch',
     },
     hparam_display_names={
-        'optim.lr': 'Learning Rate',
-        'optim.weight_decay': 'Weight Decay',
-        'optim.name': 'Optimizer',
-        'batch_size': 'Batch Size',
+        'optim.lr': 'LR',
+        'optim.weight_decay': 'WD',
+        'optim.name': 'Opt',
+        'batch_size': 'BS',
         'epochs': 'Epochs',
-        'lrsched.sched_type': 'LR Sched',
+        'lrsched.sched_type': 'LRSched',
         'lrsched.warmup_epochs': 'Warmup Epochs',
-        'model.architecture': 'Model Arch',
-        'model.dropout_prob': 'Dropout Prob',
-        'model.name': 'Model Name',
-        'model.norm_type': 'Norm Type',
+        'model.architecture': 'Arch',
+        'model.dropout_prob': 'Dropout',
+        'model.name': 'Model',
+        'model.norm_type': 'Norm',
         'model.use_residual': 'Residual On?',
         'seed': 'Seed',
         'tag': 'Run Name',
+        'model.width_mult': 'WidthMult',
         'train_transforms.rcc': 'RCC On?',
         'train_transforms.hflip': 'HFlip On?',
         'train_transforms.label_smoothing': 'Label Smoothing On?',
@@ -102,6 +101,7 @@ analysis_cfg = AnalysisConfig(
         'tag'
     ],
     grouping_exclude_hpms=['seed', 'run_id', 'tag'],
+    grouping_exclude_hpm_display_names=['model.architecture'],
 )
 #display(analysis_cfg)
 
@@ -112,6 +112,9 @@ db = ExperimentDB(
 )
 db.load_experiments()
 print(f"All Runs: {len(db.all_runs)}, Active Runs: {len(db.active_runs)}")
+
+# %%
+db.config.metric_display_names['epoch'] = 'Epoch'
 
 
 
@@ -129,12 +132,84 @@ for i, (hpm_values, runs) in enumerate(run_groups.items()):
         break
     # Create a dict mapping hyperparameter names to their values for this group
     hpm_dict = db.group_key_to_dict(hpm_values, hpm_names)
+    display_dict = db.group_key_to_dict(hpm_values, hpm_names, use_display_names=True)
     print(f"\nGroup {i+1}: {len(runs)} runs")
-    print(f"  Hyperparameters: {hpm_dict}")
+    print(f"  Technical names: {hpm_dict}")
+    print(f"  Display names: {display_dict}")
+    print(f"  Formatted: {db.format_group_description(hpm_values, hpm_names)}")
 
-#%%
+# %% Use the new run_group_to_metric_dfs function to extract metrics and plot
+# Extract metrics for the first filtered group
+first_group_key, first_group_runs = list(run_groups.items())[0]
+
+# Extract all relevant metrics
+metric_dfs = db.run_group_to_metric_dfs(
+    first_group_runs, 
+    ['train_loss', 'train_acc', 'val_loss', 'val_acc', 'epoch', 'lr']
+)
+
+pprint(list(metric_dfs.keys()))
+metric_dfs['train_loss'].head()
 
 
+# %%
+
+# Define metrics to plot (easy to change!)
+# Examples: x_metric = 'lr', 'cumulative_lr', 'global_step', 'epoch'
+#           y_metric = 'train_loss', 'val_loss', 'train_acc', 'val_acc'
+x_metric = 'epoch'
+y_metric = 'train_loss'
+
+# Get x-axis values from first column (all runs should have same x values)
+x_values = metric_dfs[x_metric].iloc[:, 0].values
+
+# Plot y_metric vs x_metric for all runs in the group
+plt.figure(figsize=(10, 6))
+
+# Plot individual runs with transparency
+for col in metric_dfs[y_metric].columns:
+    plt.plot(x_values, metric_dfs[y_metric][col], alpha=0.3, linewidth=1)
+
+# Plot mean with thicker line
+mean_y = metric_dfs[y_metric].mean(axis=1)
+plt.plot(x_values, mean_y, 'k-', linewidth=2, label='Mean')
+
+# Add standard deviation band
+std_y = metric_dfs[y_metric].std(axis=1)
+plt.fill_between(x_values, mean_y - std_y, mean_y + std_y, 
+                    alpha=0.2, color='gray', label='±1 std')
+
+# Use display names for axis labels
+plt.xlabel(db.get_display_name(x_metric))
+plt.ylabel(db.get_display_name(y_metric))
+plt.title(f'{db.get_display_name(y_metric)} | {db.format_group_description(first_group_key, hpm_names)}')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.show()
+
+# Print summary statistics
+print(f"\nGroup hyperparameters: {db.format_group_description(first_group_key, hpm_names)}")
+print(f"Number of runs: {len(first_group_runs)}")
+print(f"Final {db.get_display_name(y_metric).lower()}: {mean_y.iloc[-1]:.4f} ± {std_y.iloc[-1]:.4f}")
+
+
+# %%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# %% ------------------- IGNORE EVERYTHING BELOW THIS POINT -------------------
 
 #%%
 # Filter groups to specific hyperparameter values
@@ -189,51 +264,6 @@ plt.title('Mean Train Loss vs Epoch')
 plt.grid(True)
 plt.show()
 
-
-
-
-
-# %% Use the new run_group_to_metric_dfs function to extract metrics and plot
-# Extract metrics for the first filtered group
-if filtered_groups:
-    first_group_key, first_group_runs = filtered_groups[0]
-    
-    # Extract all relevant metrics
-    metric_dfs = db.run_group_to_metric_dfs(
-        first_group_runs, 
-        ['train_loss', 'train_acc', 'val_loss', 'val_acc', 'epoch', 'lr']
-    )
-    
-    # Get epochs from first column (all runs should have same epochs)
-    epochs = metric_dfs['epoch'].iloc[:, 0].values
-    
-    # Plot epoch vs train_loss for all runs in the group
-    plt.figure(figsize=(10, 6))
-    
-    # Plot individual runs with transparency
-    for col in metric_dfs['train_loss'].columns:
-        plt.plot(epochs, metric_dfs['train_loss'][col], alpha=0.3, linewidth=1)
-    
-    # Plot mean with thicker line
-    mean_loss = metric_dfs['train_loss'].mean(axis=1)
-    plt.plot(epochs, mean_loss, 'k-', linewidth=2, label='Mean')
-    
-    # Add standard deviation band
-    std_loss = metric_dfs['train_loss'].std(axis=1)
-    plt.fill_between(epochs, mean_loss - std_loss, mean_loss + std_loss, 
-                     alpha=0.2, color='gray', label='±1 std')
-    
-    plt.xlabel('Epoch')
-    plt.ylabel('Train Loss')
-    plt.title(f'Training Loss for Group: {db.group_key_to_dict(first_group_key, hpm_names)}')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.show()
-    
-    # Print summary statistics
-    print(f"\nGroup hyperparameters: {db.group_key_to_dict(first_group_key, hpm_names)}")
-    print(f"Number of runs: {len(first_group_runs)}")
-    print(f"Final train loss: {mean_loss.iloc[-1]:.4f} ± {std_loss.iloc[-1]:.4f}")
 
 
 

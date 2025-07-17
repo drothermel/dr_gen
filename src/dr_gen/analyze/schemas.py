@@ -1,6 +1,7 @@
 """Pydantic models for experiment analysis."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,10 +15,9 @@ class Hpms(BaseModel):
     _flat_dict_prefix: str = ""
 
     def __setattr__(self, name, value):
-        if hasattr(self, '_flat_dict'):
-            object.__setattr__(self, '_flat_dict', {})
+        if hasattr(self, "_flat_dict"):
+            object.__setattr__(self, "_flat_dict", {})
         super().__setattr__(name, value)
-
 
     def flatten(self, prefix: str = "") -> dict[str, Any]:
         """Flatten nested hyperparameters into dot-notation keys."""
@@ -31,8 +31,8 @@ class Hpms(BaseModel):
                 result.update(nested.flatten(f"{full_key}."))
             else:
                 result[full_key] = value
-        object.__setattr__(self, '_flat_dict', result)
-        object.__setattr__(self, '_flat_dict_prefix', prefix)
+        object.__setattr__(self, "_flat_dict", result)
+        object.__setattr__(self, "_flat_dict_prefix", prefix)
         return result
 
 
@@ -111,58 +111,13 @@ class AnalysisConfig(BaseSettings):
     hparam_display_names: dict[str, str] = Field(
         default_factory=lambda: {"lr": "Learning Rate", "batch_size": "Batch Size"}
     )
-    use_runs_filters: dict[str, Callable[[Run], bool]] = Field(
-        default_factory=lambda: {}
-    )
-    main_hpms: list[str] = Field(
-        default_factory=lambda: ["optim.lr", "batch_size"]
-    )
+    use_runs_filters: dict[str, Callable[[Run], bool]] = Field(default_factory=dict)
+    main_hpms: list[str] = Field(default_factory=lambda: ["optim.lr", "batch_size"])
     grouping_exclude_hpms: list[str] = Field(
         default_factory=lambda: ["seed", "run_id", "tag"],
-        description="Hyperparameters to exclude when grouping runs"
+        description="Hyperparameters to exclude when grouping runs",
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    grouping_exclude_hpm_display_names: list[str] = Field(
+        default_factory=list,
+        description="Hyperparameters to exclude from display names when showing groups",
+    )
