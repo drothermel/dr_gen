@@ -84,11 +84,11 @@ def get_color_palette(n_colors: int = 8, palette: str = "colorblind") -> list[st
 
 
 def plot_metric_group(
-    metric_dfs: dict[str, pd.DataFrame],
+    metric_dfs: dict[str, pd.DataFrame] | dict[Any, dict[str, pd.DataFrame]],
     x_metric: str = "epoch",
     y_metrics: str | list[str] = "train_loss",
     db: ExperimentDB | None = None,
-    group_description: str = "",
+    group_descriptions: str | dict[Any, str] | None = None,
     figsize: tuple[float, float] = (8, 5),
     show_individual_runs: bool = True,
     individual_alpha: float = 0.25,
@@ -110,17 +110,22 @@ def plot_metric_group(
     return_fig: bool = False,
     publication_style: bool = True,
 ) -> plt.Figure | None:
-    """Plot metrics for a group of runs with mean and standard deviation.
+    """Plot metrics for one or more groups of runs with mean and standard deviation.
 
-    Uses colorblind-safe colors by default for scientific publications.
-    Individual runs and std band use the same color as the mean with different alpha.
+    Uses colorblind-safe colors to distinguish metrics and line styles to distinguish groups.
+    Individual runs and std band use the same color/style as the mean with different alpha.
 
     Args:
-        metric_dfs: Dict of metric DataFrames from db.run_group_to_metric_dfs()
+        metric_dfs: Either:
+            - Dict of metric DataFrames (single group)
+            - Dict of dicts where keys are group IDs and values are metric DataFrames
         x_metric: Name of metric to use for x-axis
         y_metrics: Single metric name or list of metric names for y-axis
         db: ExperimentDB instance for display name lookups (optional)
-        group_description: Description of the group for the title
+        group_descriptions: Either:
+            - String description for single group
+            - Dict mapping group IDs to descriptions
+            - None to auto-generate or omit
         figsize: Figure size tuple
         show_individual_runs: Whether to plot individual run traces
         individual_alpha: Transparency for individual runs
@@ -146,44 +151,82 @@ def plot_metric_group(
         Figure if return_fig=True, otherwise None
 
     Example:
-        >>> # Single metric
+        >>> # Single group, single metric
         >>> metric_dfs = db.run_group_to_metric_dfs(runs, ["epoch", "train_loss"])
         >>> plot_metric_group(
         ...     metric_dfs,
         ...     x_metric="epoch",
         ...     y_metrics="train_loss",
         ...     db=db,
-        ...     group_description=db.format_group_description(group_key),
+        ...     group_descriptions="LR=0.01, WD=1e-4",
         ... )
 
-        >>> # Multiple metrics
-        >>> metric_dfs = db.run_group_to_metric_dfs(
-        ...     runs, ["epoch", "train_loss", "val_loss"]
-        ... )
+        >>> # Single group, multiple metrics
         >>> plot_metric_group(
         ...     metric_dfs,
         ...     x_metric="epoch",
         ...     y_metrics=["train_loss", "val_loss"],
         ...     db=db,
-        ...     color_scheme="colorblind",
+        ... )
+
+        >>> # Multiple groups, single metric
+        >>> all_groups = {}
+        >>> for group_key, runs in run_groups.items():
+        ...     all_groups[group_key] = db.run_group_to_metric_dfs(runs, metrics)
+        >>> plot_metric_group(
+        ...     all_groups,
+        ...     x_metric="epoch",
+        ...     y_metrics="train_loss",
+        ...     db=db,
+        ...     group_descriptions={
+        ...         group_key: db.format_group_description(group_key)
+        ...         for group_key in all_groups
+        ...     },
         ... )
     """
     # Ensure y_metrics is a list
     if isinstance(y_metrics, str):
         y_metrics = [y_metrics]
 
-    # Validate metrics exist
-    if x_metric not in metric_dfs:
-        raise ValueError(f"x_metric '{x_metric}' not found in metric_dfs")
-    for y_metric in y_metrics:
-        if y_metric not in metric_dfs:
-            raise ValueError(f"y_metric '{y_metric}' not found in metric_dfs")
+    # Detect if we have single or multiple groups
+    first_value = next(iter(metric_dfs.values()))
+    is_single_group = isinstance(first_value, pd.DataFrame)
 
-    # Get x-axis values from first column (all runs should have same x values)
-    x_values = metric_dfs[x_metric].iloc[:, 0].values
+    # Normalize to dict of groups format
+    if is_single_group:
+        # Single group case - wrap in a dict
+        groups = {"_single": metric_dfs}
+        if isinstance(group_descriptions, str):
+            group_desc_dict = {"_single": group_descriptions}
+        else:
+            group_desc_dict = {"_single": ""}
+    else:
+        # Multiple groups case
+        groups = metric_dfs
+        if isinstance(group_descriptions, dict):
+            group_desc_dict = group_descriptions
+        elif isinstance(group_descriptions, str):
+            # If single string provided for multiple groups, use for all
+            group_desc_dict = {k: group_descriptions for k in groups.keys()}
+        else:
+            # No descriptions provided
+            group_desc_dict = {k: f"Group {k}" for k in groups.keys()}
+
+    # Validate metrics exist in all groups
+    for group_id, group_dfs in groups.items():
+        if x_metric not in group_dfs:
+            raise ValueError(f"x_metric '{x_metric}' not found in group '{group_id}'")
+        for y_metric in y_metrics:
+            if y_metric not in group_dfs:
+                raise ValueError(
+                    f"y_metric '{y_metric}' not found in group '{group_id}'"
+                )
 
     # Get color palette for the metrics
     colors = get_color_palette(len(y_metrics), palette=color_scheme)
+
+    # Define line styles for different groups
+    line_styles = ["-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 2)), (0, (1, 1))]
 
     # Create figure with publication styling
     if publication_style:
@@ -203,47 +246,72 @@ def plot_metric_group(
 
     fig, ax = plt.subplots(figsize=figsize)
 
-    # Plot each metric
-    for i, y_metric in enumerate(y_metrics):
-        metric_color = colors[i]
+    # Get x-axis values from first group (all groups should have same x values)
+    first_group = next(iter(groups.values()))
+    x_values = first_group[x_metric].iloc[:, 0].values
 
-        # Get display name for metric
-        if db is not None:
-            metric_display_name = db.get_display_name(y_metric)
-        else:
-            metric_display_name = y_metric
+    # Plot each group and metric combination
+    for group_idx, (group_id, group_dfs) in enumerate(groups.items()):
+        # Get line style for this group
+        line_style = line_styles[group_idx % len(line_styles)]
+        group_desc = group_desc_dict.get(group_id, "")
 
-        # Plot individual runs if requested
-        if show_individual_runs:
-            for col in metric_dfs[y_metric].columns:
-                ax.plot(
-                    x_values,
-                    metric_dfs[y_metric][col],
-                    color=metric_color,
-                    alpha=individual_alpha,
-                    linewidth=individual_linewidth,
-                )
+        # Plot each metric for this group
+        for metric_idx, y_metric in enumerate(y_metrics):
+            metric_color = colors[metric_idx]
 
-        # Calculate and plot mean
-        mean_y = metric_dfs[y_metric].mean(axis=1)
-        ax.plot(
-            x_values,
-            mean_y,
-            color=metric_color,
-            linewidth=mean_linewidth,
-            label=f"{metric_display_name} (mean)",
-        )
+            # Get display name for metric
+            if db is not None:
+                metric_display_name = db.get_display_name(y_metric)
+            else:
+                metric_display_name = y_metric
 
-        # Add standard deviation band if requested
-        if std_band:
-            std_y = metric_dfs[y_metric].std(axis=1)
-            ax.fill_between(
+            # Plot individual runs if requested
+            if show_individual_runs:
+                for col in group_dfs[y_metric].columns:
+                    ax.plot(
+                        x_values,
+                        group_dfs[y_metric][col],
+                        color=metric_color,
+                        alpha=individual_alpha,
+                        linewidth=individual_linewidth,
+                        linestyle=line_style,
+                    )
+
+            # Calculate and plot mean
+            mean_y = group_dfs[y_metric].mean(axis=1)
+
+            # Create label for legend
+            if is_single_group:
+                # Single group - just show metric name
+                label = metric_display_name
+            elif len(y_metrics) == 1:
+                # Multiple groups, single metric - just show group
+                label = group_desc if group_desc else f"Group {group_id}"
+            else:
+                # Multiple groups and metrics - show both
+                group_label = group_desc if group_desc else f"Group {group_id}"
+                label = f"{metric_display_name} ({group_label})"
+
+            ax.plot(
                 x_values,
-                mean_y - std_y,
-                mean_y + std_y,
-                alpha=std_alpha,
+                mean_y,
                 color=metric_color,
+                linewidth=mean_linewidth,
+                linestyle=line_style,
+                label=label,
             )
+
+            # Add standard deviation band if requested
+            if std_band:
+                std_y = group_dfs[y_metric].std(axis=1)
+                ax.fill_between(
+                    x_values,
+                    mean_y - std_y,
+                    mean_y + std_y,
+                    alpha=std_alpha,
+                    color=metric_color,
+                )
 
     # Set labels with display names if available
     if xlabel is None and db is not None:
@@ -265,24 +333,39 @@ def plot_metric_group(
 
     # Set title
     if title is None:
-        # Generate title based on metrics being plotted
-        if len(y_metrics) == 1:
-            # Single metric
-            if db is not None:
-                y_display = db.get_display_name(y_metrics[0])
-            else:
-                y_display = y_metrics[0]
+        # Generate title based on what's being plotted
+        if is_single_group:
+            # Single group
+            group_desc = group_desc_dict.get("_single", "")
+            if len(y_metrics) == 1:
+                # Single metric, single group
+                if db is not None:
+                    y_display = db.get_display_name(y_metrics[0])
+                else:
+                    y_display = y_metrics[0]
 
-            if group_description:
-                title = f"{y_display} | {group_description}"
+                if group_desc:
+                    title = f"{y_display} | {group_desc}"
+                else:
+                    title = y_display
             else:
-                title = y_display
+                # Multiple metrics, single group
+                if group_desc:
+                    title = f"Metrics | {group_desc}"
+                else:
+                    title = "Metrics Comparison"
         else:
-            # Multiple metrics
-            if group_description:
-                title = f"Metrics | {group_description}"
+            # Multiple groups
+            if len(y_metrics) == 1:
+                # Single metric, multiple groups
+                if db is not None:
+                    y_display = db.get_display_name(y_metrics[0])
+                else:
+                    y_display = y_metrics[0]
+                title = f"{y_display} Comparison"
             else:
-                title = "Metrics Comparison"
+                # Multiple metrics, multiple groups
+                title = "Multi-Group Metrics Comparison"
     ax.set_title(title)
 
     # Apply axis limits and scales

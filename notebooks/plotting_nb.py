@@ -160,7 +160,7 @@ plot_metric_group(
     x_metric='epoch',
     y_metric='train_loss',
     db=db,
-    group_description=db.format_group_description(first_group_key, hpm_names)
+    group_descriptions=db.format_group_description(first_group_key, hpm_names)
 )
 
 # Print summary statistics
@@ -179,7 +179,7 @@ if 'val_acc' in metric_dfs:
         x_metric='epoch',
         y_metrics='val_acc',
         db=db,
-        group_description=db.format_group_description(first_group_key, hpm_names),
+        group_descriptions=db.format_group_description(first_group_key, hpm_names),
         ylim=(0, 1.0),
         ylabel='Validation Accuracy',
         title='Model Performance'
@@ -192,7 +192,7 @@ plot_metric_group(
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
-    group_description=db.format_group_description(first_group_key, hpm_names),
+    group_descriptions=db.format_group_description(first_group_key, hpm_names),
     color_scheme='colorblind',
     figsize=(10, 6),
     ylabel='Loss',
@@ -207,13 +207,72 @@ if all(m in metric_dfs for m in ['train_acc', 'val_acc']):
         x_metric='epoch',
         y_metrics=['train_acc', 'val_acc'],
         db=db,
-        group_description=db.format_group_description(first_group_key, hpm_names),
+        group_descriptions=db.format_group_description(first_group_key, hpm_names),
         color_scheme='paul_tol',
         figsize=(10, 6),
         ylim=(0, 1.0),
         ylabel='Accuracy',
         title='Model Accuracy Comparison'
     )
+
+# %% Multiple groups comparison - prepare data
+# Get first 3 groups for comparison
+n_groups_to_compare = min(3, len(run_groups))
+groups_to_plot = {}
+group_descriptions_dict = {}
+
+for i, (group_key, runs) in enumerate(list(run_groups.items())[:n_groups_to_compare]):
+    # Extract metrics for this group
+    group_metric_dfs = db.run_group_to_metric_dfs(
+        runs, 
+        ['train_loss', 'val_loss', 'train_acc', 'val_acc', 'epoch']
+    )
+    groups_to_plot[group_key] = group_metric_dfs
+    group_descriptions_dict[group_key] = db.format_group_description(group_key, hpm_names)
+
+print(f"Comparing {len(groups_to_plot)} groups:")
+for key, desc in group_descriptions_dict.items():
+    print(f"  - {desc}")
+
+# %% Multiple groups, single metric
+# Compare train loss across different hyperparameter configurations
+plot_metric_group(
+    groups_to_plot,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions=group_descriptions_dict,
+    figsize=(10, 6),
+    title='Training Loss Comparison Across Hyperparameters'
+)
+
+# %% Multiple groups, multiple metrics
+# Compare both train and val loss across groups
+plot_metric_group(
+    groups_to_plot,
+    x_metric='epoch',
+    y_metrics=['train_loss', 'val_loss'],
+    db=db,
+    group_descriptions=group_descriptions_dict,
+    figsize=(12, 6),
+    ylabel='Loss',
+    title='Train vs Validation Loss Across Configurations'
+)
+
+# %% Log scale comparison across groups
+plot_metric_group(
+    groups_to_plot,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions=group_descriptions_dict,
+    figsize=(10, 6),
+    xscale='log',
+    yscale='log',
+    xlim=(1, 50),
+    ylim=(0.01, 2.5),
+    title='Training Dynamics Comparison (Log Scale)'
+)
 
 # %%
 
