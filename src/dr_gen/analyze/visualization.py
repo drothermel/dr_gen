@@ -105,6 +105,11 @@ def plot_metric_group(
     grid_alpha: float = 0.2,
     legend: bool = True,
     legend_loc: str | tuple[float, float] = "best",
+    separate_legends: bool = False,
+    color_legend_title: str | None = None,
+    linestyle_legend_title: str | None = None,
+    color_legend_loc: str | tuple[float, float] = "upper right",
+    linestyle_legend_loc: str | tuple[float, float] = "lower right",
     xlabel: str | None = None,
     ylabel: str | None = None,
     title: str | None = None,
@@ -158,6 +163,11 @@ def plot_metric_group(
         legend_loc: Legend location ('best', 'upper right', 'upper left', 'lower left',
                    'lower right', 'right', 'center left', 'center right', 'lower center',
                    'upper center', 'center', or (x, y) tuple for custom position)
+        separate_legends: Enable dual legend mode when color_by and linestyle_by use different attributes
+        color_legend_title: Title for color legend (when separate_legends=True)
+        linestyle_legend_title: Title for linestyle legend (when separate_legends=True)
+        color_legend_loc: Position for color legend (when separate_legends=True)
+        linestyle_legend_loc: Position for linestyle legend (when separate_legends=True)
         xlabel: Override x-axis label (uses display name if None)
         ylabel: Override y-axis label (uses display name if None)
         title: Override title (auto-generated if None)
@@ -541,9 +551,81 @@ def plot_metric_group(
     if grid:
         ax.grid(alpha=grid_alpha)
 
-    # Add legend if requested
+    # Add legend(s) if requested
     if legend:
-        ax.legend(loc=legend_loc)
+        # Determine if we should use dual legend mode
+        use_dual_legends = (
+            separate_legends
+            and color_by not in ["metric", "group", "none"]
+            and linestyle_by not in ["metric", "group", "none"]
+            and color_by != linestyle_by
+            and group_hparams is not None
+        )
+
+        if use_dual_legends:
+            # Create dual legends with proxy objects
+
+            # Get unique values for color and linestyle dimensions
+            color_values = get_unique_values(color_by)
+            linestyle_values = get_unique_values(linestyle_by)
+
+            # Create color legend with proxy Line2D objects
+            color_handles = []
+            color_labels = []
+            for value in color_values:
+                color = color_mapping[value]
+                # Use db for display names if available
+                if db is not None and color_by.startswith("optim."):
+                    formatted_value = db.format_hparam_value(color_by, value)
+                    display_name = db.get_display_name(color_by, "hparam")
+                    label = f"{display_name}: {formatted_value}"
+                else:
+                    label = f"{color_by}: {value}"
+
+                proxy = Line2D([0], [0], color=color, linestyle="-", linewidth=2)
+                color_handles.append(proxy)
+                color_labels.append(label)
+
+            # Create linestyle legend with proxy Line2D objects
+            linestyle_handles = []
+            linestyle_labels = []
+            for value in linestyle_values:
+                linestyle = linestyle_mapping[value]
+                # Use db for display names if available
+                if db is not None and linestyle_by.startswith("optim."):
+                    formatted_value = db.format_hparam_value(linestyle_by, value)
+                    display_name = db.get_display_name(linestyle_by, "hparam")
+                    label = f"{display_name}: {formatted_value}"
+                elif linestyle_by == "metric" and db is not None:
+                    label = db.get_display_name(value, "metric")
+                else:
+                    label = f"{linestyle_by}: {value}"
+
+                proxy = Line2D(
+                    [0], [0], color="black", linestyle=linestyle, linewidth=2
+                )
+                linestyle_handles.append(proxy)
+                linestyle_labels.append(label)
+
+            # Add color legend
+            color_legend = ax.legend(
+                color_handles,
+                color_labels,
+                loc=color_legend_loc,
+                title=color_legend_title,
+            )
+            ax.add_artist(color_legend)  # Keep this legend when adding the second one
+
+            # Add linestyle legend
+            ax.legend(
+                linestyle_handles,
+                linestyle_labels,
+                loc=linestyle_legend_loc,
+                title=linestyle_legend_title,
+            )
+        else:
+            # Use standard single legend
+            ax.legend(loc=legend_loc)
 
     # Show or return figure
     if return_fig:
