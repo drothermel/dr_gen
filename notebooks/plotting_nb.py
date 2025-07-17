@@ -128,7 +128,7 @@ for i, (hpm_values, runs) in enumerate(run_groups.items()):
         print("...")
         break
     # Create a dict mapping hyperparameter names to their values for this group
-    hpm_dict = dict(zip(hpm_names, hpm_values))
+    hpm_dict = db.group_key_to_dict(hpm_values, hpm_names)
     print(f"\nGroup {i+1}: {len(runs)} runs")
     print(f"  Hyperparameters: {hpm_dict}")
 
@@ -193,6 +193,47 @@ plt.show()
 
 
 
+# %% Use the new run_group_to_metric_dfs function to extract metrics and plot
+# Extract metrics for the first filtered group
+if filtered_groups:
+    first_group_key, first_group_runs = filtered_groups[0]
+    
+    # Extract all relevant metrics
+    metric_dfs = db.run_group_to_metric_dfs(
+        first_group_runs, 
+        ['train_loss', 'train_acc', 'val_loss', 'val_acc', 'epoch', 'lr']
+    )
+    
+    # Get epochs from first column (all runs should have same epochs)
+    epochs = metric_dfs['epoch'].iloc[:, 0].values
+    
+    # Plot epoch vs train_loss for all runs in the group
+    plt.figure(figsize=(10, 6))
+    
+    # Plot individual runs with transparency
+    for col in metric_dfs['train_loss'].columns:
+        plt.plot(epochs, metric_dfs['train_loss'][col], alpha=0.3, linewidth=1)
+    
+    # Plot mean with thicker line
+    mean_loss = metric_dfs['train_loss'].mean(axis=1)
+    plt.plot(epochs, mean_loss, 'k-', linewidth=2, label='Mean')
+    
+    # Add standard deviation band
+    std_loss = metric_dfs['train_loss'].std(axis=1)
+    plt.fill_between(epochs, mean_loss - std_loss, mean_loss + std_loss, 
+                     alpha=0.2, color='gray', label='±1 std')
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('Train Loss')
+    plt.title(f'Training Loss for Group: {db.group_key_to_dict(first_group_key, hpm_names)}')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.show()
+    
+    # Print summary statistics
+    print(f"\nGroup hyperparameters: {db.group_key_to_dict(first_group_key, hpm_names)}")
+    print(f"Number of runs: {len(first_group_runs)}")
+    print(f"Final train loss: {mean_loss.iloc[-1]:.4f} ± {std_loss.iloc[-1]:.4f}")
 
 
 

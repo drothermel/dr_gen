@@ -3,6 +3,7 @@
 from pathlib import Path
 from pprint import pprint
 from typing import Any
+import pandas as pd
 import polars as pl
 from pydantic import BaseModel, ConfigDict
 
@@ -120,6 +121,134 @@ class ExperimentDB(BaseModel):
             grouped_runs[key].append(run)
         
         return grouping_keys or [], grouped_runs
+    
+    def group_key_to_dict(self, group_key: tuple, hpm_names: list[str] | None = None) -> dict[str, Any]:
+        """Convert a group key tuple to a hyperparameter dictionary.
+        
+        Args:
+            group_key: Tuple of hyperparameter values from active_runs_grouped_by_hpms
+            hpm_names: List of hyperparameter names. If None, uses the most recent 
+                      grouping keys from active_runs_grouped_by_hpms
+        
+        Returns:
+            Dict mapping hyperparameter names to values
+            
+        Example:
+            >>> hpm_names, run_groups = db.active_runs_grouped_by_hpms()
+            >>> for group_key, runs in run_groups.items():
+            >>>     hpm_dict = db.group_key_to_dict(group_key, hpm_names)
+            >>>     print(f"LR: {hpm_dict['optim.lr']}, WD: {hpm_dict['optim.weight_decay']}")
+        """
+        if hpm_names is None:
+            # Use the default grouping to get hpm names
+            exclude_hpms = self.config.grouping_exclude_hpms
+            hpm_names = [h for h in self.important_hpms if h not in exclude_hpms]
+            hpm_names.sort()  # Ensure consistent ordering
+            
+        if len(group_key) != len(hpm_names):
+            raise ValueError(f"group_key length ({len(group_key)}) doesn't match hpm_names length ({len(hpm_names)})")
+            
+        return dict(zip(hpm_names, group_key))
+
+    def run_group_to_metric_dfs(
+        self, 
+        run_group: list[Run], 
+        metrics: list[str]
+    ) -> dict[str, pd.DataFrame]:
+        """Convert a group of runs to metric dataframes with one column per run.
+        
+        Assumes all runs in a group have the same length for each metric.
+        The DataFrame index is just integers (0, 1, 2, ...) - you can use any
+        metric (epoch, step, cumulative_lr, etc.) as your x-axis separately.
+        
+        Args:
+            run_group: List of Run objects (e.g., from active_runs_grouped_by_hpms)
+            metrics: List of metric names to extract
+            
+        Returns:
+            Dict mapping metric_name to DataFrame where:
+            - Index: integers from 0 to length-1
+            - Columns: seed_N or run_id (one column per run)
+            - Values: metric values
+            
+        Example:
+            >>> group_key, runs = next(iter(db.active_runs_grouped_by_hpms()[1].items()))
+            >>> dfs = db.run_group_to_metric_dfs(runs, ['train_loss', 'val_acc', 'epoch'])
+            >>> print(dfs['train_loss'].head())
+                 seed_0    seed_1    seed_2
+            0    2.301     2.298     2.305
+            1    1.845     1.850     1.843
+            2    1.523     1.531     1.519
+            
+            >>> # Use any metric as x-axis
+            >>> epochs = dfs['epoch'].iloc[:, 0]  # Get epoch values from first run
+            >>> plt.plot(epochs, dfs['train_loss'].mean(axis=1))
+        """
+        result = {}
+        
+        for metric in metrics:
+            # Collect data for this metric
+            metric_data = {}
+            
+            for run in run_group:
+                if metric not in run.metrics:
+                    continue
+                    
+                # Use seed as column name if available, otherwise run_id
+                seed = run.hpms._flat_dict.get('seed')
+                col_name = f"seed_{seed}" if seed is not None else run.run_id
+                
+                # Get values directly (no index manipulation)
+                values = run.metrics[metric]
+                metric_data[col_name] = values
+            
+            if metric_data:
+                # Create DataFrame from dict - pandas will align by position
+                df = pd.DataFrame(metric_data)
+                result[metric] = df
+            else:
+                # Empty DataFrame if no data
+                result[metric] = pd.DataFrame()
+        
+        return result
+    
+    def get_grouped_metric_dfs(
+        self, 
+        metrics: list[str],
+        exclude_hpms: list[str] | None = None
+    ) -> dict[tuple, dict[str, pd.DataFrame]]:
+        """Get metric dataframes for all hyperparameter groups.
+        
+        Combines active_runs_grouped_by_hpms with run_group_to_metric_dfs.
+        
+        Args:
+            metrics: List of metric names to extract
+            exclude_hpms: Hpms to exclude from grouping (see active_runs_grouped_by_hpms)
+            
+        Returns:
+            Dict mapping group tuples to metric dataframes:
+            {
+                (batch_size, arch, lr, wd): {
+                    'train_loss': DataFrame,
+                    'val_acc': DataFrame,
+                    ...
+                },
+                ...
+            }
+            
+        Example:
+            >>> grouped_dfs = db.get_grouped_metric_dfs(['train_loss', 'val_acc'])
+            >>> for group_key, metric_dfs in grouped_dfs.items():
+            >>>     print(f"Group {group_key}:")
+            >>>     print(f"  Train loss shape: {metric_dfs['train_loss'].shape}")
+        """
+        hpm_names, run_groups = self.active_runs_grouped_by_hpms(exclude_hpms)
+        
+        result = {}
+        for group_key, runs in run_groups.items():
+            result[group_key] = self.run_group_to_metric_dfs(runs, metrics)
+            
+        return result
 
     def active_metrics_df(self) -> pl.DataFrame:
         """Get a dataframe of active metrics with only the main hyperparameter columns."""
