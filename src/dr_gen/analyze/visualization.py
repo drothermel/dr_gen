@@ -276,7 +276,14 @@ def plot_metric_group(
             for hparams in group_hparams.values():
                 if param_name in hparams:
                     values.add(hparams[param_name])
-            return sorted(values)
+            # Sort values ensuring numeric values are handled properly
+            return sorted(
+                values,
+                key=lambda x: (
+                    x if isinstance(x, (int, float)) else float("inf"),
+                    str(x),
+                ),
+            )
         raise ValueError(
             f"Cannot map by '{param_name}': not found in metrics, groups, or hyperparameters"
         )
@@ -559,11 +566,11 @@ def plot_metric_group(
         if use_dual_legends:
             # Create dual legends with proxy objects
 
-            # Get unique values for color and linestyle dimensions
+            # Get unique values for color and linestyle dimensions (already sorted for hyperparameters)
             color_values = get_unique_values(color_by)
             linestyle_values = get_unique_values(linestyle_by)
 
-            # Create color legend with proxy Line2D objects
+            # Create color legend with proxy Line2D objects (sorted by hyperparameter values)
             color_handles = []
             color_labels = []
             for value in color_values:
