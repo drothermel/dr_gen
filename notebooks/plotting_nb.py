@@ -101,6 +101,7 @@ analysis_cfg = AnalysisConfig(
         'batch_size',
         'tag'
     ],
+    grouping_exclude_hpms=['seed', 'run_id', 'tag'],
 )
 #display(analysis_cfg)
 
@@ -115,44 +116,60 @@ print(f"All Runs: {len(db.all_runs)}, Active Runs: {len(db.active_runs)}")
 
 
 # %%
-gars_keys, gars = db.active_runs_grouped_by_hpms()
-pprint(gars_keys)
+hpm_names, run_groups = db.active_runs_grouped_by_hpms()
+print(f"Grouping hyperparameters: {hpm_names}")
+# Print the count of runs in each group
+print(f"\nNumber of groups: {len(run_groups)}")
+print(f"Total runs across all groups: {sum(len(runs) for runs in run_groups.values())}")
+
+# Show first few groups with their hyperparameter values
+for i, (hpm_values, runs) in enumerate(run_groups.items()):
+    if i >= 5:  # Only show first 5 groups
+        print("...")
+        break
+    # Create a dict mapping hyperparameter names to their values for this group
+    hpm_dict = dict(zip(hpm_names, hpm_values))
+    print(f"\nGroup {i+1}: {len(runs)} runs")
+    print(f"  Hyperparameters: {hpm_dict}")
 
 #%%
-#pprint(gars_keys)
-all_gars_hpms = list(gars.keys())
-use_gars = [
+
+
+
+#%%
+# Filter groups to specific hyperparameter values
+all_group_keys = list(run_groups.keys())
+filtered_groups = [
     (
-        all_gars_hpms[i], gars[all_gars_hpms[i]]
-    ) for i in range(
-        len(all_gars_hpms)
-    ) if (
-        all_gars_hpms[i][0] == 512 and # batch_size
-        all_gars_hpms[i][2] == 1.0 and # width_mult
-        all_gars_hpms[i][3] in [0.01, 0.003, 0.001] and #lr
-        all_gars_hpms[i][5] in [0.0001, 0.0003] # wd
+        group_key, run_groups[group_key]
+    ) for group_key in all_group_keys
+    if (
+        group_key[0] == 512 and # batch_size
+        group_key[2] == 1.0 and # width_mult
+        group_key[3] in [0.01, 0.003, 0.001] and #lr
+        group_key[5] in [0.0001, 0.0003] # wd
     )
 ]
 
-#pprint(all_gars_hpms)
-for hg, g in use_gars:
-    print(f"Group {hg}: {len(g)} runs")
+# Display filtered groups
+for group_key, group_runs in filtered_groups:
+    print(f"Group {group_key}: {len(group_runs)} runs")
 
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 
-# Collect train_loss and epoch for all runs in the selected group
+# Collect train_loss and epoch for all runs in the first filtered group
 cumulative_lr = []
 lr = []
 epoch_losses = defaultdict(list)
-for r in use_gars[0][1]:
-    epochs = r.metrics['epoch']
-    train_losses = r.metrics['train_loss']
+for run in filtered_groups[0][1]:  # Get runs from first filtered group
+    epochs = run.metrics['epoch']
+    train_losses = run.metrics['train_loss']
     cumulative_lr.append(
-        r.metrics['lr'] if len(cumulative_lr) == 0 else cumulative_lr[-1] + r.metrics['lr']
+        run.metrics['lr'] if len(cumulative_lr) == 0 else cumulative_lr[-1] + run.metrics['lr']
     )
-    lr.append(r.metrics['lr'])
+    lr.append(run.metrics['lr'])
     for e, l in zip(epochs, train_losses):
         epoch_losses[e].append(l)
 

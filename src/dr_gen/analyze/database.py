@@ -69,18 +69,57 @@ class ExperimentDB(BaseModel):
         """Get a list of important hyperparameters for active runs."""
         return [run.get_important_hpms(self.important_hpms) for run in self.active_runs]
 
-    def active_runs_grouped_by_hpms(self) -> dict[tuple, list[Run]]:
-        """Group active runs by their important hyperparameters."""
+    def active_runs_grouped_by_hpms(self, exclude_hpms: list[str] | None = None) -> tuple[list[str], dict[tuple, list[Run]]]:
+        """Group active runs by important hyperparameters, excluding specified hpms.
+        
+        Groups runs by self.important_hpms minus excluded hpms.
+        
+        Args:
+            exclude_hpms: Hpms to exclude from grouping. If None, uses 
+                         self.config.grouping_exclude_hpms
+        
+        Returns:
+            Tuple of (grouping_keys, grouped_runs) where:
+            - grouping_keys: List of hpm names used for grouping (important_hpms - exclusions)
+            - grouped_runs: Dict mapping hpm value tuples to lists of runs
+        
+        Example:
+            >>> # If important_hpms = ['optim.lr', 'optim.weight_decay', 'seed', 'batch_size']
+            >>> # And exclude_hpms = ['seed']
+            >>> keys, groups = db.active_runs_grouped_by_hpms()
+            >>> print(keys)  # ['batch_size', 'optim.lr', 'optim.weight_decay'] (sorted)
+            >>> print(next(iter(groups.keys())))  # (128, 0.01, 0.0001)
+        """
+        # Use config default if not specified
+        if exclude_hpms is None:
+            exclude_hpms = self.config.grouping_exclude_hpms
+        
+        # Calculate which hpms to actually group by
+        grouping_hpms = [h for h in self.important_hpms if h not in exclude_hpms]
+        
         grouped_runs = {}
+        grouping_keys = None
+        
         for run in self.active_runs:
-            run_hpms = run.get_important_hpms(self.important_hpms)
-            sorted_run_hpms = sorted(run_hpms.items(), key=lambda x: x[0])
-            hpm_keys = [k for k, v in sorted_run_hpms if k != "seed" and k != "run_id"]
-            key = tuple([v for k, v in sorted_run_hpms if k != "seed" and k != "tag"])
+            # Get only the hpms we want to group by
+            run_hpms = run.get_important_hpms(grouping_hpms)
+            
+            # Sort for consistent ordering
+            sorted_items = sorted(run_hpms.items(), key=lambda x: x[0])
+            
+            # Set grouping_keys once (all runs should have same keys)
+            if grouping_keys is None:
+                grouping_keys = [k for k, v in sorted_items]
+            
+            # Create the grouping tuple
+            key = tuple(v for k, v in sorted_items)
+            
+            # Add run to group
             if key not in grouped_runs:
                 grouped_runs[key] = []
             grouped_runs[key].append(run)
-        return hpm_keys, grouped_runs
+        
+        return grouping_keys or [], grouped_runs
 
     def active_metrics_df(self) -> pl.DataFrame:
         """Get a dataframe of active metrics with only the main hyperparameter columns."""

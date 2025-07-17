@@ -116,6 +116,10 @@ class AnalysisConfig(BaseSettings):
     main_hpms: list[str] = Field(
         default_factory=lambda: ["optim.lr", "batch_size"]
     )
+    grouping_exclude_hpms: list[str] = Field(
+        default_factory=lambda: ["seed", "run_id", "tag"],
+        description="Hyperparameters to exclude when grouping runs"
+    )
 
 
 
