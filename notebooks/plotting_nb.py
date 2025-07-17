@@ -6,15 +6,15 @@
 from pathlib import Path
 import matplotlib.pyplot as plt
 from hydra import compose, initialize_config_dir
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 from pprint import pprint
 
-from torch._higher_order_ops.run_const_graph import run_const_graph_dispatch_mode
 from dr_gen.analyze.parsing import load_runs_from_dir
 from dr_gen.analyze.database import ExperimentDB
-from dr_gen.analyze.schemas import AnalysisConfig, Hpms
+from dr_gen.analyze.schemas import AnalysisConfig
 from IPython.display import display
 from dr_gen.analyze.visualization import plot_training_metrics, plot_metric_group
+from dr_gen.analyze import GroupedRuns
 
 # %% Load Config
 config_path = Path("../configs/").absolute()
@@ -113,93 +113,165 @@ db = ExperimentDB(
 db.load_experiments()
 print(f"All Runs: {len(db.all_runs)}, Active Runs: {len(db.active_runs)}")
 
-# %%
-db.config.metric_display_names['epoch'] = 'Epoch'
 
+# %% ========== UPDATED EXAMPLES USING GROUPEDRUNS API ==========
+# All examples below have been updated to use the new GroupedRuns class
+# Benefits: cleaner code, immutable operations, better encapsulation
+# Old workflow: manual state management with multiple variables
+# New workflow: fluent API with clear data flow
 
+# %% Basic grouping with new GroupedRuns API
+grouped = GroupedRuns.from_db(db)
+print(f"Grouping: {grouped}")
+print(f"Hyperparameters: {grouped.hpm_names}")
 
-# %%
-hpm_names, run_groups = db.active_runs_grouped_by_hpms()
-print(f"Grouping hyperparameters: {hpm_names}")
-# Print the count of runs in each group
-print(f"\nNumber of groups: {len(run_groups)}")
-print(f"Total runs across all groups: {sum(len(runs) for runs in run_groups.values())}")
+# Get group information
+info = grouped.get_group_info()
+print(f"Number of groups: {info['num_groups']}")
+print(f"Total runs: {info['total_runs']}")
+print(f"Runs per group - min: {info['runs_per_group']['min']}, max: {info['runs_per_group']['max']}, mean: {info['runs_per_group']['mean']:.1f}")
 
 # Show first few groups with their hyperparameter values
-for i, (hpm_values, runs) in enumerate(run_groups.items()):
+hpm_dicts = grouped.group_keys_to_dicts()
+display_dicts = grouped.group_keys_to_dicts(use_display_names=True)
+descriptions = grouped.describe_groups()
+
+print("\nFirst 5 groups:")
+for i, (group_key, runs) in enumerate(grouped):
     if i >= 5:  # Only show first 5 groups
         print("...")
         break
-    # Create a dict mapping hyperparameter names to their values for this group
-    hpm_dict = db.group_key_to_dict(hpm_values, hpm_names)
-    display_dict = db.group_key_to_dict(hpm_values, hpm_names, use_display_names=True)
     print(f"\nGroup {i+1}: {len(runs)} runs")
-    print(f"  Technical names: {hpm_dict}")
-    print(f"  Display names: {display_dict}")
-    print(f"  Formatted: {db.format_group_description(hpm_values, hpm_names)}")
+    print(f"  Technical names: {hpm_dicts[group_key]}")
+    print(f"  Display names: {display_dicts[group_key]}")
+    print(f"  Formatted: {descriptions[group_key]}")
 
-# %% Use the new run_group_to_metric_dfs function to extract metrics and plot
-# Extract metrics for the first filtered group
-first_group_key, first_group_runs = list(run_groups.items())[0]
+# %% Filter groups by minimum run count
+# Example: Keep only groups with at least 3 runs for robust statistics
+print("\n=== Filtering by Minimum Run Count ===")
+min_runs_required = 3
+
+# Show run count distribution before filtering
+run_counts = [len(runs) for runs in grouped.groups.values()]
+print(f"Run counts before filtering: min={min(run_counts)}, max={max(run_counts)}")
+print(f"Groups with < {min_runs_required} runs: {sum(1 for count in run_counts if count < min_runs_required)}")
+
+# Filter to well-sampled groups only
+well_sampled = grouped.filter(min_runs=min_runs_required)
+print(f"\nAfter filtering (min_runs={min_runs_required}): {well_sampled}")
+
+# Show what was removed
+removed_count = len(grouped) - len(well_sampled)
+print(f"Removed {removed_count} groups with insufficient runs")
+
+# Show remaining run count distribution
+if len(well_sampled) > 0:
+    remaining_run_counts = [len(runs) for runs in well_sampled.groups.values()]
+    print(f"Remaining run counts: min={min(remaining_run_counts)}, max={max(remaining_run_counts)}")
+    
+    # Show a few examples of what remained
+    print(f"\nFirst 3 well-sampled groups:")
+    well_sampled_descriptions = well_sampled.describe_groups()
+    for i, (group_key, runs) in enumerate(well_sampled):
+        if i >= 3:
+            break
+        print(f"  {len(runs)} runs: {well_sampled_descriptions[group_key]}")
+else:
+    print("No groups meet the minimum run requirement!")
+
+# %% Additional run count filtering examples
+print("\n=== Additional Run Count Filtering Examples ===")
+
+# Filter to groups with exactly a certain range
+moderate_sampled = grouped.filter(min_runs=2, max_runs=5)
+print(f"Groups with 2-5 runs: {len(moderate_sampled)} groups")
+
+# Filter to highly sampled groups only
+if max(run_counts) >= 5:
+    highly_sampled = grouped.filter(min_runs=5)
+    print(f"Highly sampled groups (≥5 runs): {len(highly_sampled)} groups")
+
+# Show the power of combining filters
+# Example: Well-sampled groups with specific hyperparameter constraints
+if len(well_sampled) > 0:
+    print(f"\nExample: Combining run count + hyperparameter filtering")
+    
+    # Example: Get well-sampled groups for a specific learning rate range
+    try:
+        # This assumes we have lr in our hyperparameters
+        combined_filtered = well_sampled.filter(
+            include={'optim.lr': [0.01, 0.03, 0.1]} if 'optim.lr' in well_sampled.hpm_names else None
+        )
+        print(f"Well-sampled + specific LR values: {len(combined_filtered)} groups")
+    except:
+        print("Note: Specific hyperparameter filtering depends on available hpms in your data")
+    
+    print("This ensures robust statistics (≥3 runs) AND focuses on relevant hyperparameter ranges")
+
+# %% Single group metrics extraction using GroupedRuns
+# Get first group for detailed analysis
+first_group_key = list(grouped.groups.keys())[0]
+first_group_runs = grouped.groups[first_group_key]
+
+# Extract metrics using GroupedRuns (creates dict with single group)
+single_group_metrics = {first_group_key: grouped.groups[first_group_key]}
+single_grouped = GroupedRuns(single_group_metrics, grouped.hpm_names, db)
 
 # Extract all relevant metrics
-metric_dfs = db.run_group_to_metric_dfs(
-    first_group_runs, 
-    ['train_loss', 'train_acc', 'val_loss', 'val_acc', 'epoch', 'lr']
-)
+metrics_dict = single_grouped.to_metric_dfs(['train_loss', 'train_acc', 'val_loss', 'val_acc', 'epoch', 'lr'])
+metric_dfs = metrics_dict[first_group_key]  # Get the metrics for our single group
 
 pprint(list(metric_dfs.keys()))
-metric_dfs['train_loss'].head()
-
-
-# %%
-
+print(f"Train loss shape: {metric_dfs['train_loss'].shape}")
+print("First few train loss values:")
+print(metric_dfs['train_loss'].head())
 
 # Print summary statistics
 mean_y = metric_dfs['train_loss'].mean(axis=1)
 std_y = metric_dfs['train_loss'].std(axis=1)
-print(f"\nGroup hyperparameters: {db.format_group_description(first_group_key, hpm_names)}")
+group_description = single_grouped.describe_groups()[first_group_key]
+print(f"\nGroup hyperparameters: {group_description}")
 print(f"Number of runs: {len(first_group_runs)}")
 print(f"Final {db.get_display_name('train_loss').lower()}: {mean_y.iloc[-1]:.4f} ± {std_y.iloc[-1]:.4f}")
 
 
-# %% Different metrics
-# Example: Validation accuracy over epochs
+# %% Different metrics - validation accuracy using GroupedRuns
+# Example: Validation accuracy over epochs using the single group
 if 'val_acc' in metric_dfs:
     plot_metric_group(
-        metric_dfs,
+        metrics_dict,  # Use the full dict with group key
         x_metric='epoch',
         y_metrics='val_acc',
         db=db,
-        group_descriptions=db.format_group_description(first_group_key, hpm_names),
+        group_descriptions=single_grouped.describe_groups(),
         ylim=(0, 1.0),
         ylabel='Validation Accuracy',
         title='Model Performance'
     )
 
-# %% Multiple metrics on same plot
+# %% Multiple metrics on same plot using GroupedRuns
 # Example: Plot both train and validation loss together
 plot_metric_group(
-    metric_dfs,
+    metrics_dict,  # Use the full dict with group key
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
-    group_descriptions=db.format_group_description(first_group_key, hpm_names),
+    group_descriptions=single_grouped.describe_groups(),
     color_scheme='colorblind',
     figsize=(10, 6),
     ylabel='Loss',
     title='Training vs Validation Loss'
 )
 
-# %% Multiple metrics with different color schemes
+# %% Multiple metrics with different color schemes using GroupedRuns
 # Example: Using Paul Tol's color palette
 if all(m in metric_dfs for m in ['train_acc', 'val_acc']):
     plot_metric_group(
-        metric_dfs,
+        metrics_dict,  # Use the full dict with group key
         x_metric='epoch',
         y_metrics=['train_acc', 'val_acc'],
         db=db,
-        group_descriptions=db.format_group_description(first_group_key, hpm_names),
+        group_descriptions=single_grouped.describe_groups(),
         color_scheme='paul_tol',
         figsize=(10, 6),
         ylim=(0, 1.0),
@@ -207,74 +279,231 @@ if all(m in metric_dfs for m in ['train_acc', 'val_acc']):
         title='Model Accuracy Comparison'
     )
 
-# %% Multiple groups comparison - prepare data
-# Get first 3 groups for comparison
-n_groups_to_compare = min(3, len(run_groups))
-groups_to_plot = {}
-group_descriptions_dict = {}
+# %% ========== SYSTEMATIC PLOTTING EXAMPLES ==========
+# Filter to well-sampled groups and select specific BS + Width Mult configuration
 
-for i, (group_key, runs) in enumerate(list(run_groups.items())[:n_groups_to_compare]):
-    # Extract metrics for this group
-    group_metric_dfs = db.run_group_to_metric_dfs(
-        runs, 
-        ['train_loss', 'val_loss', 'train_acc', 'val_acc', 'epoch']
+# Step 1: Filter to groups with at least 3 runs for robust statistics
+well_sampled = grouped.filter(min_runs=3)
+print(f"Well-sampled groups (≥3 runs): {well_sampled}")
+
+# Step 2: Select a specific batch size and width multiplier combination
+# First, let's see what BS and width mult values are available
+if 'batch_size' in well_sampled.hpm_names and 'model.width_mult' in well_sampled.hpm_names:
+    available_configs = well_sampled.group_keys_to_dicts()
+    bs_values = set()
+    wm_values = set()
+    for config in available_configs.values():
+        if 'batch_size' in config:
+            bs_values.add(config['batch_size'])
+        if 'model.width_mult' in config:
+            wm_values.add(config['model.width_mult'])
+    
+    print(f"Available batch sizes: {sorted(bs_values)}")
+    print(f"Available width multipliers: {sorted(wm_values)}")
+    
+    # Select specific configuration for focused analysis
+    selected_bs = 512  # Choose based on what's available in your data
+    selected_wm = 1.0  # Choose based on what's available in your data
+    
+    base_config = {
+        'batch_size': selected_bs,
+        'model.width_mult': selected_wm
+    }
+    
+    print(f"\nSelected configuration: BS={selected_bs}, Width Mult={selected_wm}")
+    
+    # Get (lr, wd) combinations for this configuration
+    lr_wd_analysis = well_sampled.matching(
+        base_hpms=base_config,
+        varying_hpms=['optim.lr', 'optim.weight_decay']
     )
-    groups_to_plot[group_key] = group_metric_dfs
-    group_descriptions_dict[group_key] = db.format_group_description(group_key, hpm_names)
+    
+    print(f"Found {len(lr_wd_analysis)} (lr, wd) combinations for analysis")
+    if len(lr_wd_analysis) > 0:
+        print("Available combinations:")
+        descriptions = lr_wd_analysis.describe_groups()
+        for key, desc in descriptions.items():
+            print(f"  {key}: {desc}")
+    
+else:
+    print("Note: Adjusting for available hyperparameters in your dataset")
+    # Fallback: use whatever hyperparameters are available
+    lr_wd_analysis = well_sampled
 
-print(f"Comparing {len(groups_to_plot)} groups:")
-for key, desc in group_descriptions_dict.items():
-    print(f"  - {desc}")
+# %% Example 1: Fixed Learning Rate across Weight Decay values (Single Metric)
+print("\n=== Example 1: Fixed LR across WD values (Single Metric) ===")
 
-# %% Multiple groups, single metric
-# Compare train loss across different hyperparameter configurations
+# Get all unique lr and wd values
+lr_wd_dicts = lr_wd_analysis.group_keys_to_dicts()
+lr_values = set()
+wd_values = set()
+
+for config in lr_wd_dicts.values():
+    if 'optim.lr' in config:
+        lr_values.add(config['optim.lr'])
+    if 'optim.weight_decay' in config:
+        wd_values.add(config['optim.weight_decay'])
+
+# Pick a specific learning rate to analyze
+selected_lr = sorted(lr_values)[0]  # Use first available LR
+print(f"Analyzing LR={selected_lr} across different weight decay values")
+
+# Filter to this specific learning rate
+fixed_lr_analysis = lr_wd_analysis.filter(
+    include={'optim.lr': [selected_lr]}
+)
+
+# Extract metrics and plot
+fixed_lr_metrics = fixed_lr_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
+fixed_lr_descriptions = fixed_lr_analysis.describe_groups()
+
 plot_metric_group(
-    groups_to_plot,
+    fixed_lr_metrics,
     x_metric='epoch',
     y_metrics='train_loss',
     db=db,
-    group_descriptions=group_descriptions_dict,
+    group_descriptions=fixed_lr_descriptions,
     figsize=(10, 6),
-    title='Training Loss Comparison Across Hyperparameters'
+    title=f'Training Loss: LR={selected_lr} across Weight Decay Values'
 )
 
-# %% Multiple groups, multiple metrics
-# Compare both train and val loss across groups
+# %% Example 2: Fixed Weight Decay across Learning Rate values (Single Metric)
+print("\n=== Example 2: Fixed WD across LR values (Single Metric) ===")
+
+# Pick a specific weight decay to analyze
+selected_wd = sorted(wd_values)[0]  # Use first available WD
+print(f"Analyzing WD={selected_wd} across different learning rate values")
+
+# Filter to this specific weight decay
+fixed_wd_analysis = lr_wd_analysis.filter(
+    include={'optim.weight_decay': [selected_wd]}
+)
+
+# Extract metrics and plot
+fixed_wd_metrics = fixed_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
+fixed_wd_descriptions = fixed_wd_analysis.describe_groups()
+
 plot_metric_group(
-    groups_to_plot,
+    fixed_wd_metrics,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions=fixed_wd_descriptions,
+    figsize=(10, 6),
+    title=f'Training Loss: WD={selected_wd} across Learning Rate Values'
+)
+
+# %% Example 3: All LR x WD combinations (Single Metric)
+print("\n=== Example 3: All LR x WD combinations (Single Metric) ===")
+
+# Show all combinations
+all_lr_wd_metrics = lr_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
+all_lr_wd_descriptions = lr_wd_analysis.describe_groups()
+
+plot_metric_group(
+    all_lr_wd_metrics,
+    x_metric='epoch',
+    y_metrics='train_loss',
+    db=db,
+    group_descriptions=all_lr_wd_descriptions,
+    figsize=(12, 6),
+    title='Training Loss: All LR x WD Combinations'
+)
+
+# %% Example 4: Fixed Learning Rate across Weight Decay values (Multiple Metrics)
+print("\n=== Example 4: Fixed LR across WD values (Multiple Metrics) ===")
+
+# Use the same selected LR from Example 1
+print(f"Analyzing LR={selected_lr} across WD values - Train vs Validation Loss")
+
+fixed_lr_analysis = lr_wd_analysis.filter(
+    include={'optim.lr': [selected_lr]}
+)
+
+fixed_lr_metrics = fixed_lr_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
+fixed_lr_descriptions = fixed_lr_analysis.describe_groups()
+
+plot_metric_group(
+    fixed_lr_metrics,
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
-    group_descriptions=group_descriptions_dict,
+    group_descriptions=fixed_lr_descriptions,
     figsize=(12, 6),
     ylabel='Loss',
-    title='Train vs Validation Loss Across Configurations'
+    title=f'Train vs Val Loss: LR={selected_lr} across Weight Decay Values'
 )
 
-# %% Log scale comparison across groups
-# Note: When log scale is used, "(log scale)" is automatically added to axis labels
+# %% Example 5: Fixed Weight Decay across Learning Rate values (Multiple Metrics)
+print("\n=== Example 5: Fixed WD across LR values (Multiple Metrics) ===")
+
+# Use the same selected WD from Example 2
+print(f"Analyzing WD={selected_wd} across LR values - Train vs Validation Loss")
+
+fixed_wd_analysis = lr_wd_analysis.filter(
+    include={'optim.weight_decay': [selected_wd]}
+)
+
+fixed_wd_metrics = fixed_wd_analysis.to_metric_dfs(['train_loss', 'val_loss', 'epoch'])
+fixed_wd_descriptions = fixed_wd_analysis.describe_groups()
+
 plot_metric_group(
-    groups_to_plot,
+    fixed_wd_metrics,
     x_metric='epoch',
-    y_metrics='train_loss',
+    y_metrics=['train_loss', 'val_loss'],
     db=db,
-    group_descriptions=group_descriptions_dict,
-    figsize=(10, 6),
-    xscale='log',
-    yscale='log',
-    xlim=(1, 50),
-    ylim=(0.01, 2.5),
-    title='Training Dynamics Comparison (Log Scale)'
+    group_descriptions=fixed_wd_descriptions,
+    figsize=(12, 6),
+    ylabel='Loss',
+    title=f'Train vs Val Loss: WD={selected_wd} across Learning Rate Values'
 )
 
-# %% Log scale with custom labels
+# %% Example 6: All LR x WD combinations (Multiple Metrics)
+print("\n=== Example 6: All LR x WD combinations (Multiple Metrics) ===")
+
+plot_metric_group(
+    all_lr_wd_metrics,
+    x_metric='epoch',
+    y_metrics=['train_loss', 'val_loss'],
+    db=db,
+    group_descriptions=all_lr_wd_descriptions,
+    figsize=(14, 6),
+    ylabel='Loss',
+    title='Train vs Val Loss: All LR x WD Combinations'
+)
+
+# %% ========== PLOTTING EXAMPLES SUMMARY ==========
+# The examples above demonstrate systematic plotting patterns:
+# 
+# 1. FILTERING STRATEGY:
+#    - Filter to groups with ≥3 runs for statistical reliability
+#    - Fix batch size + width multiplier to focus analysis
+#    - Extract (lr, wd) combinations for systematic comparison
+#
+# 2. PLOTTING PATTERNS:
+#    - Fixed LR across WD values (Examples 1, 4)
+#    - Fixed WD across LR values (Examples 2, 5) 
+#    - All LR x WD combinations (Examples 3, 6)
+#    - Single metric (Examples 1-3) vs Multiple metrics (Examples 4-6)
+#
+# 3. AESTHETIC CONTROL OPPORTUNITIES:
+#    - figsize: Control plot dimensions
+#    - title: Custom titles with dynamic values
+#    - ylabel: Specify axis labels
+#    - color_scheme: Different color palettes (not used yet)
+#    - x/yscale: Log scale options (not used yet)
+#    - xlim/ylim: Axis limits (not used yet)
+#
+# Each example is in its own cell for easy iteration on aesthetic options!
+
+# %% Log scale with custom labels using GroupedRuns
 # Even with custom labels, "(log scale)" is appended if not already present
 plot_metric_group(
-    metric_dfs,
+    metrics_dict,  # Use the single group dict
     x_metric='epoch',
     y_metrics='train_loss',
     db=db,
-    group_descriptions=db.format_group_description(first_group_key, hpm_names),
+    group_descriptions=single_grouped.describe_groups(),
     figsize=(10, 6),
     xscale='log',
     yscale='log',
@@ -284,136 +513,138 @@ plot_metric_group(
     ylim=(0.01, 2.5)
 )
 
-# %% ========== FILTERING WORKFLOW EXAMPLE ==========
-# Demonstrate the workflow for filtering (lr, wd) combinations
+# %% ========== NEW GROUPEDRUNS API DEMONSTRATION ==========
+# Clean workflow using the new GroupedRuns class
 
-# Step 1: Get all (lr, wd) combinations for a specific model configuration
-# First, let's see what hyperparameters we have
-first_run = db.active_runs[0]
-print("Example hyperparameters available:")
-for k, v in sorted(first_run.hpms._flat_dict.items()):
-    if not k.startswith('_'):
-        print(f"  {k}: {v}")
+# Step 1: Create initial grouping from database
+print("=== Step 1: Initial Grouping ===")
+grouped = GroupedRuns.from_db(db)
+print(f"Initial grouping: {grouped}")
+print(f"Hyperparameters: {grouped.hpm_names}")
+
+# Show some group information
+info = grouped.get_group_info()
+print(f"Group info: {info}")
 
 # %%
-# Step 2: Choose base hyperparameters to fix
-# Get all runs with these fixed values, varying only lr and wd
+# Step 2: Filter to specific hyperparameter combinations
+print("\n=== Step 2: Filter to (lr, wd) combinations for specific config ===")
 base_hpms = {
     'batch_size': 512,
     'model.width_mult': 1.0,
-    # Add other hpms you want to fix here
 }
 
-# Get groups with these base hpms, varying lr and wd
-hpm_names, lr_wd_groups = db.get_groups_matching(
+# Get all (lr, wd) combinations for this configuration
+lr_wd_grouped = grouped.matching(
     base_hpms=base_hpms,
-    varying_hpms=['optim.lr', 'optim.weight_decay'],
-    metrics=['train_loss', 'val_loss', 'train_acc', 'val_acc', 'epoch']
+    varying_hpms=['optim.lr', 'optim.weight_decay']
 )
 
-print(f"Found {len(lr_wd_groups)} (lr, wd) combinations")
-print(f"Varying hyperparameters: {hpm_names}")
+print(f"Filtered to lr/wd combinations: {lr_wd_grouped}")
+print(f"Found {len(lr_wd_grouped)} combinations")
 
-# Show all combinations
+# Show all combinations with descriptions
+descriptions = lr_wd_grouped.describe_groups()
 print("\nAll (lr, wd) combinations:")
-for i, (key, _) in enumerate(lr_wd_groups.items()):
-    lr, wd = key
-    print(f"  {i+1}. lr={lr}, wd={wd}")
+for i, (key, desc) in enumerate(descriptions.items()):
+    print(f"  {i+1}. {key}: {desc}")
 
 # %%
-# Step 3: Plot all combinations to see what needs filtering
-print("Plotting all combinations...")
+# Step 3: Apply value-based filtering
+print("\n=== Step 3: Filter by hyperparameter values ===")
+filtered_grouped = lr_wd_grouped.filter(
+    include={'optim.lr': [0.001, 0.003, 0.01, 0.03]},  # Only reasonable LRs
+    exclude={'optim.weight_decay': [0.01]},  # Exclude high WD
+)
+
+print(f"After value filtering: {filtered_grouped}")
+
+# Show what remains
+remaining_descriptions = filtered_grouped.describe_groups()
+print("Remaining combinations:")
+for key, desc in remaining_descriptions.items():
+    print(f"  {key}: {desc}")
+
+# %%
+# Step 4: Remove specific problematic pairs
+print("\n=== Step 4: Remove specific pairs ===")
+final_grouped = filtered_grouped.filter(
+    exclude_pairs=[(0.03, 0.0003), (0.01, 0.0001)]  # Remove unstable combinations
+)
+
+print(f"Final selection: {final_grouped}")
+
+# %%
+# Step 5: Convert to metric DataFrames for analysis/plotting
+print("\n=== Step 5: Extract metrics for analysis ===")
+metrics_to_extract = ['train_loss', 'val_loss', 'train_acc', 'val_acc', 'epoch']
+metric_dfs = final_grouped.to_metric_dfs(metrics_to_extract)
+
+print(f"Extracted metrics for {len(metric_dfs)} groups")
+print(f"Available metrics: {metrics_to_extract}")
+
+# Show example of accessing data
+first_group_key = list(metric_dfs.keys())[0]
+first_group_data = metric_dfs[first_group_key]
+print(f"\nExample - Group {first_group_key}:")
+print(f"  Train loss shape: {first_group_data['train_loss'].shape}")
+print(f"  Columns (runs): {list(first_group_data['train_loss'].columns)}")
+print(f"  First few train loss values:\n{first_group_data['train_loss'].head(3)}")
+
+# %%
+# Step 6: Plot using the extracted DataFrames
+print("\n=== Step 6: Plotting with metric DataFrames ===")
+
+# Use the existing plot_metric_group function
+group_descriptions = final_grouped.describe_groups()
+
+# Plot single metric across groups
 plot_metric_group(
-    lr_wd_groups,
+    metric_dfs,
     x_metric='epoch',
     y_metrics='train_loss',
     db=db,
-    group_descriptions={
-        key: f"LR={key[0]}, WD={key[1]}" 
-        for key in lr_wd_groups.keys()
-    },
+    group_descriptions=group_descriptions,
     figsize=(12, 6),
-    title='All Learning Rate and Weight Decay Combinations'
+    title='Training Loss - Final Filtered Selection'
 )
 
 # %%
-# Step 4: Interactive filtering - see what we have
-from dr_gen.analyze.filtering import filter_groups, filter_groups_interactive
-
-# This shows current values and helps decide what to filter
-filtered, include, exclude = filter_groups_interactive(
-    lr_wd_groups,
-    hpm_names
-)
-
-# %%
-# Step 5: Apply specific filters
-# Example: Remove very high learning rates and specific problematic combinations
-
-# Filter by individual values
-filtered_groups = filter_groups(
-    lr_wd_groups,
-    hpm_names,
-    include={'optim.lr': [0.001, 0.003, 0.01, 0.03]},  # Only these LRs
-    exclude={'optim.weight_decay': [0.01]},  # Exclude this WD
-)
-
-print(f"After filtering: {len(filtered_groups)} groups remain")
-
-# Plot filtered version
+# Plot multiple metrics for comparison
 plot_metric_group(
-    filtered_groups,
-    x_metric='epoch',
-    y_metrics='train_loss',
-    db=db,
-    group_descriptions={
-        key: f"LR={key[0]}, WD={key[1]}" 
-        for key in filtered_groups.keys()
-    },
-    figsize=(12, 6),
-    title='Filtered: Reasonable Learning Rates Only'
-)
-
-# %%
-# Step 6: Further filtering - exclude specific (lr, wd) pairs
-# Maybe some combinations are unstable or uninteresting
-
-filtered_groups_2 = filter_groups(
-    filtered_groups,  # Start from previous filtered result
-    hpm_names,
-    exclude_pairs=[(0.03, 0.0003), (0.01, 0.0001)]  # Remove specific pairs
-)
-
-print(f"After removing specific pairs: {len(filtered_groups_2)} groups remain")
-
-plot_metric_group(
-    filtered_groups_2,
-    x_metric='epoch',
-    y_metrics='train_loss',
-    db=db,
-    group_descriptions={
-        key: f"LR={key[0]}, WD={key[1]}" 
-        for key in filtered_groups_2.keys()
-    },
-    figsize=(12, 6),
-    title='Final Filtered Selection'
-)
-
-# %%
-# Step 7: Compare train vs validation for final selection
-plot_metric_group(
-    filtered_groups_2,
+    metric_dfs,
     x_metric='epoch',
     y_metrics=['train_loss', 'val_loss'],
     db=db,
-    group_descriptions={
-        key: f"LR={key[0]}, WD={key[1]}" 
-        for key in filtered_groups_2.keys()
-    },
+    group_descriptions=group_descriptions,
     figsize=(12, 6),
     ylabel='Loss',
     title='Train vs Validation Loss - Final Selection'
 )
+
+# %%
+# Demonstrate additional GroupedRuns features
+print("\n=== Additional GroupedRuns Features ===")
+
+# Get hyperparameter dictionaries for programmatic access
+hpm_dicts = final_grouped.group_keys_to_dicts()
+display_dicts = final_grouped.group_keys_to_dicts(use_display_names=True)
+
+print("Technical names:")
+for key, hpm_dict in list(hpm_dicts.items())[:2]:  # Show first 2
+    print(f"  {key}: {hpm_dict}")
+
+print("\nDisplay names:")
+for key, display_dict in list(display_dicts.items())[:2]:  # Show first 2
+    print(f"  {key}: {display_dict}")
+
+# Iterate over groups
+print(f"\nIterating over {len(final_grouped)} groups:")
+for i, (group_key, runs) in enumerate(final_grouped):
+    if i >= 3:  # Only show first 3
+        print("  ...")
+        break
+    print(f"  Group {group_key}: {len(runs)} runs")
 
 # %%
 
